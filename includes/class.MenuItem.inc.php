@@ -8,31 +8,31 @@ class MenuItem {
 	private $children;
 
 	public function __construct($url, $hoverTitle, $isCurrent, $title, $children) {
-		$this->$url = $url;
-		$this->$hoverTitle = $hoverTitle;
-		$this->$isCurrent = $isCurrent;
-		$this->$title = $title;
-		$this->$children = $children;
+		$this->url = $url;
+		$this->hoverTitle = $hoverTitle;
+		$this->isCurrent = $isCurrent;
+		$this->title = $title;
+		$this->children = $children;
 	}
 
 	public function getUrl() {
-		return $this->$url;
+		return $this->url;
 	}
 
 	public function hasHoverTitle() {
-		return Utils::hasStringContents($this->$hoverTitle);
+		return Utils::hasStringContents($this->hoverTitle);
 	}
 
 	public function getHoverTitle() {
-		return $this->$hoverTitle;
+		return $this->hoverTitle;
 	}
 
 	public function isCurrent() {
-		return $this->$isCurrent;
+		return $this->isCurrent;
 	}
 
 	public function getTitle() {
-		return $this->$title;
+		return $this->title;
 	}
 
 	public function hasChild() {
@@ -40,7 +40,7 @@ class MenuItem {
 	}
 
 	public function getChildren() {
-		return $this->$children;
+		return $this->children;
 	}
 }
 

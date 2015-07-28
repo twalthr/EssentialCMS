@@ -52,30 +52,46 @@
 				<?php endif; ?>
 			</nav>
 			<?php endif; ?>
+			<?php if ($layoutContext->hasAsideHeader()) : ?>
+			<aside>
+				<?php echo $layoutContext->getAsideHeader(); ?>
+			</aside>
+			<?php endif; ?>
 		</header>
 		<?php if ($layoutContext->hasBeforeContentModules()) : ?>
 		<section class="before-content">
 			<?php foreach ($layoutContext->getBeforeContentModules() as $module) : ?>
 			<div class="module <?php echo $module->getName(); ?> order<?php echo $module->getOrder(); ?>" id="bc-<?php echo $module->getName()."-".$module->getOrder(); ?>">
-					<?php echo $module->getContent(); ?>
+				<?php echo $module->getContent(); ?>
 			</div>
 			<?php endforeach; ?>
 		</section>
 		<?php endif; ?>
-		<?php if ($layoutContext->hasContentModules()) : ?>
-		<section class="content">
-			<?php foreach ($layoutContext->getContentModules() as $module) : ?>
-			<div class="module <?php echo $module->getName(); ?> order<?php echo $module->getOrder(); ?>" id="c-<?php echo $module->getName()."-".$module->getOrder(); ?>">
+		<main>
+			<?php if ($layoutContext->hasContentModules()) : ?>
+			<section class="content">
+				<?php foreach ($layoutContext->getContentModules() as $module) : ?>
+				<div class="module <?php echo $module->getName(); ?> order<?php echo $module->getOrder(); ?>" id="c-<?php echo $module->getName()."-".$module->getOrder(); ?>">
 					<?php echo $module->getContent(); ?>
-			</div>
-			<?php endforeach; ?>
-		</section>
-		<?php endif; ?>
+				</div>
+				<?php endforeach; ?>
+			</section>
+			<?php endif; ?>
+			<?php if ($layoutContext->hasAsideContentModules()) : ?>
+			<aside class="aside-content">
+				<?php foreach ($layoutContext->getAsideContentModules() as $module) : ?>
+				<div class="module <?php echo $module->getName(); ?> order<?php echo $module->getOrder(); ?>" id="c-<?php echo $module->getName()."-".$module->getOrder(); ?>">
+					<?php echo $module->getContent(); ?>
+				</div>
+				<?php endforeach; ?>
+			</aside>
+			<?php endif; ?>
+		</main>
 		<?php if ($layoutContext->hasAfterContentModules()) : ?>
 		<section class="after-content">
 			<?php foreach ($layoutContext->getAfterContentModules() as $module) : ?>
 			<div class="module <?php echo $module->getName(); ?> order<?php echo $module->getOrder(); ?>" id="ac-<?php echo $module->getName()."-".$module->getOrder(); ?>">
-					<?php echo $module->getContent(); ?>
+				<?php echo $module->getContent(); ?>
 			</div>
 			<?php endforeach; ?>
 		</section>

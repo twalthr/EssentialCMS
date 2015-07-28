@@ -1,5 +1,5 @@
 <?php
- 
+
 class LayoutContext {
 	private $title;
 	private $description;
@@ -9,70 +9,71 @@ class LayoutContext {
 	private $logo; // html
 	private $menuItems;
 	private $currentSubMenuItems;
+	private $asideHeader; // html
 	private $beforeContentModules;
 	private $contentModules;
 	private $afterContentModules;
 	private $footer;
 
 	public function __construct($config) {
-		$this->$config = $config;
-		$this->$root = $config->getPublicRoot();
+		$this->config = $config;
+		$this->root = $config->getPublicRoot();
 	}
-	
+
 	public function hasTitle() {
-		return Utils::hasStringContents($this->$title);
+		return Utils::hasStringContents($this->title);
 	}
 
 	public function setTitle($title) {
-		$this->$title = $title;
+		$this->title = $title;
 	}
 
 	public function getTitle() {
-		return $this->$title;
+		return $this->title;
 	}
 
 	public function hasDescription() {
-		return Utils::hasStringContents($this->$description);
+		return Utils::hasStringContents($this->description);
 	}
 
 	public function setDescription($description) {
-		$this->$description = $description;
+		$this->description = $description;
 	}
 
 	public function getDescription() {
-		return $this->$description;
+		return $this->description;
 	}
 
 	public function getConfig() {
-		return $this->$config;
+		return $this->config;
 	}
 
 	public function setRoot($root) {
-		$this->$root = $root;
+		$this->root = $root;
 	}
 
 	public function getRoot() {
-		return $this->$root;
+		return $this->root;
 	}
 
 	public function hasCustomHeader() {
-		return Utils::hasStringContents($this->$customHeader);
+		return Utils::hasStringContents($this->customHeader);
 	}
 
 	public function setCustomHeader($customHeader) {
-		$this->$customHeader = $customHeader;
+		$this->customHeader = $customHeader;
 	}
 
 	public function getCustomHeader() {
-		return $this->$customHeader;
+		return $this->customHeader;
 	}
 
 	public function setLogo($logo) {
-		$this->$logo = $logo;
+		$this->logo = $logo;
 	}
 
 	public function getLogo() {
-		return $this->$logo;
+		return $this->logo;
 	}
 
 	public function hasMenuItems() {
@@ -80,11 +81,11 @@ class LayoutContext {
 	}
 
 	public function setMenuItems($menuItems) {
-		$this->$menuItems = $menuItems;
+		$this->menuItems = $menuItems;
 	}
 
 	public function getMenuItems() {
-		return $this->$menuItems;
+		return $this->menuItems;
 	}
 
 	public function hasCurrentSubMenuItems() {
@@ -92,11 +93,11 @@ class LayoutContext {
 	}
 
 	public function setCurrentSubMenuItems($currentSubMenuItems) {
-		$this->$currentSubMenuItems = $currentSubMenuItems;
+		$this->currentSubMenuItems = $currentSubMenuItems;
 	}
 
 	public function getCurrentSubMenuItems() {
-		return $this->$currentSubMenuItems;
+		return $this->currentSubMenuItems;
 	}
 
 	public function hasBeforeContentModules() {
@@ -104,11 +105,11 @@ class LayoutContext {
 	}
 
 	public function setBeforeContentModules($beforeContentModules) {
-		$this->$beforeContentModules = $beforeContentModules;
+		$this->beforeContentModules = $beforeContentModules;
 	}
 
 	public function getBeforeContentModules() {
-		return $this->$beforeContentModules;
+		return $this->beforeContentModules;
 	}
 
 	public function hasContentModules() {
@@ -116,11 +117,23 @@ class LayoutContext {
 	}
 
 	public function setContentModules($contentModules) {
-		$this->$contentModules = $contentModules;
+		$this->contentModules = $contentModules;
 	}
 
 	public function getContentModules() {
-		return $this->$contentModules;
+		return $this->contentModules;
+	}
+
+	public function hasAsideHeader() {
+		return Utils::hasStringContents($this->asideHeader);
+	}
+
+	public function setAsideHeader($asideHeader) {
+		$this->asideHeader = $asideHeader;
+	}
+
+	public function getAsideHeader() {
+		return $this->asideHeader;
 	}
 
 	public function hasAfterContentModules() {
@@ -128,20 +141,32 @@ class LayoutContext {
 	}
 
 	public function setAfterContentModules($afterContentModules) {
-		$this->$afterContentModules = $afterContentModules;
+		$this->afterContentModules = $afterContentModules;
 	}
 
 	public function getAfterContentModules() {
-		return $this->$afterContentModules;
+		return $this->afterContentModules;
+	}
+
+	public function hasAsideContentModules() {
+		return is_array($asideContentModules) && !empty($asideContentModules);
+	}
+
+	public function setAsideContentModules($asideContentModules) {
+		$this->asideContentModules = $asideContentModules;
+	}
+
+	public function getAsideContentModules() {
+		return $this->asideContentModules;
 	}
 
 	public function hasFooter() {
-		return Utils::hasStringContents($this->$footer);
+		return Utils::hasStringContents($this->footer);
 	}
 
 	public function getFooter() {
-		return $this->$footer;
+		return $this->footer;
 	}
 }
- 
+
 ?>

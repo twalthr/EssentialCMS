@@ -1,20 +1,20 @@
 <?php
  
 class BasicModule {
+	private $cmsVersion;
 	private $name;
-	private $order;
 
-	public function __construct($name, $order) {
+	public function __construct($cmsVersion, $name) {
+		$this->cmsVersion = $cmsVersion;
 		$this->name = $name;
-		$this->order = $order;
+	}
+
+	public function getCmsVersion() {
+		return $this->cmsVersion;
 	}
 
 	public function getName() {
 		return $this->name;
-	}
-
-	public function getOrder() {
-		return $this->order;
 	}
 
 	public function getContent() {

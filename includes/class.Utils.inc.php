@@ -2,7 +2,7 @@
 
 class Utils {
 	public static function hasStringContents($str) {
-		return !isset($str) || trim($str) === '';
+		return isset($str) && !(trim($str) === '');
 	}
 
 	public static function stringStartsWith($haystack, $needle) {

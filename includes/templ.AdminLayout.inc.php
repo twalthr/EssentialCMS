@@ -10,10 +10,8 @@
 		<meta name="description" content="<?php echo $layoutContext->getDescription(); ?>" />
 		<?php endif; ?>
 		<meta name="generator" content="<?php echo $layoutContext->getConfig()->getCmsFullname(); ?>" />
-		<script type="text/javascript" src="<?php echo $layoutContext->getRoot(); ?>/js/main.js"></script>
-		<script type="text/javascript" src="<?php echo $layoutContext->getRoot(); ?>/custom/scripts.js"></script>
-		<link rel="stylesheet" href="<?php echo $layoutContext->getRoot(); ?>/css/main.css" type="text/css" media="all" />
-		<link rel="stylesheet" href="<?php echo $layoutContext->getRoot(); ?>/custom/style.css" type="text/css" media="all" />
+		<script type="text/javascript" src="<?php echo $layoutContext->getRoot(); ?>/js/admin.js"></script>
+		<link rel="stylesheet" href="<?php echo $layoutContext->getRoot(); ?>/css/admin.css" type="text/css" media="all" />
 		<?php if ($layoutContext->hasCustomHeader()) : ?>
 		<?php echo $layoutContext->getCustomHeader(); ?>
 		<?php endif; ?>
@@ -60,8 +58,8 @@
 		</header>
 		<?php if ($layoutContext->hasBeforeContentModules()) : ?>
 		<section class="before-content">
-			<?php foreach ($layoutContext->getBeforeContentModules() as $module) : ?>
-			<div class="module <?php echo $module->getName(); ?> order<?php echo $module->getOrder(); ?>" id="bc-<?php echo $module->getName()."-".$module->getOrder(); ?>">
+			<?php foreach ($layoutContext->getBeforeContentModules() as $order => $module) : ?>
+			<div class="module <?php echo $module->getName(); ?> order<?php echo $order; ?>" id="bc-<?php echo $module->getName()."-".$order; ?>">
 				<?php echo $module->getContent(); ?>
 			</div>
 			<?php endforeach; ?>
@@ -70,8 +68,8 @@
 		<main>
 			<?php if ($layoutContext->hasContentModules()) : ?>
 			<section class="content">
-				<?php foreach ($layoutContext->getContentModules() as $module) : ?>
-				<div class="module <?php echo $module->getName(); ?> order<?php echo $module->getOrder(); ?>" id="c-<?php echo $module->getName()."-".$module->getOrder(); ?>">
+				<?php foreach ($layoutContext->getContentModules() as $order => $module) : ?>
+				<div class="module <?php echo $module->getName(); ?> order<?php echo $order; ?>" id="c-<?php echo $module->getName()."-".$order; ?>">
 					<?php echo $module->getContent(); ?>
 				</div>
 				<?php endforeach; ?>
@@ -79,8 +77,8 @@
 			<?php endif; ?>
 			<?php if ($layoutContext->hasAsideContentModules()) : ?>
 			<aside class="aside-content">
-				<?php foreach ($layoutContext->getAsideContentModules() as $module) : ?>
-				<div class="module <?php echo $module->getName(); ?> order<?php echo $module->getOrder(); ?>" id="c-<?php echo $module->getName()."-".$module->getOrder(); ?>">
+				<?php foreach ($layoutContext->getAsideContentModules() as $order => $module) : ?>
+				<div class="module <?php echo $module->getName(); ?> order<?php echo $order; ?>" id="c-<?php echo $module->getName()."-".$order; ?>">
 					<?php echo $module->getContent(); ?>
 				</div>
 				<?php endforeach; ?>
@@ -89,8 +87,8 @@
 		</main>
 		<?php if ($layoutContext->hasAfterContentModules()) : ?>
 		<section class="after-content">
-			<?php foreach ($layoutContext->getAfterContentModules() as $module) : ?>
-			<div class="module <?php echo $module->getName(); ?> order<?php echo $module->getOrder(); ?>" id="ac-<?php echo $module->getName()."-".$module->getOrder(); ?>">
+			<?php foreach ($layoutContext->getAfterContentModules() as $order => $module) : ?>
+			<div class="module <?php echo $module->getName(); ?> order<?php echo $order; ?>" id="ac-<?php echo $module->getName()."-".$order; ?>">
 				<?php echo $module->getContent(); ?>
 			</div>
 			<?php endforeach; ?>

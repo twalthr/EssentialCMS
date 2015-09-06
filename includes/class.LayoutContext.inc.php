@@ -13,6 +13,7 @@ class LayoutContext {
 	private $beforeContentModules;
 	private $contentModules;
 	private $afterContentModules;
+	private $asideContentModules;
 	private $footer;
 
 	public function __construct($config) {
@@ -68,6 +69,10 @@ class LayoutContext {
 		return $this->customHeader;
 	}
 
+	public function hasLogo() {
+		return Utils::hasStringContents($this->logo);
+	}
+
 	public function setLogo($logo) {
 		$this->logo = $logo;
 	}
@@ -77,7 +82,7 @@ class LayoutContext {
 	}
 
 	public function hasMenuItems() {
-		return is_array($menuItems) && !empty($menuItems);
+		return is_array($this->menuItems) && !empty($this->menuItems);
 	}
 
 	public function setMenuItems($menuItems) {
@@ -89,7 +94,7 @@ class LayoutContext {
 	}
 
 	public function hasCurrentSubMenuItems() {
-		return is_array($currentSubMenuItems) && !empty($currentSubMenuItems);
+		return is_array($this->currentSubMenuItems) && !empty($this->currentSubMenuItems);
 	}
 
 	public function setCurrentSubMenuItems($currentSubMenuItems) {
@@ -101,7 +106,7 @@ class LayoutContext {
 	}
 
 	public function hasBeforeContentModules() {
-		return is_array($beforeContentModules) && !empty($beforeContentModules);
+		return is_array($this->beforeContentModules) && !empty($this->beforeContentModules);
 	}
 
 	public function setBeforeContentModules($beforeContentModules) {
@@ -113,7 +118,7 @@ class LayoutContext {
 	}
 
 	public function hasContentModules() {
-		return is_array($contentModules) && !empty($contentModules);
+		return is_array($this->contentModules) && !empty($this->contentModules);
 	}
 
 	public function setContentModules($contentModules) {
@@ -137,7 +142,7 @@ class LayoutContext {
 	}
 
 	public function hasAfterContentModules() {
-		return is_array($afterContentModules) && !empty($afterContentModules);
+		return is_array($this->afterContentModules) && !empty($this->afterContentModules);
 	}
 
 	public function setAfterContentModules($afterContentModules) {
@@ -149,7 +154,7 @@ class LayoutContext {
 	}
 
 	public function hasAsideContentModules() {
-		return is_array($asideContentModules) && !empty($asideContentModules);
+		return is_array($this->asideContentModules) && !empty($this->asideContentModules);
 	}
 
 	public function setAsideContentModules($asideContentModules) {

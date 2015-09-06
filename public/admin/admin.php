@@ -13,7 +13,10 @@ $adminController = new AdminController();
 
 switch ($querySplitted[0]) {
 	case '':
-		$adminController->layout(new ModuleAdminLogin());
+		$adminController->layoutContent(new ModuleAdminLogin());
+		break;
+	case 'install':
+		$adminController->install();
 		break;
 	default:
 		echo "Invalid command.";

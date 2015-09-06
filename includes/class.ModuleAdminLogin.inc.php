@@ -3,7 +3,8 @@
 class ModuleAdminLogin extends BasicModule {
 
 	public function __construct() {
-		parent::__construct("admin-login", 0);
+		global $CMS_VERSION;
+		parent::__construct($CMS_VERSION, "admin-login");
 	}
 
 	public function getContent() {

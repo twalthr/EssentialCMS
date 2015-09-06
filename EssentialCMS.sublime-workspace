@@ -3,10 +3,77 @@
 	{
 		"selected_items":
 		[
+			[
+				"end",
+				"ending"
+			],
+			[
+				"is_a",
+				"is_array"
+			]
 		]
 	},
 	"buffers":
 	[
+		{
+			"contents": "<?php\n\nerror_reporting(E_ALL);\n\n// parameters\n$DEFAULT_LANGUAGE = 'en';\n$DEFAULT_COUNTRY = \"US\";\n$LANGUAGE_SWITCHING = true;\n\n// set class autoloader\n$ROOT_DIRECTORY = dirname(__FILE__);\nspl_autoload_register(function ($class) {\n	global $ROOT_DIRECTORY;\n	require_once $ROOT_DIRECTORY . '/includes/class.' . $class . '.inc.php';\n});\n\n// constants\n$TRANSLATOR = new Translator($DEFAULT_LANGUAGE, $DEFAULT_COUNTRY, $LANGUAGE_SWITCHING);\n$CONFIG = new Configuration();\n$CONFIG->setCmsFullname(\"EssentialCMS\");\n$CONFIG->setCmsUrl(\"https://github.com/twalthr/EssentialCMS\");\n\n?>",
+			"file": "config.php",
+			"file_size": 437,
+			"file_write_time": 1437683144000000,
+			"settings":
+			{
+				"buffer_size": 572,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "public/admin/admin.php",
+			"settings":
+			{
+				"buffer_size": 331,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "includes/templ.AdminLayout.inc.php",
+			"settings":
+			{
+				"buffer_size": 5042,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "includes/class.BasicModule.inc.php",
+			"settings":
+			{
+				"buffer_size": 325,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "includes/class.AdminController.inc.php",
+			"settings":
+			{
+				"buffer_size": 126,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "includes/class.ModuleAdminLogin.inc.php",
+			"settings":
+			{
+				"buffer_size": 201,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "includes/class.LayoutContext.inc.php",
+			"settings":
+			{
+				"buffer_size": 3710,
+				"line_ending": "Unix"
+			}
+		}
 	],
 	"build_system": "",
 	"command_palette":
@@ -32,10 +99,26 @@
 	},
 	"file_history":
 	[
+		"/opt/lampp/htdocs/EssentialCMS/includes/class.Translator.inc.php",
+		"/opt/lampp/htdocs/EssentialCMS/includes/class.RichModule.inc.php",
+		"/opt/lampp/htdocs/EssentialCMS/includes/class.MenuItem.inc.php",
+		"/opt/lampp/htdocs/EssentialCMS/includes/templ.MainLayout.inc.php",
+		"/opt/lampp/htdocs/EssentialCMS/includes/class.LayoutContext.inc.php",
+		"/opt/lampp/htdocs/EssentialCMS/includes/class.Utils.inc.php",
+		"/opt/lampp/htdocs/EssentialCMS/includes/class.Module.inc.php",
+		"/home/twalthr/.config/sublime-text-2/Packages/Default/Preferences.sublime-settings",
+		"/opt/lampp/htdocs/EssentialCMS/includes/class.Configuration.inc.php",
+		"/opt/lampp/htdocs/EssentialCMS/includes/class.Database.inc.php",
+		"/opt/lampp/htdocs/EssentialCMS/includes/class.Field.inc.php",
+		"/opt/lampp/htdocs/EssentialCMS/includes/class.FieldSet.inc.php",
+		"/opt/lampp/htdocs/EssentialCMS/includes/class.ImageStore.inc.php",
+		"/opt/lampp/htdocs/EssentialCMS/admin/admin.php",
+		"/opt/lampp/htdocs/EssentialCMS/includes/templ.Layout.inc.php",
+		"/opt/lampp/htdocs/EssentialCMS/admin/includes/layout.php"
 	],
 	"find":
 	{
-		"height": 0.0
+		"height": 35.0
 	},
 	"find_in_files":
 	{
@@ -49,6 +132,7 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"->$"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -56,6 +140,7 @@
 		"regex": false,
 		"replace_history":
 		[
+			"->"
 		],
 		"reverse": false,
 		"show_context": true,
@@ -66,18 +151,204 @@
 	"groups":
 	[
 		{
+			"selected": 0,
 			"sheets":
 			[
+				{
+					"buffer": 0,
+					"file": "config.php",
+					"settings":
+					{
+						"buffer_size": 572,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								568,
+								568
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/HTML/HTML.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 1,
+					"file": "public/admin/admin.php",
+					"settings":
+					{
+						"buffer_size": 331,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								5,
+								5
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/PHP/PHP.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 2,
+					"file": "includes/templ.AdminLayout.inc.php",
+					"settings":
+					{
+						"buffer_size": 5042,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								5042,
+								5042
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/PHP/PHP.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 1048.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 3,
+					"file": "includes/class.BasicModule.inc.php",
+					"settings":
+					{
+						"buffer_size": 325,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								303,
+								303
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/PHP/PHP.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 4,
+					"file": "includes/class.AdminController.inc.php",
+					"settings":
+					{
+						"buffer_size": 126,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								116,
+								116
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/HTML/HTML.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 5,
+					"file": "includes/class.ModuleAdminLogin.inc.php",
+					"settings":
+					{
+						"buffer_size": 201,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								182,
+								182
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/HTML/HTML.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 6,
+					"file": "includes/class.LayoutContext.inc.php",
+					"settings":
+					{
+						"buffer_size": 3710,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								0,
+								0
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/PHP/PHP.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				}
 			]
 		}
 	],
 	"incremental_find":
 	{
-		"height": 0.0
+		"height": 34.0
 	},
 	"input":
 	{
-		"height": 0.0
+		"height": 33.0
 	},
 	"layout":
 	{
@@ -104,7 +375,7 @@
 	"menu_visible": true,
 	"replace":
 	{
-		"height": 0.0
+		"height": 64.0
 	},
 	"save_all_on_build": true,
 	"select_file":
@@ -127,6 +398,6 @@
 	"show_open_files": false,
 	"show_tabs": true,
 	"side_bar_visible": true,
-	"side_bar_width": 150.0,
+	"side_bar_width": 206.0,
 	"status_bar_visible": true
 }

@@ -22,7 +22,7 @@ class LayoutContext {
 	}
 
 	public function hasTitle() {
-		return Utils::hasStringContents($this->title);
+		return Utils::hasStringContent($this->title);
 	}
 
 	public function setTitle($title) {
@@ -34,7 +34,7 @@ class LayoutContext {
 	}
 
 	public function hasDescription() {
-		return Utils::hasStringContents($this->description);
+		return Utils::hasStringContent($this->description);
 	}
 
 	public function setDescription($description) {
@@ -58,7 +58,7 @@ class LayoutContext {
 	}
 
 	public function hasCustomHeader() {
-		return Utils::hasStringContents($this->customHeader);
+		return Utils::hasStringContent($this->customHeader);
 	}
 
 	public function setCustomHeader($customHeader) {
@@ -70,7 +70,7 @@ class LayoutContext {
 	}
 
 	public function hasLogo() {
-		return Utils::hasStringContents($this->logo);
+		return Utils::hasStringContent($this->logo);
 	}
 
 	public function setLogo($logo) {
@@ -130,7 +130,7 @@ class LayoutContext {
 	}
 
 	public function hasAsideHeader() {
-		return Utils::hasStringContents($this->asideHeader);
+		return Utils::hasStringContent($this->asideHeader);
 	}
 
 	public function setAsideHeader($asideHeader) {
@@ -166,7 +166,7 @@ class LayoutContext {
 	}
 
 	public function hasFooter() {
-		return Utils::hasStringContents($this->footer);
+		return Utils::hasStringContent($this->footer);
 	}
 
 	public function getFooter() {

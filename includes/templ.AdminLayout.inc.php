@@ -60,7 +60,7 @@
 		<section class="before-content">
 			<?php foreach ($layoutContext->getBeforeContentModules() as $order => $module) : ?>
 			<div class="module <?php echo $module->getName(); ?> order<?php echo $order; ?>" id="bc-<?php echo $module->getName()."-".$order; ?>">
-				<?php echo $module->getContent(); ?>
+				<?php echo $module->getContent($layoutContext->getConfig()); ?>
 			</div>
 			<?php endforeach; ?>
 		</section>
@@ -70,7 +70,7 @@
 			<section class="content">
 				<?php foreach ($layoutContext->getContentModules() as $order => $module) : ?>
 				<div class="module <?php echo $module->getName(); ?> order<?php echo $order; ?>" id="c-<?php echo $module->getName()."-".$order; ?>">
-					<?php echo $module->getContent(); ?>
+					<?php echo $module->getContent($layoutContext->getConfig()); ?>
 				</div>
 				<?php endforeach; ?>
 			</section>
@@ -79,7 +79,7 @@
 			<aside class="aside-content">
 				<?php foreach ($layoutContext->getAsideContentModules() as $order => $module) : ?>
 				<div class="module <?php echo $module->getName(); ?> order<?php echo $order; ?>" id="c-<?php echo $module->getName()."-".$order; ?>">
-					<?php echo $module->getContent(); ?>
+					<?php echo $module->getContent($layoutContext->getConfig()); ?>
 				</div>
 				<?php endforeach; ?>
 			</aside>
@@ -89,7 +89,7 @@
 		<section class="after-content">
 			<?php foreach ($layoutContext->getAfterContentModules() as $order => $module) : ?>
 			<div class="module <?php echo $module->getName(); ?> order<?php echo $order; ?>" id="ac-<?php echo $module->getName()."-".$order; ?>">
-				<?php echo $module->getContent(); ?>
+				<?php echo $module->getContent($layoutContext->getConfig()); ?>
 			</div>
 			<?php endforeach; ?>
 		</section>

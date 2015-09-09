@@ -17,8 +17,13 @@ class BasicModule {
 		return $this->name;
 	}
 
-	public function getContent() {
+	public function getContent($config) {
 		return '';
+	}
+
+	public function text($id, ...$args) {
+		global $TR;
+		echo $TR->translate($id, ...$args);
 	}
 }
 

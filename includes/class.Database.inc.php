@@ -28,6 +28,42 @@ class Database {
 		}
 	}
 
+	public function successQuery($sql) {
+		$result = false;
+		if($r = $this->mysqli->query($sql)) {
+			$result = true;
+			$r->close();
+		}
+		return $result;
+	}
+
+	public function existsQuery($sql) {
+		$result = false;
+		if($r = $this->mysqli->query($sql)) {
+			$result = $r->num_rows > 0;
+			$r->close();
+		}
+		return $result;
+	}
+
+
+
+	
+
+	public function resultQuery() {
+
+	}
+
+	public function numberQuery($sql) {
+		$r = $this->mysqli->query($sql);
+		if ($r == false) {
+			return 0;
+		}
+		$result = $r->num_rows;
+		$r->close();
+		return $result;
+	}
+
 	public function getLastError() {
 		return $this->lastError;
 	}

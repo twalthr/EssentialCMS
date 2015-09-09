@@ -7,7 +7,7 @@ class ModuleAdminLogin extends BasicModule {
 		parent::__construct($CMS_VERSION, "admin-login");
 	}
 
-	public function getContent() {
+	public function getContent($config) {
 		?>
 
 		Hello World

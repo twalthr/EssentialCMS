@@ -28,6 +28,7 @@ class Configuration {
 	public function getPublicRoot() {
 		return $this->root;
 	}
+
 }
 
 ?>

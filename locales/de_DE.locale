@@ -1,3 +1,7 @@
 German (Germany)
 Deutsch (Deutschland)
 INTERNAL_SERVER_ERROR=Ein interner Serverfehler ist aufgetreten. Bitte informieren Sie den Webmaster und/oder rufen Sie die Webseite zu einem späteren Zeitpunkt erneut auf.
+DATABASE_NOT_INITIALIZED=Die Datenbank scheint noch nicht initialisiert zu sein. Um eine neue, leere Datenbank zu erstellen, geben Sie bitte ein neues Administrator-Passwort ein.
+NEW_PASSWORD=Passwort:
+RETYPE_PASSWORD=Passwort wiederholen:
+CREATE_DATABASE=Datenbank erstellen

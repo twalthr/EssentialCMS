@@ -29,7 +29,7 @@ class ModuleAdminInstall extends BasicModule {
 	<div class="dialog-message">
 		<?php $this->text('DATABASE_NOT_INITIALIZED'); ?>
 	</div>
-	<form action="<?php echo $config->getPublicRoot()?>/admin/install" method="post">
+	<form method="post" action="<?php echo $config->getPublicRoot()?>/admin/install">
 		<label for="password"><?php $this->text('NEW_PASSWORD'); ?></label>
 		<input type="password" name="password" id="password" pattern=".{8,64}" required />
 		<label for="password2"><?php $this->text('RETYPE_PASSWORD'); ?></label>

@@ -24,7 +24,7 @@ class ModuleAdminLogin extends BasicModule {
 	<div class="dialog-message">
 		<?php $this->text('ENTER_PASSWORD'); ?>
 	</div>
-	<form action="<?php echo $config->getPublicRoot()?>/admin" method="post">
+	<form method="post">
 		<label for="password"><?php $this->text('PASSWORD'); ?></label>
 		<input type="password" name="password" id="password" pattern=".{8,64}" required />
 		<input type="submit" value="<?php $this->text('LOGIN'); ?>" />

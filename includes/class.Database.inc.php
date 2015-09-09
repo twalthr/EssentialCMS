@@ -47,28 +47,50 @@ class Database {
 		return $result;
 	}
 
-	// for INSERT, UPDATE, DELETE without escaping
-	public function impactQuery($sql) {
-		$result = false;
-		if($r = $this->mysqli->query($sql)) {
-			$result = $this->mysqli->affected_rows > 0;
-		}
-		return $result;
-	}
-
-	public function insertAndExecute($sql, $types, ...$vars) {
+	// for INSERT, UPDATE, DELETE
+	public function impactQuery($sql, $types = NULL, ...$vars) {
 		if (!$stmt = $this->mysqli->prepare($sql)) {
 			return false;
 		}
-		if (!$stmt->bind_param($types, ...$vars)) {
-			$stmt->close();
-			return false;
+		if ($types !== NULL) {
+			if (!$stmt->bind_param($types, ...$vars)) {
+				$stmt->close();
+				return false;
+			}
 		}
 		if (!$stmt->execute()) {
 			$stmt->close();
 			return false;
 		}
-		$result = $this->mysqli->affected_rows == 1;
+		$result = $this->mysqli->affected_rows > 0;
+		$stmt->close();
+		return $result;
+	}
+
+	// for SELECT with escaping
+	public function valuesQuery($sql, $types = NULL, ...$vars) {
+		if (!$stmt = $this->mysqli->prepare($sql)) {
+			return false;
+		}
+		if ($types !== NULL) {
+			if (!$stmt->bind_param($types, ...$vars)) {
+				$stmt->close();
+				return false;
+			}
+		}
+		if (!$stmt->execute()) {
+			$stmt->close();
+			return false;
+		}
+		if (!$r = $stmt->get_result()) {
+			$stmt->close();
+			return false;
+		}
+		$result = array();
+		while ($row = $r->fetch_array(MYSQLI_ASSOC)) {
+			$result[] = $row;
+		}
+		$r->free();
 		$stmt->close();
 		return $result;
 	}

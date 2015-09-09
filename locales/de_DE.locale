@@ -1,7 +1,16 @@
 German (Germany)
 Deutsch (Deutschland)
 INTERNAL_SERVER_ERROR=Ein interner Serverfehler ist aufgetreten. Bitte informieren Sie den Webmaster und/oder rufen Sie die Webseite zu einem späteren Zeitpunkt erneut auf.
-DATABASE_NOT_INITIALIZED=Die Datenbank scheint noch nicht initialisiert zu sein. Um eine neue, leere Datenbank zu erstellen, geben Sie bitte ein neues Administrator-Passwort ein.
+DATABASE_NOT_INITIALIZED=Die Datenbank scheint noch nicht initialisiert zu sein. Um eine neue, leere Datenbank zu erstellen, geben Sie bitte ein neues Administrator-Passwort ein. Das Passwort sollte 8-64 Zeichen lang sein.
 NEW_PASSWORD=Passwort:
 RETYPE_PASSWORD=Passwort wiederholen:
 CREATE_DATABASE=Datenbank erstellen
+PASSWORD_MAXLENGTH=Das eingegebene Passwort ist zu lang.
+PASSWORD_MINLENGTH=Das eingegebene Passwort sollte mindestens 8 Zeichen lang sein.
+PASSWORDS_NOT_EQUAL=Das Passwort stimmt nicht mit der Wiederholung überein.
+UNKNOWN_ERROR=Ein unbekannter Fehler ist aufgetreten. Die Datenbank könnte nun in einem undefinierten Zustand sein.
+INSTALLATION_SUCCESS=Die Installation war erfolgreich. Sie können sich nun mit dem Administrator-Passwort einloggen.
+ENTER_PASSWORD=Bitte geben Sie das Administrator-Passwort ein, um diese Webseite zu bearbeiten.
+PASSWORD=Passwort:
+LOGIN=Einloggen
+WRONG_PASSWORD=Das eingegebene Passwort ist ungültig.

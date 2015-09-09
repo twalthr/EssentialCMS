@@ -28,16 +28,17 @@ class Database {
 		}
 	}
 
+	// for CREATE TABLES
 	public function successQuery($sql) {
 		$result = false;
 		if($r = $this->mysqli->query($sql)) {
 			$result = true;
-			$r->close();
 		}
 		return $result;
 	}
 
-	public function existsQuery($sql) {
+	// for SELECT where actual result is unimportant but must exist
+	public function resultQuery($sql) {
 		$result = false;
 		if($r = $this->mysqli->query($sql)) {
 			$result = $r->num_rows > 0;
@@ -46,13 +47,35 @@ class Database {
 		return $result;
 	}
 
-
-
-	
-
-	public function resultQuery() {
-
+	// for INSERT, UPDATE, DELETE without escaping
+	public function impactQuery($sql) {
+		$result = false;
+		if($r = $this->mysqli->query($sql)) {
+			$result = $this->mysqli->affected_rows > 0;
+		}
+		return $result;
 	}
+
+	public function insertAndExecute($sql, $types, ...$vars) {
+		if (!$stmt = $this->mysqli->prepare($sql)) {
+			return false;
+		}
+		if (!$stmt->bind_param($types, ...$vars)) {
+			$stmt->close();
+			return false;
+		}
+		if (!$stmt->execute()) {
+			$stmt->close();
+			return false;
+		}
+		$result = $this->mysqli->affected_rows == 1;
+		$stmt->close();
+		return $result;
+	}
+
+
+
+
 
 	public function numberQuery($sql) {
 		$r = $this->mysqli->query($sql);

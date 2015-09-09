@@ -2,16 +2,34 @@
 
 class ModuleAdminLogin extends BasicModule {
 
+	private $state;
+
 	public function __construct() {
 		global $CMS_VERSION;
 		parent::__construct($CMS_VERSION, "admin-login");
 	}
 
+	public function setState($state) {
+		$this->state = $state;
+	}
+
 	public function getContent($config) {
 		?>
-
-		Hello World
-
+<div class="dialog-box">
+<?php if (!empty($this->state)) : ?>
+	<div class="dialog-error-message">
+		<?php $this->text($this->state); ?>
+	</div>
+<?php endif; ?>
+	<div class="dialog-message">
+		<?php $this->text('ENTER_PASSWORD'); ?>
+	</div>
+	<form action="<?php echo $config->getPublicRoot()?>/admin" method="post">
+		<label for="password"><?php $this->text('PASSWORD'); ?></label>
+		<input type="password" name="password" id="password" pattern=".{8,64}" required />
+		<input type="submit" value="<?php $this->text('LOGIN'); ?>" />
+	</form>
+</div>
 		<?php
 	}
 

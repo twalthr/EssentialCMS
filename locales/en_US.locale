@@ -1,7 +1,16 @@
 English (USA)
 English (USA)
 INTERNAL_SERVER_ERROR=An internal server error occured. Please inform the webmaster and/or visit this website again later.
-DATABASE_NOT_INITIALIZED=The database seems not to be initialized. You can create a new, empty database. Please enter a new administrator password.
+DATABASE_NOT_INITIALIZED=The database seems not to be initialized. You can create a new, empty database. Please enter a new administrator password. The password should be 8-64 characters long.
 NEW_PASSWORD=Password:
 RETYPE_PASSWORD=Retype password:
 CREATE_DATABASE=Create database
+PASSWORD_MAXLENGTH=Password is too long.
+PASSWORD_MINLENGTH=Password should be at least 8 charaters long.
+PASSWORDS_NOT_EQUAL=Entered passwords are not equal.
+UNKNOWN_ERROR=An unknown error occurred. The database could be in an undefined state now.
+INSTALLATION_SUCCESS=Installation was successful. You can now log in with your new administrator password.
+ENTER_PASSWORD=Please enter the administrator password to edit this website.
+PASSWORD=Password:
+LOGIN=Log in
+WRONG_PASSWORD=The password you have entered is invalid.

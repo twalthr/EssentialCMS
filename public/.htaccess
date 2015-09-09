@@ -1,0 +1,8 @@
+Options +FollowSymLinks -MultiViews
+
+RewriteEngine On
+RewriteBase /EssentialCMS/public/
+
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^admin/(.*)$ admin/index.php?q=$1 [NC,L]

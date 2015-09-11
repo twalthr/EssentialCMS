@@ -1,19 +1,19 @@
 <?php
 
-class ModuleAdminOverview extends BasicModule {
+class ModuleAdminPages extends BasicModule {
 
 	private $controller;
 
 	public function __construct($controller) {
 		global $CMS_VERSION;
-		parent::__construct($CMS_VERSION, "admin-overview");
+		parent::__construct($CMS_VERSION, "admin-pages");
 		$this->controller = $controller;
 	}
 
 	public function getContent($config) {
 		?>
 
-		Overview
+		Pages
 
 		<?php
 	}

@@ -18,6 +18,21 @@ class AdminController {
 		$this->layout($layoutContext);
 	}
 
+	public function layoutLoggedInContent($currentMenuIndex, $subMenuItems, $asideModules, ...$contentModules) {
+		$layoutContext = $this->generateLayoutContext();
+		$menuItems = $this->generateMenuItems();
+		$menuItems[$currentMenuIndex]->setCurrent(true);
+		$layoutContext->setMenuItems($menuItems);
+		if ($subMenuItems !== null) {
+			$layoutContext->setCurrentSubMenuItems($subMenuItems);
+		}
+		if ($asideModules !== null) {
+			$layoutContext->setAsideHeader($asideModules);
+		}
+		$layoutContext->setContentModules($contentModules);
+		$this->layout($layoutContext);
+	}
+
 	public function isInstalled() {
 		global $DB;
 		return $DB->resultQuery('
@@ -39,7 +54,7 @@ class AdminController {
 			return false;
 		}
 
-		// installation attempts
+		// installation attempt
 		if (!isset($_POST['password2'])
 			|| strlen($_POST['password']) > 64
 			|| strlen($_POST['password2']) > 64) {
@@ -103,7 +118,7 @@ class AdminController {
 			return 'UNKNOWN_ERROR';
 		}
 		foreach ($sessionInfos as $sessionInfo) {
-			if ($sessionInfo['value'] !== NULL
+			if ($sessionInfo['value'] !== null
 				&& strlen($sessionInfo['value']) == strlen($currentSid)
 				&& hash_equals($sessionInfo['value'], $currentSid)) {
 				$this->config->setUserId($sessionInfo['order']);
@@ -138,8 +153,34 @@ class AdminController {
 	// --------------------------------------------------------------------------------------------
 
 	private function generateLayoutContext() {
+		global $CMS_FULLNAME, $TR;
 		$layoutContext = new LayoutContext($this->config);
+		$layoutContext->setTitle($CMS_FULLNAME);
+		$layoutContext->setLogo('
+			<hgroup>
+				<h1>' . $CMS_FULLNAME . '</h1>
+				<h2>' . $TR->translate('WEBSITE_ADMINISTRATION') . '</h2>
+			</hgroup>
+			');
 		return $layoutContext;
+	}
+
+	private function generateMenuItems() {
+		global $PUBLIC_ROOT, $TR;
+		$menuItems = array();
+		$menuItems[] = new MenuItem($PUBLIC_ROOT . '/admin/overview', null, false, 
+			$TR->translate('MENU_OVERVIEW'), null);
+		$menuItems[] = new MenuItem($PUBLIC_ROOT . '/admin/pages', null, false, 
+			$TR->translate('MENU_PAGES'), null);
+		$menuItems[] = new MenuItem($PUBLIC_ROOT . '/admin/feedback', null, false, 
+			$TR->translate('MENU_FEEDBACK'), null);
+		$menuItems[] = new MenuItem($PUBLIC_ROOT . '/admin/media', null, false, 
+			$TR->translate('MENU_MEDIA'), null);
+		$menuItems[] = new MenuItem($PUBLIC_ROOT . '/admin/property', null, false, 
+			$TR->translate('MENU_PROPERTY'), null);
+		$menuItems[] = new MenuItem($PUBLIC_ROOT . '/admin/logout', null, false, 
+			$TR->translate('MENU_LOGOUT'), null);
+		return $menuItems;
 	}
 
 	private function layout($layoutContext) {

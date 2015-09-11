@@ -20,11 +20,15 @@ class MenuItem {
 	}
 
 	public function hasHoverTitle() {
-		return Utils::hasStringContents($this->hoverTitle);
+		return Utils::hasStringContent($this->hoverTitle);
 	}
 
 	public function getHoverTitle() {
 		return $this->hoverTitle;
+	}
+
+	public function setCurrent($isCurrent) {
+		return $this->isCurrent = $isCurrent;
 	}
 
 	public function isCurrent() {
@@ -36,7 +40,7 @@ class MenuItem {
 	}
 
 	public function hasChild() {
-		return is_array($children) && !empty($children);
+		return is_array($this->children) && !empty($this->children);
 	}
 
 	public function getChildren() {

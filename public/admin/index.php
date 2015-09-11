@@ -36,10 +36,6 @@ switch ($querySplitted[0]) {
 			$adminController->layoutContent($module);
 		}
 		break;
-	case 'overview':
-		checkLogin($adminController);
-		$adminController->layoutContent(new ModuleAdminOverview());
-		break;
 	case 'install':
 		$installed = $adminController->install();
 		// not installed
@@ -53,6 +49,15 @@ switch ($querySplitted[0]) {
 			$adminController->layoutContent($module);
 		}
 		break;
+	case 'overview':
+		checkLogin($adminController);
+		$adminController->layoutLoggedInContent(0, null, null, new ModuleAdminOverview($adminController));
+		break;
+	case 'pages':
+		checkLogin($adminController);
+		$adminController->layoutLoggedInContent(1, null, null, new ModuleAdminPages($adminController));
+		break;
+	
 	default:
 		echo "Invalid command.";
 }

@@ -17,89 +17,91 @@
 		<?php endif; ?>
 	</head>
 	<body>
-		<header>
-			<?php if ($layoutContext->hasLogo()) : ?>
-			<div class="logo">
-				<?php echo $layoutContext->getLogo(); ?>
-			</div>
-			<?php endif; ?>
-			<?php if ($layoutContext->hasMenuItems()) : ?>
-			<nav class="main-menu">
-				<ul>
-				<?php foreach ($layoutContext->getMenuItems() as $item) : ?>
-					<li>
-						<a href="<?php echo $item->getUrl(); ?>"<?php if ($item->hasHoverTitle()) : ?> title="<?php echo $item->getHoverTitle(); ?>"<?php endif; ?><?php if ($item->isCurrent()) : ?> class="current"<?php endif; ?>><?php echo $item->getTitle(); ?></a>
-						<?php if ($item->hasChild()) : ?>
-						<ul class="sub-menu">
-							<?php foreach ($item->getChildren() as $child) : ?>
-								<li><a href="<?php echo $child->getUrl(); ?>"<?php if ($child->hasHoverTitle()) : ?> title="<?php echo $child->getHoverTitle(); ?>"<?php endif; ?><?php if ($child->isCurrent()) : ?> class="current"<?php endif; ?>><?php echo $child->getTitle(); ?></a><li>
-							<?php endforeach; ?>
-						</ul>
-						<?php endif; ?>
-					</li>
-				<?php endforeach; ?>
-				</ul>
-			</nav>
-			<?php if ($layoutContext->hasCurrentSubMenuItems()) : ?>
-			<nav class="current-sub-menu">
-				<ul>
-					<?php foreach ($item->getCurrentSubMenuItems() as $currentSubItem) : ?>
-						<li><a href="<?php echo $currentSubItem->getUrl(); ?>"<?php if ($currentSubItem->hasHoverTitle()) : ?> title="<?php echo $currentSubItem->getHoverTitle(); ?>"<?php endif; ?><?php if ($currentSubItem->isCurrent()) : ?> class="current"<?php endif; ?>><?php echo $currentSubItem->getTitle(); ?></a><li>
-					<?php endforeach; ?>
-				</ul>
+		<div class="page">
+			<header>
+				<?php if ($layoutContext->hasLogo()) : ?>
+				<div class="logo">
+					<?php echo $layoutContext->getLogo(); ?>
+				</div>
 				<?php endif; ?>
-			</nav>
-			<?php endif; ?>
-			<?php if ($layoutContext->hasAsideHeader()) : ?>
-			<aside>
-				<?php echo $layoutContext->getAsideHeader(); ?>
-			</aside>
-			<?php endif; ?>
-		</header>
-		<?php if ($layoutContext->hasBeforeContentModules()) : ?>
-		<section class="before-content">
-			<?php foreach ($layoutContext->getBeforeContentModules() as $order => $module) : ?>
-			<div class="module <?php echo $module->getName(); ?> order<?php echo $order; ?>" id="bc-<?php echo $module->getName()."-".$order; ?>">
-				<?php echo $module->getContent($layoutContext->getConfig()); ?>
-			</div>
-			<?php endforeach; ?>
-		</section>
-		<?php endif; ?>
-		<main>
-			<?php if ($layoutContext->hasContentModules()) : ?>
-			<section class="content">
-				<?php foreach ($layoutContext->getContentModules() as $order => $module) : ?>
-				<div class="module <?php echo $module->getName(); ?> order<?php echo $order; ?>" id="c-<?php echo $module->getName()."-".$order; ?>">
+				<?php if ($layoutContext->hasMenuItems()) : ?>
+				<nav class="main-menu">
+					<ul>
+					<?php foreach ($layoutContext->getMenuItems() as $item) : ?>
+						<li>
+							<a href="<?php echo $item->getUrl(); ?>"<?php if ($item->hasHoverTitle()) : ?> title="<?php echo $item->getHoverTitle(); ?>"<?php endif; ?><?php if ($item->isCurrent()) : ?> class="current"<?php endif; ?>><?php echo $item->getTitle(); ?></a>
+							<?php if ($item->hasChild()) : ?>
+							<ul class="sub-menu">
+								<?php foreach ($item->getChildren() as $child) : ?>
+									<li><a href="<?php echo $child->getUrl(); ?>"<?php if ($child->hasHoverTitle()) : ?> title="<?php echo $child->getHoverTitle(); ?>"<?php endif; ?><?php if ($child->isCurrent()) : ?> class="current"<?php endif; ?>><?php echo $child->getTitle(); ?></a><li>
+								<?php endforeach; ?>
+							</ul>
+							<?php endif; ?>
+						</li>
+					<?php endforeach; ?>
+					</ul>
+				</nav>
+				<?php if ($layoutContext->hasCurrentSubMenuItems()) : ?>
+				<nav class="current-sub-menu">
+					<ul>
+						<?php foreach ($item->getCurrentSubMenuItems() as $currentSubItem) : ?>
+							<li><a href="<?php echo $currentSubItem->getUrl(); ?>"<?php if ($currentSubItem->hasHoverTitle()) : ?> title="<?php echo $currentSubItem->getHoverTitle(); ?>"<?php endif; ?><?php if ($currentSubItem->isCurrent()) : ?> class="current"<?php endif; ?>><?php echo $currentSubItem->getTitle(); ?></a><li>
+						<?php endforeach; ?>
+					</ul>
+					<?php endif; ?>
+				</nav>
+				<?php endif; ?>
+				<?php if ($layoutContext->hasAsideHeader()) : ?>
+				<aside>
+					<?php echo $layoutContext->getAsideHeader(); ?>
+				</aside>
+				<?php endif; ?>
+			</header>
+			<?php if ($layoutContext->hasBeforeContentModules()) : ?>
+			<section class="before-content">
+				<?php foreach ($layoutContext->getBeforeContentModules() as $order => $module) : ?>
+				<div class="module <?php echo $module->getName(); ?> order<?php echo $order; ?>" id="bc-<?php echo $module->getName()."-".$order; ?>">
 					<?php echo $module->getContent($layoutContext->getConfig()); ?>
 				</div>
 				<?php endforeach; ?>
 			</section>
 			<?php endif; ?>
-			<?php if ($layoutContext->hasAsideContentModules()) : ?>
-			<aside class="aside-content">
-				<?php foreach ($layoutContext->getAsideContentModules() as $order => $module) : ?>
-				<div class="module <?php echo $module->getName(); ?> order<?php echo $order; ?>" id="c-<?php echo $module->getName()."-".$order; ?>">
+			<main>
+				<?php if ($layoutContext->hasContentModules()) : ?>
+				<section class="content">
+					<?php foreach ($layoutContext->getContentModules() as $order => $module) : ?>
+					<div class="module <?php echo $module->getName(); ?> order<?php echo $order; ?>" id="c-<?php echo $module->getName()."-".$order; ?>">
+						<?php echo $module->getContent($layoutContext->getConfig()); ?>
+					</div>
+					<?php endforeach; ?>
+				</section>
+				<?php endif; ?>
+				<?php if ($layoutContext->hasAsideContentModules()) : ?>
+				<aside class="aside-content">
+					<?php foreach ($layoutContext->getAsideContentModules() as $order => $module) : ?>
+					<div class="module <?php echo $module->getName(); ?> order<?php echo $order; ?>" id="c-<?php echo $module->getName()."-".$order; ?>">
+						<?php echo $module->getContent($layoutContext->getConfig()); ?>
+					</div>
+					<?php endforeach; ?>
+				</aside>
+				<?php endif; ?>
+			</main>
+			<?php if ($layoutContext->hasAfterContentModules()) : ?>
+			<section class="after-content">
+				<?php foreach ($layoutContext->getAfterContentModules() as $order => $module) : ?>
+				<div class="module <?php echo $module->getName(); ?> order<?php echo $order; ?>" id="ac-<?php echo $module->getName()."-".$order; ?>">
 					<?php echo $module->getContent($layoutContext->getConfig()); ?>
 				</div>
 				<?php endforeach; ?>
-			</aside>
+			</section>
 			<?php endif; ?>
-		</main>
-		<?php if ($layoutContext->hasAfterContentModules()) : ?>
-		<section class="after-content">
-			<?php foreach ($layoutContext->getAfterContentModules() as $order => $module) : ?>
-			<div class="module <?php echo $module->getName(); ?> order<?php echo $order; ?>" id="ac-<?php echo $module->getName()."-".$order; ?>">
-				<?php echo $module->getContent($layoutContext->getConfig()); ?>
-			</div>
-			<?php endforeach; ?>
-		</section>
-		<?php endif; ?>
-		<footer>
-			<?php if ($layoutContext->hasFooter()) : ?>
-				<?php echo $layoutContext->getFooter(); ?>
-			<?php else : ?>
-				&copy; <?php echo date('Y'); ?> Copyright - Managed and generated by <a href="<?php echo $layoutContext->getConfig()->getCmsUrl(); ?>"><?php echo $layoutContext->getConfig()->getCmsFullname(); ?></a>.
-			<?php endif; ?>
-		</footer>
+			<footer>
+				<?php if ($layoutContext->hasFooter()) : ?>
+					<?php echo $layoutContext->getFooter(); ?>
+				<?php else : ?>
+					&copy; <?php echo date('Y'); ?> Copyright - Managed and generated by <a href="<?php echo $layoutContext->getConfig()->getCmsUrl(); ?>"><?php echo $layoutContext->getConfig()->getCmsFullname(); ?></a>.
+				<?php endif; ?>
+			</footer>
+		</div>
 	</body>
 </html>

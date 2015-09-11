@@ -18,6 +18,6 @@ MENU_OVERVIEW=Overview
 MENU_PAGES=Pages
 MENU_FEEDBACK=Feedback
 MENU_MEDIA=Media
-MENU_PROPERTY=Properties
+MENU_SETTINGS=Settings
 MENU_LOGOUT=Log out
 WEBSITE_ADMINISTRATION=Website Administration Backend

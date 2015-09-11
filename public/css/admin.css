@@ -118,7 +118,28 @@ body {
 	width:100%;
 }
 
-body>header {
+html, body, .page {
+	height: 100%;
+}
+
+body>.page {
+	height: auto;
+	min-height: 100%;
+	position: relative;
+}
+
+a {
+	text-decoration: none;
+	color: #2A2A2A;
+	font-weight: 600;
+}
+
+a:hover, a.current {
+	text-decoration: underline;
+	color: #000000;
+}
+
+body>.page>header {
 	width: 100%;
 	padding: 15px 0 15px 0;
 	max-width: 978px;
@@ -126,11 +147,70 @@ body>header {
 	margin-right: auto;
 }
 
-body>header .logo h1 {
+body>.page>header:after {
+	clear:both;
+	content:".";
+	display:block;
+	height:0;
+	line-height:0;
+	visibility:hidden;
+}
+
+body>.page>header .logo {
+	float: left;
+	height: 63px;
+	display: table;
+}
+
+body>.page>header hgroup {
+	display: table-cell;
+	vertical-align: middle;
+}
+
+body>.page>header .logo h1 {
 	font-size: 18px;
 	font-weight: 300;
 }
 
-body>header .logo h2 {
+body>.page>header .logo h2 {
 	font-weight: 300;
+}
+
+body>.page>header nav {
+	float: right;
+}
+
+body>.page>header ul {
+	margin-top: 20px;
+}
+
+body>.page>header li {
+	margin-left: 45px;
+	padding-bottom: 20px;
+	float: left;
+	font-size: 15px;
+}
+
+body>.page>main {
+	width: 100%;
+	max-width: 978px;
+	margin: 65px auto 0;
+}
+
+body>.page>footer {
+	position: absolute;
+	bottom: 0;
+	width: 100%;
+	padding: 20px 0 20px 0;
+	background: #272B32;
+	border-top: 5px solid #2F353D;
+	box-shadow: inset #3D4551 0 1px 0;
+	-webkit-box-shadow: inset #3D4551 0 1px 0;
+	-moz-box-shadow: inset #3D4551 0 1px 0;
+	color: #99A7BD;
+	text-align: center;
+}
+
+body>.page>footer a {
+	color: #99A7BD;
 }

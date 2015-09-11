@@ -176,8 +176,8 @@ class AdminController {
 			$TR->translate('MENU_FEEDBACK'), null);
 		$menuItems[] = new MenuItem($PUBLIC_ROOT . '/admin/media', null, false, 
 			$TR->translate('MENU_MEDIA'), null);
-		$menuItems[] = new MenuItem($PUBLIC_ROOT . '/admin/property', null, false, 
-			$TR->translate('MENU_PROPERTY'), null);
+		$menuItems[] = new MenuItem($PUBLIC_ROOT . '/admin/settings', null, false, 
+			$TR->translate('MENU_SETTINGS'), null);
 		$menuItems[] = new MenuItem($PUBLIC_ROOT . '/admin/logout', null, false, 
 			$TR->translate('MENU_LOGOUT'), null);
 		return $menuItems;

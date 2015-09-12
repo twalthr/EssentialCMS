@@ -22,3 +22,5 @@ MENU_SETTINGS=Einstellungen
 MENU_LOGOUT=Ausloggen
 WEBSITE_ADMINISTRATION=Webseiten-Administration
 GOTO_LOGIN=Zum Login
+MENU=Menü
+ALL_PAGES=Alle Seiten

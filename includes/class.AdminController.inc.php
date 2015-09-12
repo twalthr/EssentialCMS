@@ -87,6 +87,18 @@ class AdminController {
 					`order` INT(10) NOT NULL,
 					PRIMARY KEY (`key`)
 				)
+			') && $DB->successQuery('
+				CREATE TABLE IF NOT EXISTS `MenuPaths` (
+					`mpid` INT(10) NOT NULL,
+					`parent` INT(10) NULL,
+					`title` VARCHAR(128) NOT NULL,
+					`hoverTitle` VARCHAR(128) NULL,
+					`externalId` VARCHAR(256) NOT NULL,
+					`destPage` INT(10) NULL,
+					`destLink` VARCHAR(256) NULL,
+					`options` INT(10) NOT NULL,
+					PRIMARY KEY (`mpid`)
+				)
 			') && $DB->impactQuery('
 				INSERT INTO `Configuration` (`key`, `value`, `order`) 
 				VALUES ("user", "admin", 0)

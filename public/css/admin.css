@@ -275,8 +275,11 @@ body>.page>header li {
 
 body>.page>main {
 	width: 100%;
+}
+
+body>.page>main section.content {
 	max-width: 978px;
-	margin: 65px auto 0;
+	margin: 45px auto 0;
 }
 
 body>.page>footer {
@@ -333,4 +336,20 @@ body>.page>*:nth-last-child(2) {
 
 .dialog-box .fields, .dialog-box input[type='submit'], .dialog-box button {
 	margin: auto;
+}
+
+section.content section h1 {
+	font-size: 21px;
+	font-weight: 600;
+	line-height: normal;
+	border-bottom: 1px solid #DCDCDC;
+	padding-left: 5px;
+}
+
+section.content section {
+	margin-top: 45px;
+}
+
+section.content section:first-child {
+	margin-top: 0;
 }

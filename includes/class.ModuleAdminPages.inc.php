@@ -12,6 +12,12 @@ class ModuleAdminPages extends BasicModule {
 
 	public function getContent($config) {
 		?>
+		<section>
+			<h1><?php $this->text('MENU'); ?></h1>
+		</section>
+		<section>
+			<h1><?php $this->text('ALL_PAGES'); ?></h1>
+		</section>
 
 		Pages
 

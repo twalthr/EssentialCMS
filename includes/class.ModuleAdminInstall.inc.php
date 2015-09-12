@@ -20,6 +20,7 @@ class ModuleAdminInstall extends BasicModule {
 	<div class="dialog-success-message">
 		<?php $this->text('INSTALLATION_SUCCESS'); ?>
 	</div>
+	<a href="<?php echo $config->getPublicRoot()?>/admin" class="goto"><?php $this->text('GOTO_LOGIN'); ?></a>
 <?php else : ?>
 <?php if (!empty($this->state)) : ?>
 	<div class="dialog-error-message">
@@ -30,10 +31,16 @@ class ModuleAdminInstall extends BasicModule {
 		<?php $this->text('DATABASE_NOT_INITIALIZED'); ?>
 	</div>
 	<form method="post" action="<?php echo $config->getPublicRoot()?>/admin/install">
-		<label for="password"><?php $this->text('NEW_PASSWORD'); ?></label>
-		<input type="password" name="password" id="password" pattern=".{8,64}" required />
-		<label for="password2"><?php $this->text('RETYPE_PASSWORD'); ?></label>
-		<input type="password" name="password2" id="password2" pattern=".{8,64}" required />
+		<div class="fields">
+			<div class="field">
+				<label for="password"><?php $this->text('NEW_PASSWORD'); ?></label>
+				<input type="password" name="password" id="password" pattern=".{8,64}" required />
+			</div>
+			<div class="field">
+				<label for="password2"><?php $this->text('RETYPE_PASSWORD'); ?></label>
+				<input type="password" name="password2" id="password2" pattern=".{8,64}" required />
+			</div>
+		</div>
 		<input type="submit" value="<?php $this->text('CREATE_DATABASE'); ?>" />
 	</form>
 <?php endif; ?>

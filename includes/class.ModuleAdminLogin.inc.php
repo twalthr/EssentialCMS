@@ -25,8 +25,12 @@ class ModuleAdminLogin extends BasicModule {
 		<?php $this->text('ENTER_PASSWORD'); ?>
 	</div>
 	<form method="post">
-		<label for="password"><?php $this->text('PASSWORD'); ?></label>
-		<input type="password" name="password" id="password" pattern=".{8,64}" required />
+		<div class="fields">
+			<div class="field">
+				<label for="password"><?php $this->text('PASSWORD'); ?></label>
+				<input type="password" name="password" id="password" pattern=".{8,64}" required />
+			</div>
+		</div>
 		<input type="submit" value="<?php $this->text('LOGIN'); ?>" />
 	</form>
 </div>

@@ -134,10 +134,92 @@ a {
 	font-weight: 600;
 }
 
+a.goto::after {
+	content: '▶';
+	font-size: 9px;
+	padding-left: 5px;
+	vertical-align: top;
+	line-height: 21px;
+	display: inline-block;
+	color: #2A2A2A;
+}
+
+a.goto:hover::after {
+	color: #000000;
+}
+
 a:hover, a.current {
 	text-decoration: underline;
 	color: #000000;
 }
+
+input[type='submit'], button {
+	background-color: #EAEAEA;
+	border: 1px solid #DCDCDC;
+	line-height: 23px;
+	font-weight: 600;
+	color: #2A2A2A;
+	padding-left: 10px;
+	padding-right: 10px;
+	display: block;
+	margin-bottom: 20px;
+}
+
+input[type='submit']:last-child, button:last-child {
+	margin-bottom: 0;
+}
+
+input[type='submit']:hover, button:hover {
+	background-color: #CCCCCC;
+	border: 1px solid #B5B4B4;
+	color: #000000;
+	cursor: pointer;
+}
+
+input[type='text'], input[type='password'], input[type='email'] {
+	background-color: #FFFFFF;
+	line-height: 23px;
+	color: #494949;
+	padding-left: 5px;
+	padding-right: 5px;
+	border: 1px solid #DCDCDC;
+	margin-bottom: 20px;
+	width: 200px;
+}
+
+input::after {
+	clear: both;
+	content: '.';
+	visibility: hidden;
+}
+
+input[type='text']:hover, input[type='password']:hover, input[type='email']:hover {
+	border: 1px solid #B5B4B4;
+}
+
+input[type='text']:focus, input[type='password']:focus, input[type='email']:focus {
+	border: 1px solid #B5B4B4;
+	color: #000000;
+}
+
+label {
+	font-weight: 600;
+	padding-right: 20px;
+}
+
+form .fields {
+	display: table;
+}
+
+form .fields .field {
+	display: table-row;
+}
+
+form .fields .field>* {
+	display: table-cell;
+	text-align: left;
+}
+
 
 body>.page>header {
 	width: 100%;
@@ -213,4 +295,42 @@ body>.page>footer {
 
 body>.page>footer a {
 	color: #99A7BD;
+}
+
+body>.page>*:nth-last-child(2) {
+	padding-bottom: 88px;
+}
+
+.dialog-box {
+	max-width: 500px;
+	padding: 20px;
+	border: 1px solid #DCDCDC;
+	margin: 0 auto;
+	text-align: center;
+}
+
+.dialog-box .dialog-message, .dialog-box .dialog-error-message, .dialog-box .dialog-success-message {
+	margin-bottom: 20px;
+}
+
+.dialog-box .dialog-message:last-child, .dialog-box .dialog-error-message:last-child, .dialog-box .dialog-success-message:last-child {
+	margin-bottom: 0px
+}
+
+.dialog-box .dialog-error-message, .dialog-box .dialog-success-message {
+	padding: 7px;
+}
+
+.dialog-box .dialog-error-message {
+	background-color: #E8B5B5;
+	border: 1px solid #E49494;
+}
+
+.dialog-box .dialog-success-message {
+	background-color: #B5E8B9;
+	border: 1px solid #8BD291;
+}
+
+.dialog-box .fields, .dialog-box input[type='submit'], .dialog-box button {
+	margin: auto;
 }

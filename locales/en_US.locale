@@ -21,3 +21,4 @@ MENU_MEDIA=Media
 MENU_SETTINGS=Settings
 MENU_LOGOUT=Log out
 WEBSITE_ADMINISTRATION=Website Administration Backend
+GOTO_LOGIN=Go to login

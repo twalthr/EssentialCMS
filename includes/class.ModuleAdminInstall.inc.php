@@ -6,7 +6,7 @@ class ModuleAdminInstall extends BasicModule {
 
 	public function __construct() {
 		global $CMS_VERSION;
-		parent::__construct($CMS_VERSION, "admin-install");
+		parent::__construct($CMS_VERSION, 'admin-install');
 	}
 
 	public function setState($state) {

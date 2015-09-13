@@ -165,6 +165,40 @@ input[type='submit'], button {
 	margin-bottom: 20px;
 }
 
+input[type='checkbox'] {
+	display: none;
+}
+
+input[type='checkbox'] + label.checkbox {
+	display: inline-block;
+	padding: 0;
+	width: 12px;
+	height: 12px;
+	background-color: #EAEAEA;
+	border: 1px solid #DCDCDC;
+	cursor: pointer;
+	text-indent: 100%;
+	white-space: nowrap;
+	overflow: hidden;
+	margin-bottom: -2px;
+	margin-right: 20px;
+}
+
+input[type='checkbox'] + label.checkbox:hover {
+	background-color: #CCCCCC;
+	border: 1px solid #B5B4B4;
+}
+
+input[type='checkbox']:checked + label.checkbox {
+	background-color: #999999;
+	border: 1px solid #B5B4B4;
+}
+
+input[type='checkbox']:checked + label.checkbox:hover {
+	background-color: #777777;
+	border: 1px solid #B5B4B4;
+}
+
 input[type='submit']:last-child, button:last-child {
 	margin-bottom: 0;
 }
@@ -338,12 +372,18 @@ body>.page>*:nth-last-child(2) {
 	margin: auto;
 }
 
+section.content section>* {
+	margin-left: 5px;
+}
+
 section.content section h1 {
 	font-size: 21px;
 	font-weight: 600;
 	line-height: normal;
 	border-bottom: 1px solid #DCDCDC;
 	padding-left: 5px;
+	margin-left: 0;
+	margin-bottom: 20px;
 }
 
 section.content section {
@@ -352,4 +392,24 @@ section.content section {
 
 section.content section:first-child {
 	margin-top: 0;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/*                                      Admin pages style                                        */
+/* --------------------------------------------------------------------------------------------- */
+div.siteMap a {
+	font-size: 15px;
+}
+
+div.siteMap .subLevel li {
+	padding-left: 20px;
+}
+
+div.siteMap .topLevel li {
+	float: left;
+	margin-right: 20px;
+}
+
+div.siteMap + * {
+	clear: both;
 }

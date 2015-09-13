@@ -89,7 +89,7 @@ class AdminController {
 				)
 			') && $DB->successQuery('
 				CREATE TABLE IF NOT EXISTS `MenuPaths` (
-					`mpid` INT(10) NOT NULL,
+					`mpid` INT(10) NOT NULL AUTO_INCREMENT,
 					`parent` INT(10) NULL,
 					`title` VARCHAR(128) NOT NULL,
 					`hoverTitle` VARCHAR(128) NULL,
@@ -160,6 +160,14 @@ class AdminController {
 			return true;
 		}
 		return 'WRONG_PASSWORD';
+	}
+
+	public function verifyLogin() {
+		global $PUBLIC_ROOT;
+		if ($this->login() !== true) {
+			header('Location: ' . $PUBLIC_ROOT . '/admin');
+			exit;
+		}
 	}
 
 	// --------------------------------------------------------------------------------------------

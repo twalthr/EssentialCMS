@@ -2,12 +2,10 @@
 
 class ModuleAdminOverview extends BasicModule {
 
-	private $controller;
-
-	public function __construct($controller) {
+	public function __construct(&$controller) {
 		global $CMS_VERSION;
-		parent::__construct($CMS_VERSION, "admin-overview");
-		$this->controller = $controller;
+		parent::__construct($CMS_VERSION, 'admin-overview');
+		$controller->verifyLogin();
 	}
 
 	public function getContent($config) {

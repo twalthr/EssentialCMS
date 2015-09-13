@@ -24,3 +24,4 @@ WEBSITE_ADMINISTRATION=Website Administration Backend
 GOTO_LOGIN=Go to login
 MENU=Menu
 ALL_PAGES=All Pages
+NO_MENU_ITEMS=No menu items are defined yet.

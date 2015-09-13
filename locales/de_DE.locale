@@ -24,3 +24,4 @@ WEBSITE_ADMINISTRATION=Webseiten-Administration
 GOTO_LOGIN=Zum Login
 MENU=Menü
 ALL_PAGES=Alle Seiten
+NO_MENU_ITEMS=Im Moment sind keine Menueinträge definiert.

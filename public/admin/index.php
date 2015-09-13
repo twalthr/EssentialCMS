@@ -50,26 +50,14 @@ switch ($querySplitted[0]) {
 		}
 		break;
 	case 'overview':
-		checkLogin($adminController);
 		$adminController->layoutLoggedInContent(0, null, null, new ModuleAdminOverview($adminController));
 		break;
 	case 'pages':
-		checkLogin($adminController);
 		$adminController->layoutLoggedInContent(1, null, null, new ModuleAdminPages($adminController));
 		break;
 	
 	default:
 		echo "Invalid command.";
-}
-
-// ------------------------------------------------------------------------------------------------
-
-function checkLogin($adminController) {
-	global $PUBLIC_ROOT;
-	if ($adminController->login() !== true) {
-		header('Location: ' . $PUBLIC_ROOT . '/admin');
-		exit;
-	}
 }
 
 ?>

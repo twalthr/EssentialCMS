@@ -71,10 +71,10 @@ class AdminController {
 
 		$result = $DB->successQuery('
 				CREATE TABLE IF NOT EXISTS `Pages` (
-					`pid` INT(10) NOT NULL,
-					`title` VARCHAR(128) NULL,
-					`externalId` VARCHAR(64) NOT NULL,
-					`mainMenu` INT(10) NULL,
+					`pid` INT(10) NOT NULL AUTO_INCREMENT,
+					`title` VARCHAR(256) NOT NULL,
+					`hoverTitle` VARCHAR(256) NULL,
+					`externalId` VARCHAR(256) NULL,
 					`options` INT(10) NOT NULL,
 					`lastChanged` TIMESTAMP NOT NULL,
 					`externalLastChanged` TIMESTAMP NULL,
@@ -92,8 +92,8 @@ class AdminController {
 					`mpid` INT(10) NOT NULL AUTO_INCREMENT,
 					`parent` INT(10) NULL,
 					`order` INT(10) NOT NULL,
-					`title` VARCHAR(128) NOT NULL,
-					`hoverTitle` VARCHAR(128) NULL,
+					`title` VARCHAR(256) NOT NULL,
+					`hoverTitle` VARCHAR(256) NULL,
 					`externalId` VARCHAR(256) NOT NULL,
 					`destPage` INT(10) NULL,
 					`destLink` VARCHAR(256) NULL,

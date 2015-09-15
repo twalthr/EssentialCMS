@@ -67,4 +67,6 @@ if (!$success) {
 define('MENUPATHS_OPTION_PRIVATE', 1);
 define('MENUPATHS_OPTION_BLANK', 2);
 
+define('PAGES_OPTION_PRIVATE', 1);
+
 ?>

@@ -454,14 +454,43 @@ p.empty {
 	text-align: center;
 }
 
+.rowLike:last-child {
+	border-bottom: 1px dotted #DCDCDC;
+}
+
+.rowLike {
+	border-top: 1px dotted #DCDCDC;
+	padding: 5px;
+}
+
+.rowLike::after {
+	content: '';
+	display: table;
+	clear: both;
+}
+
+.rowLike:nth-child(2) {
+	background-color: #FAFAFA;
+}
+
+.rowAdditionalInfo {
+	display: block;
+	float: right;
+	color: #DCDCDC;
+}
+
 /* --------------------------------------------------------------------------------------------- */
 /*                                      Admin pages style                                        */
 /* --------------------------------------------------------------------------------------------- */
-div.siteMap a {
+div.siteMap a, div.pageList a {
 	font-size: 15px;
 }
 
-div.siteMap a.private {
+div.pageList {
+	margin-bottom: 20px;
+}
+
+div.siteMap a.private, div.pageList a.private {
 	text-decoration: line-through;
 }
 

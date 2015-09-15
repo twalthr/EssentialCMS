@@ -55,6 +55,9 @@ switch ($querySplitted[0]) {
 	case 'pages':
 		$adminController->layoutLoggedInContent(1, null, null, new ModuleAdminPages($adminController));
 		break;
+	case 'new-page':
+		$adminController->layoutLoggedInContent(1, null, null, new ModuleAdminEditPage($adminController));
+		break;
 	
 	default:
 		echo "Invalid command.";

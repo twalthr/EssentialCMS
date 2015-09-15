@@ -41,3 +41,5 @@ DELETE=Delete
 MENU_ITEMS_VISIBILITY_CHANGED=Visibility successfully changed.
 MENU_ITEMS_DELETED=Items successfully deleted.
 MENU_ITEMS_NO_RECURSIVE_MOVE=An item cannot be moved to or into itself, or subitems of itelf.
+MENU_ITEMS_NO_MULTILEVEL_MOVE=Items of different menu levels can only be moved as an entire group.
+MENU_ITEMS_COPY_MOVE_SUCCESSFUL=Items successfully moved/copied.

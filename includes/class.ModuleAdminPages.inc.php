@@ -25,7 +25,7 @@ class ModuleAdminPages extends BasicModule {
 			$this->menu = false;
 		}
 		if ($this->menu !== false) {
-			$this->addSubMenu($this->menu);
+			$this->addSubMenuForEachItem($this->menu);
 		}
 	}
 
@@ -38,13 +38,22 @@ class ModuleAdminPages extends BasicModule {
 			return;
 		}
 
-		$menuitems = $_POST['menuitem'];
+		// normalize menuitems
+		$uniqueMenuitems = array_unique($_POST['menuitem']);
+		// check for existence of all menuitems
+		foreach ($uniqueMenuitems as $menuitem) {
+			if(!$DB->resultQuery('SELECT `mpid` FROM `MenuPaths` WHERE `mpid`=?', 'i', $menuitem)) {
+				return;
+			}
+		}
+
+		// execute operation
 		$operation = $_POST['operation'];
 		switch ($operation) {
 			case 'public':
-				$result = false;
-				foreach ($menuitems as $menuitem) {
-					$result |= $DB->impactQuery('
+				$result = true;
+				foreach ($uniqueMenuitems as $menuitem) {
+					$result &= $DB->impactQuery('
 						UPDATE `MenuPaths`
 						SET `options` = `options` & ~' . MENUPATHS_OPTION_PRIVATE . '
 						WHERE `mpid`=?', 'i', $menuitem);
@@ -56,9 +65,9 @@ class ModuleAdminPages extends BasicModule {
 				}
 				break;
 			case 'private':
-				$result = false;
-				foreach ($menuitems as $menuitem) {
-					$result |= $DB->impactQuery('
+				$result = true;
+				foreach ($uniqueMenuitems as $menuitem) {
+					$result &= $DB->impactQuery('
 						UPDATE `MenuPaths`
 						SET `options` = `options` | ' . MENUPATHS_OPTION_PRIVATE . '
 						WHERE `mpid`=?', 'i', $menuitem);
@@ -75,26 +84,17 @@ class ModuleAdminPages extends BasicModule {
 					|| !isset($_POST['target'])) {
 					return;
 				}
-
 				$operationTarget = $_POST['operationTarget'];
-				$target = $DB->valuesQuery('
+
+				// normalize target
+				$target = $DB->valueQuery('
 					SELECT `mpid`, `parent`, `order`
 					FROM `MenuPaths`
 					WHERE `mpid`=?',
 					'i', $_POST['target']);
 				// check for existence of target
-				if ($target === false || empty($target)) {
+				if ($target === false) {
 					return;
-				}
-				$target = $target[0];
-
-				$uniqueMenuitems = array_unique($menuitems);
-
-				// check for existence of all menuitems
-				foreach ($uniqueMenuitems as $menuitem) {
-					if(!$DB->resultQuery('SELECT `mpid` FROM `MenuPaths` WHERE `mpid`=?', 'i', $menuitem)) {
-						return;
-					}
 				}
 
 				// process one item after the other
@@ -105,14 +105,17 @@ class ModuleAdminPages extends BasicModule {
 						continue;
 					}
 
+					$group = [];
 					$group[] = intval($menuitem);
-					$this->getIdsOfSubMenuItem($group, $menuitem);
+					$this->addIdsOfSubMenuItems($group, $menuitem);
 
 					// check that target is not part of the group
-					if (in_array($target['mpid'], $group)) {
-						$this->state = false;
-						$this->message = 'MENU_ITEMS_NO_RECURSIVE_MOVE';
-						return;
+					if ($operation === 'move') {
+						if (in_array($target['mpid'], $group)) {
+							$this->state = false;
+							$this->message = 'MENU_ITEMS_NO_RECURSIVE_MOVE';
+							return;
+						}
 					}
 
 					// if single element or entire group (parent with children) is selected
@@ -141,32 +144,45 @@ class ModuleAdminPages extends BasicModule {
 				}
 				break;
 			case 'delete':
-				$result = false;
-				foreach ($menuitems as $menuitem) {
-					$result |= $DB->impactQuery('
-						DELETE FROM `MenuPaths`
-						WHERE `mpid`=?', 'i', $menuitem);
+				$result = true;
+				$processed = [];
+				// process one item after the other
+				foreach ($uniqueMenuitems as $menuitem) {
+					// skip already processed items
+					if (in_array($menuitem, $processed)) {
+						continue;
+					}
+					$group = [];
+					$group[] = intval($menuitem);
+					$this->addIdsOfSubMenuItems($group, $menuitem);
+					$result &= $this->deleteGroup($group);
 				}
-				// TODO UPDATE ORDER
 				if ($result) {
 					$this->state = true;
 					$this->message = 'MENU_ITEMS_DELETED';
 				}
 			break;
-			default:
-			return;
 		}
 	}
 
 	private function moveGroup(&$group, &$target, $mode) {
-		global $DB;
 		$result = true;
 		$result &= $this->copyGroup($group, $target, $mode);
-		$topElement = $DB->valuesQuery('
+		$result &= $this->deleteGroup($group);
+		return $result;
+	}
+
+	private function deleteGroup(&$group) {
+		global $DB;
+		$topElement = $DB->valueQuery('
 			SELECT `mpid`, `parent`, `order`
 			FROM `MenuPaths` WHERE `mpid`=?',
-			'i', $group[0])[0];
+			'i', $group[0]);
+		if ($topElement === false) {
+			return false;
+		}
 		
+		$result = true;
 		// delete the group
 		foreach ($group as $mpid) {
 			$result &= $DB->impactQuery('DELETE FROM `MenuPaths` WHERE `mpid`=?', 'i', $mpid);
@@ -190,9 +206,13 @@ class ModuleAdminPages extends BasicModule {
 	private function copyGroup(&$group, &$target, $mode) {
 		global $DB;
 		// load group
-		$topElement = $DB->valuesQuery('SELECT * FROM `MenuPaths` WHERE `mpid`=?', 'i', $group[0])[0];
+		$topElement = $DB->valueQuery('SELECT * FROM `MenuPaths` WHERE `mpid`=?', 'i', $group[0]);
+		if ($topElement === false) {
+			return false;
+		}
+		$menu = [];
 		$menu[] = &$topElement;
-		$this->addSubMenu($menu);
+		$this->addSubMenuForEachItem($menu);
 
 		if ($mode === 'at') {
 			// refresh the order of the target neighbours
@@ -278,7 +298,7 @@ class ModuleAdminPages extends BasicModule {
 		return true;
 	}
 
-	private function getIdsOfSubMenuItem(&$array, $parent) {
+	private function addIdsOfSubMenuItems(&$array, $parent) {
 		global $DB;
 		$submenuItems = $DB->valuesQuery('SELECT `mpid` FROM `MenuPaths` WHERE `parent`=?', 'i', $parent);
 		if ($submenuItems === false) {
@@ -286,11 +306,11 @@ class ModuleAdminPages extends BasicModule {
 		}
 		foreach ($submenuItems as $submenuItem) {
 			$array[] = $submenuItem['mpid'];
-			$this->getIdsOfSubMenuItem($array, $submenuItem['mpid']);
+			$this->addIdsOfSubMenuItems($array, $submenuItem['mpid']);
 		}
 	}
 
-	private function addSubMenu(&$menu) {
+	private function addSubMenuForEachItem(&$menu) {
 		global $DB;
 		foreach ($menu as &$item) {
 			$item['subMenu'] = $DB->valuesQuery('
@@ -302,7 +322,7 @@ class ModuleAdminPages extends BasicModule {
 				$item['subMenu'] = false;
 			}
 			else {
-				$this->addSubMenu($item['subMenu']);
+				$this->addSubMenuForEachItem($item['subMenu']);
 			}
 		}
 	}

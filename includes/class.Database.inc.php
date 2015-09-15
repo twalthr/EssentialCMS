@@ -118,6 +118,14 @@ class Database {
 		return $result;
 	}
 
+	public function valueQuery($sql, $types = NULL, ...$vars) {
+		$result = $this->valuesQuery($sql, $types, ...$vars);
+		if ($result === false || empty($result)) {
+			return false;
+		}
+		return $result[0];
+	}
+
 
 
 

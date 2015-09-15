@@ -38,13 +38,28 @@ class Database {
 	}
 
 	// for SELECT where actual result is unimportant but must exist
-	public function resultQuery($sql) {
-		$result = false;
-		if($r = $this->mysqli->query($sql)) {
-			$result = $r->num_rows > 0;
-			$r->close();
+	public function resultQuery($sql, $types = NULL, ...$vars) {
+		if (!$stmt = $this->mysqli->prepare($sql)) {
+			return false;
 		}
-		return $result;
+		if ($types !== NULL) {
+			if (!$stmt->bind_param($types, ...$vars)) {
+				$stmt->close();
+				return false;
+			}
+		}
+		if (!$stmt->execute()) {
+			$stmt->close();
+			return false;
+		}
+		if ($r = $stmt->get_result()) {
+			$result = $r->num_rows > 0;
+			$r->free();
+			$stmt->close();
+			return $result ;
+		}		
+		$stmt->close();
+		return false;
 	}
 
 	// for INSERT, UPDATE, DELETE
@@ -65,6 +80,14 @@ class Database {
 		$result = $this->mysqli->affected_rows > 0;
 		$stmt->close();
 		return $result;
+	}
+
+		// for INSERT
+	public function impactQueryWithId($sql, $types = NULL, ...$vars) {
+		if ($this->impactQuery($sql, $types, ...$vars) === false) {
+			return false;
+		}
+		return $this->mysqli->insert_id;
 	}
 
 	// for SELECT with escaping

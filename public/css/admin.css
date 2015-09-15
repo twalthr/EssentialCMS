@@ -199,6 +199,18 @@ input[type='checkbox']:checked + label.checkbox:hover {
 	border: 1px solid #B5B4B4;
 }
 
+input[type='checkbox']:disabled + label.checkbox:hover {
+	background-color: #EAEAEA;
+	border: 1px solid #DCDCDC;
+	cursor: default;
+}
+
+input[type='checkbox']:checked:disabled + label.checkbox:hover {
+	background-color: #999999;
+	border: 1px solid #B5B4B4;
+	cursor: default;
+}
+
 input[type='submit']:last-child, button:last-child {
 	margin-bottom: 0;
 }
@@ -208,6 +220,13 @@ input[type='submit']:hover, button:hover {
 	border: 1px solid #B5B4B4;
 	color: #000000;
 	cursor: pointer;
+}
+
+input[type='submit']:disabled, button:disabled, select:disabled {
+	background-color: #FAFAFA;
+	border: 1px solid #EDEDED;
+	color: #EDEDED;
+	cursor: default;
 }
 
 input[type='text'], input[type='password'], input[type='email'] {
@@ -227,13 +246,24 @@ input::after {
 	visibility: hidden;
 }
 
-input[type='text']:hover, input[type='password']:hover, input[type='email']:hover {
+input[type='text']:hover, input[type='password']:hover, input[type='email']:hover, select:hover {
 	border: 1px solid #B5B4B4;
 }
 
-input[type='text']:focus, input[type='password']:focus, input[type='email']:focus {
+input[type='text']:focus, input[type='password']:focus, input[type='email']:focus, select:focus {
 	border: 1px solid #B5B4B4;
 	color: #000000;
+}
+
+select {
+	background-color: #EAEAEA;
+	height: 27px;
+	color: #494949;
+	padding-left: 5px;
+	padding-right: 5px;
+	border: 1px solid #DCDCDC;
+	margin-bottom: 20px;
+	width: 200px;
 }
 
 label {
@@ -254,6 +284,23 @@ form .fields .field>* {
 	text-align: left;
 }
 
+.buttonSet {
+	text-align: right;
+}
+
+.buttonSet button, .buttonSet input[type='submit'], .buttonSet select {
+	display: inline-block;
+	margin-right: 5px;
+	margin-bottom: 0;
+}
+
+.buttonSet button:last-child, .buttonSet select:last-child {
+	margin-right: 0;
+}
+
+.hidden {
+	display: none !important;
+}
 
 body>.page>header {
 	width: 100%;
@@ -346,7 +393,7 @@ body>.page>*:nth-last-child(2) {
 	text-align: center;
 }
 
-.dialog-box .dialog-message, .dialog-box .dialog-error-message, .dialog-box .dialog-success-message {
+.dialog-box .dialog-message, .dialog-error-message, .dialog-success-message {
 	margin-bottom: 20px;
 }
 
@@ -354,16 +401,16 @@ body>.page>*:nth-last-child(2) {
 	margin-bottom: 0px
 }
 
-.dialog-box .dialog-error-message, .dialog-box .dialog-success-message {
+.dialog-error-message, .dialog-success-message {
 	padding: 7px;
 }
 
-.dialog-box .dialog-error-message {
+.dialog-error-message {
 	background-color: #E8B5B5;
 	border: 1px solid #E49494;
 }
 
-.dialog-box .dialog-success-message {
+.dialog-success-message {
 	background-color: #B5E8B9;
 	border: 1px solid #8BD291;
 }
@@ -372,8 +419,13 @@ body>.page>*:nth-last-child(2) {
 	margin: auto;
 }
 
+.dialog-box .options input[type='submit'], .dialog-box .options button{
+	display: inline-block;
+}
+
 section.content section>* {
 	margin-left: 5px;
+	margin-right: 5px;
 }
 
 section.content section h1 {
@@ -394,6 +446,14 @@ section.content section:first-child {
 	margin-top: 0;
 }
 
+section.content .dialog-success-message + section, section.content .dialog-error-message + section {
+	margin-top: 0;
+}
+
+p.empty {
+	text-align: center;
+}
+
 /* --------------------------------------------------------------------------------------------- */
 /*                                      Admin pages style                                        */
 /* --------------------------------------------------------------------------------------------- */
@@ -401,15 +461,25 @@ div.siteMap a {
 	font-size: 15px;
 }
 
-div.siteMap .subLevel li {
+div.siteMap a.private {
+	text-decoration: line-through;
+}
+
+div.siteMap .subLevel>li {
 	padding-left: 20px;
 }
 
-div.siteMap .topLevel li {
+div.siteMap .topLevel>li {
 	float: left;
-	margin-right: 20px;
+	margin-left: 20px;
+}
+
+div.siteMap .topLevel>li:first-child {
+	margin-left: 0px;
 }
 
 div.siteMap + * {
 	clear: both;
+	padding-top: 20px;
 }
+

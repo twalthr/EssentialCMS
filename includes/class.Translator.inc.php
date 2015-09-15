@@ -24,7 +24,7 @@ class Translator {
 	public function translate($id, ...$args) {
 		$this->checkAndLoadDict();
 		if (array_key_exists($id, $this->dict)) {
-			return sprintf($this->dict[$id], ...$args);
+			return sprintf(trim($this->dict[$id]), ...$args);
 		}
 		return $id;
 	}

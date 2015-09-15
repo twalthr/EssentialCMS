@@ -91,6 +91,7 @@ class AdminController {
 				CREATE TABLE IF NOT EXISTS `MenuPaths` (
 					`mpid` INT(10) NOT NULL AUTO_INCREMENT,
 					`parent` INT(10) NULL,
+					`order` INT(10) NOT NULL,
 					`title` VARCHAR(128) NOT NULL,
 					`hoverTitle` VARCHAR(128) NULL,
 					`externalId` VARCHAR(256) NOT NULL,

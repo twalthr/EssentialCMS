@@ -238,7 +238,17 @@ input[type='text'], input[type='password'], input[type='email'] {
 	border: 1px solid #DCDCDC;
 	margin-bottom: 20px;
 	width: 200px;
+	box-sizing: border-box;
 }
+
+input[type='text']:disabled, input[type='password']:disabled, input[type='email']:disabled {
+	background-color: #EAEAEA;
+	border: 1px solid #DCDCDC;
+}
+
+input[type='text'].large, input[type='password'].large, input[type='email'].large {
+	width: 100%;
+} 
 
 input::after {
 	clear: both;
@@ -273,6 +283,7 @@ label {
 
 form .fields {
 	display: table;
+	width: 100%;
 }
 
 form .fields .field {
@@ -282,6 +293,14 @@ form .fields .field {
 form .fields .field>* {
 	display: table-cell;
 	text-align: left;
+}
+
+form .fields .field .hint {
+	padding-left: 20px;
+}
+
+form .fieldsRequired {
+	padding-bottom: 20px;
 }
 
 .buttonSet {
@@ -296,6 +315,15 @@ form .fields .field>* {
 
 .buttonSet button:last-child, .buttonSet select:last-child {
 	margin-right: 0;
+}
+
+.checkboxWrapper {
+	padding-bottom: 20px;
+	font-weight: 600;
+}
+
+.checkboxWrapper label.checkbox {
+	margin-right: 5px !important;
 }
 
 .hidden {
@@ -391,6 +419,10 @@ body>.page>*:nth-last-child(2) {
 	border: 1px solid #DCDCDC;
 	margin: 0 auto;
 	text-align: center;
+}
+
+.dialog-box form .fields {
+	width: auto;
 }
 
 .dialog-box .dialog-message, .dialog-error-message, .dialog-success-message {

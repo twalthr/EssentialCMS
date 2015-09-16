@@ -44,6 +44,268 @@ class ModuleAdminPages extends BasicModule {
 		}
 	}
 
+	public function getContent($config) {
+		?>
+		<script type="text/javascript">
+			$(document).ready(function(){
+				$('.siteMap input[type="checkbox"]').change(function() {
+					var disabled = $('.siteMap input[type="checkbox"]:checked').length == 0;
+					$('#menu-item-public').prop('disabled', disabled);
+					$('#menu-item-private').prop('disabled', disabled);
+					$('#menu-item-move').prop('disabled', disabled);
+					$('#menu-item-copy').prop('disabled', disabled);
+					$('#menu-item-delete').prop('disabled', disabled);
+				});
+				$('#menu-item-public').click(function(e) {
+					e.preventDefault();
+					$('#menu-item-operation').val('public');
+					$('#menuOperations').submit();
+				});
+				$('#menu-item-private').click(function(e) {
+					e.preventDefault();
+					$('#menu-item-operation').val('private');
+					$('#menuOperations').submit();
+				});
+				$('#menu-item-move').click(function(e) {
+					e.preventDefault();
+					$('#menu-item-operation').val('move');
+					$('#menuOperations button').addClass('hidden');
+					$('#menuOperations .siteMap input[type="checkbox"]').prop('disabled', true);
+					$('#menuOperations .dialog-box .dialog-message')
+						.text('<?php $this->text('SELECT_MOVE_TARGET'); ?>');
+					$('#menuOperations .dialog-box, #menu-item-target, #menu-item-at, #menu-item-into, ' +
+						'#menu-item-cancel').removeClass('hidden');
+				});
+				$('#menu-item-copy').click(function(e) {
+					e.preventDefault();
+					$('#menu-item-operation').val('copy');
+					$('#menuOperations button').addClass('hidden');
+					$('#menuOperations .siteMap input[type="checkbox"]').prop('disabled', true);
+					$('#menuOperations .dialog-box .dialog-message')
+						.text('<?php $this->text('SELECT_COPY_TARGET'); ?>');
+					$('#menuOperations .dialog-box, #menu-item-target, #menu-item-at, #menu-item-into, ' +
+						'#menu-item-cancel').removeClass('hidden');
+				});
+				$('#menu-item-at').click(function(e) {
+					e.preventDefault();
+					$('#menu-item-operationTarget').val('at');
+					$('#menuOperations .siteMap input[type="checkbox"]').prop('disabled', false);
+					$('#menuOperations').submit();
+				});
+				$('#menu-item-into').click(function(e) {
+					e.preventDefault();
+					$('#menu-item-operationTarget').val('into');
+					$('#menuOperations .siteMap input[type="checkbox"]').prop('disabled', false);
+					$('#menuOperations').submit();
+				});
+				$('#menu-item-cancel').click(function(e) {
+					e.preventDefault();
+					$('#menuOperations .siteMap input[type="checkbox"]').prop('disabled', false);
+					$('#menuOperations button, #menuOperations .dialog-box').addClass('hidden');
+					$('#menuOperations .siteMap, #menu-item-new, #menu-item-public, #menu-item-private, ' +
+						'#menu-item-move, #menu-item-copy, #menu-item-delete').removeClass('hidden');
+				});
+				$('#menu-item-delete').click(function(e) {
+					e.preventDefault();
+					$('#menu-item-operation').val('delete');
+					$('#menuOperations button').addClass('hidden');
+					$('#menuOperations .siteMap input[type="checkbox"]').prop('disabled', true);
+					$('#menuOperations .dialog-box .dialog-message').text('<?php $this->text('DELETE_QUESTION'); ?>');
+					$('#menuOperations .dialog-box, #menu-item-cancel, #menu-item-deleteConfirm').removeClass('hidden');
+				});
+				$('#menu-item-deleteConfirm').click(function(e) {
+					e.preventDefault();
+					$('#menuOperations .siteMap input[type="checkbox"]').prop('disabled', false);
+					$('#menuOperations').submit();
+				});
+				$('#menu-item-new').click(function(e) {
+					e.preventDefault();
+					window.open('<?php echo $config->getPublicRoot()?>/admin/new-menu-item', '_self');
+				});
+				$('.pageList input[type="checkbox"]').change(function() {
+					var disabled = $('.pageList input[type="checkbox"]:checked').length == 0;
+					$('#page-public').prop('disabled', disabled);
+					$('#page-private').prop('disabled', disabled);
+					$('#page-copy').prop('disabled', disabled);
+					$('#page-delete').prop('disabled', disabled);
+				});
+				$('#page-public').click(function(e) {
+					e.preventDefault();
+					$('#page-operation').val('public');
+					$('#pageOperations').submit();
+				});
+				$('#page-private').click(function(e) {
+					e.preventDefault();
+					$('#page-operation').val('private');
+					$('#pageOperations').submit();
+				});
+				$('#page-delete').click(function(e) {
+					e.preventDefault();
+					$('#page-operation').val('delete');
+				});
+				$('#page-deleteConfirm').click(function(e) {
+					e.preventDefault();
+				});
+				$('#page-new').click(function(e) {
+					e.preventDefault();
+					window.open('<?php echo $config->getPublicRoot()?>/admin/new-page', '_self');
+				});
+
+			});
+		</script>
+		<?php if (isset($this->state)) : ?>
+			<?php if ($this->state === true) : ?>
+				<div class="dialog-success-message">
+					<?php $this->text($this->message); ?>
+				</div>
+			<?php else: ?>
+				<div class="dialog-error-message">
+					<?php $this->text($this->message); ?>
+				</div>
+			<?php endif; ?>
+		<?php endif; ?>
+		<section>
+			<h1><?php $this->text('MENU'); ?></h1>
+			<form method="post" action="<?php echo $config->getPublicRoot()?>/admin/pages" id="menuOperations">
+				<button id="menu-item-new"><?php $this->text('NEW_MENU_ITEM'); ?></button>
+				<input type="hidden" name="operationSpace" value="menu" />
+				<input type="hidden" name="operation" id="menu-item-operation" />
+				<input type="hidden" name="operationTarget" id="menu-item-operationTarget" />
+				<div class="siteMap">
+					<?php $this->printMenu($this->menu, $config, true); ?>
+				</div>
+				<div class="buttonSet">
+					<button id="menu-item-public" disabled><?php $this->text('MAKE_PUBLIC'); ?></button>
+					<button id="menu-item-private" disabled><?php $this->text('MAKE_PRIVATE'); ?></button>
+					<button id="menu-item-move" disabled><?php $this->text('MOVE'); ?></button>
+					<button id="menu-item-copy" disabled><?php $this->text('COPY'); ?></button>
+					<button id="menu-item-delete" disabled><?php $this->text('DELETE'); ?></button>
+				</div>
+				<div class="dialog-box hidden">
+					<div class="dialog-message"></div>
+					<div class="fields">
+						<select name="target" class="hidden" id="menu-item-target">
+							<?php $this->printSelect($this->menu, 0); ?>
+						</select>
+					</div>
+					<div class="options">
+						<button id="menu-item-at" class="hidden"><?php $this->text('MENU_ITEM_AT'); ?></button>
+						<button id="menu-item-into" class="hidden"><?php $this->text('MENU_ITEM_INTO'); ?></button>
+						<button id="menu-item-deleteConfirm" class="hidden"><?php $this->text('DELETE'); ?></button>
+						<button id="menu-item-cancel" class="hidden"><?php $this->text('CANCEL'); ?></button>
+					</div>
+				</div>
+			</form>
+		</section>
+		<section>
+			<h1><?php $this->text('PAGES'); ?></h1>
+			<form method="post" action="<?php echo $config->getPublicRoot()?>/admin/pages" id="pageOperations">
+				<button id="page-new"><?php $this->text('NEW_PAGE'); ?></button>
+				<input type="hidden" name="operationSpace" value="page" />
+				<input type="hidden" name="operation" id="page-operation" />
+				<div class="pageList">
+					<?php $this->printPages($config); ?>
+				</div>
+				<div class="buttonSet">
+					<button id="page-public" disabled><?php $this->text('MAKE_PUBLIC'); ?></button>
+					<button id="page-private" disabled><?php $this->text('MAKE_PRIVATE'); ?></button>
+					<button id="page-copy" disabled><?php $this->text('COPY'); ?></button>
+					<button id="page-delete" disabled><?php $this->text('DELETE'); ?></button>
+				</div>
+				<div class="dialog-box hidden">
+					<div class="dialog-message"></div>
+					<div class="options">
+						<button id="page-deleteConfirm" class="hidden"><?php $this->text('DELETE'); ?></button>
+						<button id="page-cancel" class="hidden"><?php $this->text('CANCEL'); ?></button>
+					</div>
+				</div>
+			</form>
+		</section>
+		<?php
+	}
+
+	// --------------------------------------------------------------------------------------------
+
+	private function printMenu(&$menu, &$config, $topLevel) {
+		if ($topLevel && ($menu === false || empty($menu))) {
+			echo '<p class="empty">';
+			echo $this->text('NO_MENU_ITEMS');
+			echo '</p>';
+			return;
+		}
+
+		if ($topLevel) {
+			echo '<ul class="topLevel">';
+		}
+		else {
+			echo '<ul class="subLevel">';
+		}
+		foreach ($menu as &$item) {
+			echo '<li>';
+			echo '<input type="checkbox" id="menuitem' . $item['mpid'] . '" name="menuitem[]"';
+			echo ' value="' . $item['mpid'] . '" class="propagateChecked" />';
+			echo '<label for="menuitem' . $item['mpid'] . '" class="checkbox">';
+			echo htmlspecialchars($item['title']) .' </label>';
+			echo '<a href="' . $config->getPublicRoot() . '/admin/menu-item/' . $item['mpid'] . '"';
+			if (Utils::hasStringContent($item['hoverTitle'])) {
+				echo ' title="' . htmlspecialchars($item['hoverTitle']) . '"';
+			}
+			if ($item['options'] & MENUPATHS_OPTION_PRIVATE) {
+				echo ' class="private"';
+			}
+			echo '>' . htmlspecialchars($item['title']) . '</a>';
+			if ($item['subMenu'] !== false) {
+				$this->printMenu($item['subMenu'], $config, false);
+			}
+		}
+		echo '</ul>';
+	}
+
+	private function printSelect(&$menu, $level) {
+		foreach ($menu as &$item) {
+			echo '<option value="' . $item['mpid']. '">';
+			echo str_repeat('&nbsp;', $level);
+			echo htmlspecialchars($item['title']) . '</option>';
+			if ($item['subMenu'] !== false) {
+				$this->printSelect($item['subMenu'], $level + 1);
+			}
+		}
+	}
+
+	private function printPages(&$config) {
+		if ($this->pages === false) {
+			echo '<p class="empty">';
+			echo $this->text('NO_PAGES');
+			echo '</p>';
+			return;
+		}
+		echo '<ul>';
+		foreach ($this->pages as $page) {
+			echo '<li class="rowLike">';
+			echo '<input type="checkbox" id="page' . $page['pid'] . '" name="page[]"';
+			echo ' value="' . $page['pid'] . '" />';
+			echo '<label for="page' . $page['pid'] . '" class="checkbox">';
+			echo htmlspecialchars($page['title']) .' </label>';
+			echo '<a href="' . $config->getPublicRoot() . '/admin/page/' . $page['pid'] . '"';
+			if (Utils::hasStringContent($page['hoverTitle'])) {
+				echo ' title="' . htmlspecialchars($page['hoverTitle']) . '"';
+			}
+			if ($page['options'] & PAGES_OPTION_PRIVATE) {
+				echo ' class="private"';
+			}
+			echo '>' . htmlspecialchars($page['title']) . '</a>';
+			if (Utils::hasStringContent($page['externalId'])) {
+				echo '<span class="rowAdditionalInfo">';
+				echo htmlspecialchars($page['hoverTitle']);
+				echo '</span>';
+			}
+			echo '</li>';
+		}
+		echo '</ul>';
+	}
+
+	// --------------------------------------------------------------------------------------------
+
 	private function handlePageOperations() {
 		global $DB;
 		if (!isset($_POST['operation'])
@@ -393,265 +655,6 @@ class ModuleAdminPages extends BasicModule {
 			}
 		}
 	}
-
-	private function printMenu(&$menu, &$config, $topLevel) {
-		if ($topLevel && ($menu === false || empty($menu))) {
-			echo '<p class="empty">';
-			echo $this->text('NO_MENU_ITEMS');
-			echo '</p>';
-			return;
-		}
-
-		if ($topLevel) {
-			echo '<ul class="topLevel">';
-		}
-		else {
-			echo '<ul class="subLevel">';
-		}
-		foreach ($menu as &$item) {
-			echo '<li>';
-			echo '<input type="checkbox" id="menuitem' . $item['mpid'] . '" name="menuitem[]"';
-			echo ' value="' . $item['mpid'] . '" class="propagateChecked" />';
-			echo '<label for="menuitem' . $item['mpid'] . '" class="checkbox">';
-			echo htmlspecialchars($item['title']) .' </label>';
-			echo '<a href="' . $config->getPublicRoot() . '/admin/menu-item/' . $item['mpid'] . '"';
-			if (Utils::hasStringContent($item['hoverTitle'])) {
-				echo ' title="' . htmlspecialchars($item['hoverTitle']) . '"';
-			}
-			if ($item['options'] & MENUPATHS_OPTION_PRIVATE) {
-				echo ' class="private"';
-			}
-			echo '>' . htmlspecialchars($item['title']) . '</a>';
-			if ($item['subMenu'] !== false) {
-				$this->printMenu($item['subMenu'], $config, false);
-			}
-		}
-		echo '</ul>';
-	}
-
-	private function printSelect(&$menu, $level) {
-		foreach ($menu as &$item) {
-			echo '<option value="' . $item['mpid']. '">';
-			echo str_repeat('&nbsp;', $level);
-			echo htmlspecialchars($item['title']) . '</option>';
-			if ($item['subMenu'] !== false) {
-				$this->printSelect($item['subMenu'], $level + 1);
-			}
-		}
-	}
-
-	private function printPages(&$config) {
-		if ($this->pages === false) {
-			echo '<p class="empty">';
-			echo $this->text('NO_PAGES');
-			echo '</p>';
-			return;
-		}
-		echo '<ul>';
-		foreach ($this->pages as $page) {
-			echo '<li class="rowLike">';
-			echo '<input type="checkbox" id="page' . $page['pid'] . '" name="page[]"';
-			echo ' value="' . $page['pid'] . '" />';
-			echo '<label for="page' . $page['pid'] . '" class="checkbox">';
-			echo htmlspecialchars($page['title']) .' </label>';
-			echo '<a href="' . $config->getPublicRoot() . '/admin/page/' . $page['pid'] . '"';
-			if (Utils::hasStringContent($page['hoverTitle'])) {
-				echo ' title="' . htmlspecialchars($page['hoverTitle']) . '"';
-			}
-			if ($page['options'] & PAGES_OPTION_PRIVATE) {
-				echo ' class="private"';
-			}
-			echo '>' . htmlspecialchars($page['title']) . '</a>';
-			if (Utils::hasStringContent($page['externalId'])) {
-				echo '<span class="rowAdditionalInfo">';
-				echo htmlspecialchars($page['hoverTitle']);
-				echo '</span>';
-			}
-			echo '</li>';
-		}
-		echo '</ul>';
-	}
-
-	public function getContent($config) {
-		?>
-		<script type="text/javascript">
-			$(document).ready(function(){
-				$('.siteMap input[type="checkbox"]').change(function() {
-					var disabled = $('.siteMap input[type="checkbox"]:checked').length == 0;
-					$('#menu-item-public').prop('disabled', disabled);
-					$('#menu-item-private').prop('disabled', disabled);
-					$('#menu-item-move').prop('disabled', disabled);
-					$('#menu-item-copy').prop('disabled', disabled);
-					$('#menu-item-delete').prop('disabled', disabled);
-				});
-				$('#menu-item-public').click(function(e) {
-					e.preventDefault();
-					$('#menu-item-operation').val('public');
-					$('#menuOperations').submit();
-				});
-				$('#menu-item-private').click(function(e) {
-					e.preventDefault();
-					$('#menu-item-operation').val('private');
-					$('#menuOperations').submit();
-				});
-				$('#menu-item-move').click(function(e) {
-					e.preventDefault();
-					$('#menu-item-operation').val('move');
-					$('#menuOperations button').addClass('hidden');
-					$('#menuOperations .siteMap input[type="checkbox"]').prop('disabled', true);
-					$('#menuOperations .dialog-box .dialog-message')
-						.text('<?php $this->text('SELECT_MOVE_TARGET'); ?>');
-					$('#menuOperations .dialog-box, #menu-item-target, #menu-item-at, #menu-item-into, ' +
-						'#menu-item-cancel').removeClass('hidden');
-				});
-				$('#menu-item-copy').click(function(e) {
-					e.preventDefault();
-					$('#menu-item-operation').val('copy');
-					$('#menuOperations button').addClass('hidden');
-					$('#menuOperations .siteMap input[type="checkbox"]').prop('disabled', true);
-					$('#menuOperations .dialog-box .dialog-message')
-						.text('<?php $this->text('SELECT_COPY_TARGET'); ?>');
-					$('#menuOperations .dialog-box, #menu-item-target, #menu-item-at, #menu-item-into, ' +
-						'#menu-item-cancel').removeClass('hidden');
-				});
-				$('#menu-item-at').click(function(e) {
-					e.preventDefault();
-					$('#menu-item-operationTarget').val('at');
-					$('#menuOperations .siteMap input[type="checkbox"]').prop('disabled', false);
-					$('#menuOperations').submit();
-				});
-				$('#menu-item-into').click(function(e) {
-					e.preventDefault();
-					$('#menu-item-operationTarget').val('into');
-					$('#menuOperations .siteMap input[type="checkbox"]').prop('disabled', false);
-					$('#menuOperations').submit();
-				});
-				$('#menu-item-cancel').click(function(e) {
-					e.preventDefault();
-					$('#menuOperations .siteMap input[type="checkbox"]').prop('disabled', false);
-					$('#menuOperations button, #menuOperations .dialog-box').addClass('hidden');
-					$('#menuOperations .siteMap, #menu-item-new, #menu-item-public, #menu-item-private, ' +
-						'#menu-item-move, #menu-item-copy, #menu-item-delete').removeClass('hidden');
-				});
-				$('#menu-item-delete').click(function(e) {
-					e.preventDefault();
-					$('#menu-item-operation').val('delete');
-					$('#menuOperations button').addClass('hidden');
-					$('#menuOperations .siteMap input[type="checkbox"]').prop('disabled', true);
-					$('#menuOperations .dialog-box .dialog-message').text('<?php $this->text('DELETE_QUESTION'); ?>');
-					$('#menuOperations .dialog-box, #menu-item-cancel, #menu-item-deleteConfirm').removeClass('hidden');
-				});
-				$('#menu-item-deleteConfirm').click(function(e) {
-					e.preventDefault();
-					$('#menuOperations .siteMap input[type="checkbox"]').prop('disabled', false);
-					$('#menuOperations').submit();
-				});
-				$('#menu-item-new').click(function(e) {
-					e.preventDefault();
-					window.open('<?php echo $config->getPublicRoot()?>/admin/new-menu-item', '_self');
-				});
-				$('.pageList input[type="checkbox"]').change(function() {
-					var disabled = $('.pageList input[type="checkbox"]:checked').length == 0;
-					$('#page-public').prop('disabled', disabled);
-					$('#page-private').prop('disabled', disabled);
-					$('#page-copy').prop('disabled', disabled);
-					$('#page-delete').prop('disabled', disabled);
-				});
-				$('#page-public').click(function(e) {
-					e.preventDefault();
-					$('#page-operation').val('public');
-					$('#pageOperations').submit();
-				});
-				$('#page-private').click(function(e) {
-					e.preventDefault();
-					$('#page-operation').val('private');
-					$('#pageOperations').submit();
-				});
-				$('#page-delete').click(function(e) {
-					e.preventDefault();
-					$('#page-operation').val('delete');
-				});
-				$('#page-deleteConfirm').click(function(e) {
-					e.preventDefault();
-				});
-				$('#page-new').click(function(e) {
-					e.preventDefault();
-					window.open('<?php echo $config->getPublicRoot()?>/admin/new-page', '_self');
-				});
-
-			});
-		</script>
-		<?php if (isset($this->state)) : ?>
-			<?php if ($this->state === true) : ?>
-				<div class="dialog-success-message">
-					<?php $this->text($this->message); ?>
-				</div>
-			<?php else: ?>
-				<div class="dialog-error-message">
-					<?php $this->text($this->message); ?>
-				</div>
-			<?php endif; ?>
-		<?php endif; ?>
-		<section>
-			<h1><?php $this->text('MENU'); ?></h1>
-			<form method="post" action="<?php echo $config->getPublicRoot()?>/admin/pages" id="menuOperations">
-				<button id="menu-item-new"><?php $this->text('NEW_MENU_ITEM'); ?></button>
-				<input type="hidden" name="operationSpace" value="menu" />
-				<input type="hidden" name="operation" id="menu-item-operation" />
-				<input type="hidden" name="operationTarget" id="menu-item-operationTarget" />
-				<div class="siteMap">
-					<?php $this->printMenu($this->menu, $config, true); ?>
-				</div>
-				<div class="buttonSet">
-					<button id="menu-item-public" disabled><?php $this->text('MAKE_PUBLIC'); ?></button>
-					<button id="menu-item-private" disabled><?php $this->text('MAKE_PRIVATE'); ?></button>
-					<button id="menu-item-move" disabled><?php $this->text('MOVE'); ?></button>
-					<button id="menu-item-copy" disabled><?php $this->text('COPY'); ?></button>
-					<button id="menu-item-delete" disabled><?php $this->text('DELETE'); ?></button>
-				</div>
-				<div class="dialog-box hidden">
-					<div class="dialog-message"></div>
-					<div class="fields">
-						<select name="target" class="hidden" id="menu-item-target">
-							<?php $this->printSelect($this->menu, 0); ?>
-						</select>
-					</div>
-					<div class="options">
-						<button id="menu-item-at" class="hidden"><?php $this->text('MENU_ITEM_AT'); ?></button>
-						<button id="menu-item-into" class="hidden"><?php $this->text('MENU_ITEM_INTO'); ?></button>
-						<button id="menu-item-deleteConfirm" class="hidden"><?php $this->text('DELETE'); ?></button>
-						<button id="menu-item-cancel" class="hidden"><?php $this->text('CANCEL'); ?></button>
-					</div>
-				</div>
-			</form>
-		</section>
-		<section>
-			<h1><?php $this->text('PAGES'); ?></h1>
-			<form method="post" action="<?php echo $config->getPublicRoot()?>/admin/pages" id="pageOperations">
-				<button id="page-new"><?php $this->text('NEW_PAGE'); ?></button>
-				<input type="hidden" name="operationSpace" value="page" />
-				<input type="hidden" name="operation" id="page-operation" />
-				<div class="pageList">
-					<?php $this->printPages($config); ?>
-				</div>
-				<div class="buttonSet">
-					<button id="page-public" disabled><?php $this->text('MAKE_PUBLIC'); ?></button>
-					<button id="page-private" disabled><?php $this->text('MAKE_PRIVATE'); ?></button>
-					<button id="page-copy" disabled><?php $this->text('COPY'); ?></button>
-					<button id="page-delete" disabled><?php $this->text('DELETE'); ?></button>
-				</div>
-				<div class="dialog-box hidden">
-					<div class="dialog-message"></div>
-					<div class="options">
-						<button id="page-deleteConfirm" class="hidden"><?php $this->text('DELETE'); ?></button>
-						<button id="page-cancel" class="hidden"><?php $this->text('CANCEL'); ?></button>
-					</div>
-				</div>
-			</form>
-		</section>
-		<?php
-	}
-
 }
 
 ?>

@@ -1,6 +1,6 @@
 <?php
  
-class BasicModule {
+abstract class BasicModule {
 	private $cmsVersion;
 	private $name;
 
@@ -18,7 +18,15 @@ class BasicModule {
 	}
 
 	public function getContent($config) {
-		return '';
+		ob_start();
+		$this->printContent($config);
+		$content = ob_get_contents();
+		ob_end_clean();
+		return $content;
+	}
+
+	public function printContent($config) {
+		echo '';
 	}
 
 	public function text($id, ...$args) {

@@ -44,7 +44,7 @@ class ModuleAdminPages extends BasicModule {
 		}
 	}
 
-	public function getContent($config) {
+	public function printContent($config) {
 		?>
 		<script type="text/javascript">
 			$(document).ready(function(){
@@ -573,7 +573,7 @@ class ModuleAdminPages extends BasicModule {
 		}
 		else if ($mode === 'into') {
 			$targetMax = $DB ->valuesQuery('
-				SELECT COUNT(`mpid`) AS count
+				SELECT COUNT(*) AS count
 				FROM `MenuPaths`
 				WHERE `parent`=?',
 				'i', $target['mpid'])[0]['count'];

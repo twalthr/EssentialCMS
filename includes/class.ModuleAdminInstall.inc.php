@@ -13,7 +13,7 @@ class ModuleAdminInstall extends BasicModule {
 		$this->state = $state;
 	}
 
-	public function getContent($config) {
+	public function printContent($config) {
 		?>
 <div class="dialog-box">
 <?php if ($this->state === true) : ?>

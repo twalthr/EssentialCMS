@@ -27,7 +27,7 @@ class ModuleAdminEditPage extends BasicModule {
 		}
 	}
 
-	public function getContent($config) {
+	public function printContent($config) {
 		?>
 		<?php if (!empty($this->state) && isset($this->createdPageId)) : ?>
 			<div class="dialog-box">
@@ -167,11 +167,11 @@ class ModuleAdminEditPage extends BasicModule {
 					<h1><?php $this->text('CONTENT_MODULES'); ?></h1>
 				</section>
 				<section>
-					<h1><?php $this->text('ASIDE_CONTENT_MODULES'); ?></h1></section>
+					<h1><?php $this->text('ASIDE_CONTENT_MODULES'); ?></h1>
+				</section>
 				<section>
-				<section>
-					<h1><?php $this->text('FOOTER_MODULES'); ?></h1></section>
-				<section>
+					<h1><?php $this->text('FOOTER_MODULES'); ?></h1>
+				</section>
 			<?php endif; ?>
 		</form>
 		<?php
@@ -247,16 +247,14 @@ class ModuleAdminEditPage extends BasicModule {
 
 	private function loadPage($pageId) {
 		global $DB;
-
-		$result = 
-			ctype_digit($pageId)
+		$result = ctype_digit($pageId)
 			&& ($resultValue = $DB->valueQuery('
 				SELECT `pid`, `title`, `hoverTitle`, `externalId`, `options`, `lastChanged`, `externalLastChanged`
 				FROM `Pages`
 				WHERE `pid`=?', 'i', $pageId));
 		if ($result === false) {
 			$this->state = false;
-			$this->message = 'PAGE_DOES_NOT_EXIST';
+			$this->message = 'PAGE_NOT_FOUND';
 			return;
 		}
 		$this->page = $resultValue;

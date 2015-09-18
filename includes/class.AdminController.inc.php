@@ -113,23 +113,23 @@ class AdminController {
 					UNIQUE KEY `position` (`page`, `section`, `order`)
 				)
 			') && $DB->successQuery('
-				CREATE TABLE IF NOT EXISTS `FieldContentGroup` (
-					`fcgid` INT(10) NOT NULL AUTO_INCREMENT,
+				CREATE TABLE IF NOT EXISTS `FieldGroups` (
+					`fgid` INT(10) NOT NULL AUTO_INCREMENT,
 					`module` INT(10) NOT NULL,
 					`key` VARCHAR(32) NULL,
 					`order` INT(10) NOT NULL,
-					PRIMARY KEY (`fcgid`),
+					PRIMARY KEY (`fgid`),
 					UNIQUE KEY `position` (`module`, `key`, `order`)
 				)
 			') && $DB->successQuery('
-				CREATE TABLE IF NOT EXISTS `FieldContent` (
-					`fcid` INT(10) NOT NULL AUTO_INCREMENT,
+				CREATE TABLE IF NOT EXISTS `Fields` (
+					`fid` INT(10) NOT NULL AUTO_INCREMENT,
 					`group` INT(10) NOT NULL,
 					`key` VARCHAR(32) NOT NULL,
 					`type` INT(10) NOT NULL,
 					`content` TEXT NOT NULL,
 					`metaContent` TEXT NULL,
-					PRIMARY KEY (`fcid`),
+					PRIMARY KEY (`fid`),
 					UNIQUE KEY `position` (`group`, `key`)
 				)
 			') && $DB->impactQuery('
@@ -201,6 +201,11 @@ class AdminController {
 			header('Location: ' . $PUBLIC_ROOT . '/admin');
 			exit;
 		}
+	}
+
+	public function getDB() {
+		global $DB;
+		return $DB;
 	}
 
 	// --------------------------------------------------------------------------------------------

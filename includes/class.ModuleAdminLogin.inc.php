@@ -13,7 +13,7 @@ class ModuleAdminLogin extends BasicModule {
 		$this->state = $state;
 	}
 
-	public function getContent($config) {
+	public function printContent($config) {
 		?>
 <div class="dialog-box">
 <?php if (!empty($this->state)) : ?>

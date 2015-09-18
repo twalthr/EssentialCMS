@@ -72,3 +72,4 @@ INVALID_PAGE_EXTERNAL_DATE=The public date is empty or invalid. It should have t
 PAGE_EXTERNALID_EXISTS=The entered public page ID already exists. Either a menu item or an other page has the same page ID. Please enter a different one.
 PAGE_CREATED=A new page has been created successfully. You can fill the page with content now.
 GOTO_PAGE=Go to page
+PAGE_NOT_FOUND=The page could not be found.

@@ -8,7 +8,7 @@ class ModuleAdminOverview extends BasicModule {
 		$controller->verifyLogin();
 	}
 
-	public function getContent($config) {
+	public function printContent($config) {
 		?>
 
 		Overview

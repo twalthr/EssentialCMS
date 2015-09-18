@@ -12,6 +12,12 @@ class AdminController {
 		$this->config->setCmsUrl($CMS_URL);
 	}
 
+	public function layoutDialog(...$contentModules) {
+		foreach ($contentModules as $contentModule) {
+			$contentModule->printContent($this->config);
+		}
+	}
+
 	public function layoutContent(...$contentModules) {
 		$layoutContext = $this->generateLayoutContext();
 		$layoutContext->setContentModules($contentModules);
@@ -117,7 +123,7 @@ class AdminController {
 					`fgid` INT(10) NOT NULL AUTO_INCREMENT,
 					`module` INT(10) NOT NULL,
 					`key` VARCHAR(32) NULL,
-					`order` INT(10) NOT NULL,
+					`order` INT(10) NULL,
 					PRIMARY KEY (`fgid`),
 					UNIQUE KEY `position` (`module`, `key`, `order`)
 				)

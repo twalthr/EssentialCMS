@@ -23,14 +23,6 @@ abstract class RichModule extends BasicModule {
 		$this->$controller = $controller;
 	}
 
-	public function getLocalizedModuleName() {
-		return $this->getName();
-	}
-
-	public function getLocalizedModuleDescription() {
-		return '';
-	}
-
 	// the priority determines which module can define page properties
 	public function getPriority() {
 		return MODULE_PRIORITY_LOW;
@@ -153,6 +145,31 @@ abstract class RichModule extends BasicModule {
 		return $result;
 	}
 
+	final public function getConfigGroup() {
+		$this->verifyInPageProperties();
+		$db = $this->controller->getDB();
+		$fieldGroupId = $db->valueQuery('
+			SELECT `fgid`
+			FROM `FieldGroups`
+			WHERE `module`=? AND `key` IS NULL AND `order` IS NULL',
+			'i', $this->inPageModuleId);
+
+		// insert empty config
+		if ($fieldGroupId === false) {
+			$fieldGroupId = $db->impactQueryWithId('
+			INSERT INTO `FieldGroups`
+			(`module`, `key`, `order`)
+			VALUES
+			(?, NULL, NULL)',
+			'i', $this->inPageModuleId);
+
+			if ($fieldGroupId === false) {
+				return false;
+			}
+		}
+		return new FieldGroup($controller, $fieldGroupId);
+	}
+
 	final public function getFieldGroup($key, $order) {
 		$this->verifyInPageProperties();
 		$db = $this->controller->getDB();
@@ -199,7 +216,7 @@ abstract class RichModule extends BasicModule {
 			SET `order` = `order` + 1
 			WHERE `module`=? AND `key`=? AND `order`>=?',
 			'isi', $this->inPageModuleId, $key, $order);
-		if ($result === false {
+		if ($result === false) {
 			return false;
 		}
 		$fieldGroupId = $db->impactQueryWithId('
@@ -212,6 +229,53 @@ abstract class RichModule extends BasicModule {
 			return false;
 		}
 		return new FieldGroup($controller, $fieldGroupId);
+	}
+
+	// --------------------------------------------------------------------------------------------
+	// Static helper methods
+	// --------------------------------------------------------------------------------------------
+
+	public static function getLocalizedModulesList() {
+		global $ROOT_DIRECTORY;
+		global $TR;
+		$moduleList = array();
+		// open modules directory
+		if ($handle = opendir($ROOT_DIRECTORY . '/modules')) {
+			while (false !== ($entry = readdir($handle))) {
+				// for each directory
+				if ($entry !== '.'
+					&& $entry !== '..'
+					&& is_dir($ROOT_DIRECTORY . '/modules/' . $entry)) {
+					// check for module.php
+					if (!file_exists($ROOT_DIRECTORY . '/modules/' . $entry . '/module.php')) {
+						continue;
+					}
+					$module = [];
+					$module['name'] = $entry;
+					$module['description'] = null;
+					// check for locale information
+					$localeDir = $ROOT_DIRECTORY . '/modules/' . $entry . '/locales';
+					if (file_exists($localeDir) && is_dir($localeDir)) {
+						// check of current locale is supported
+						$supportedLocale = $TR->getSupportedLocaleFromDirectory($localeDir);
+						if ($supportedLocale !== false) {
+							$header = Translator::readHeaderFromLocaleFile($localeDir . '/' . 
+								$supportedLocale . '.locale');
+							// get translated module information from header
+							if (count($header) > 0) {
+								$module['name'] = $header[0];
+							}
+							if (count($header) > 1) {
+								$module['description'] = $header[1];
+							}
+						}
+					}
+					$moduleList[] = $module;
+				}
+			}
+			closedir($handle);
+		}
+		return $moduleList;
 	}
 }
 

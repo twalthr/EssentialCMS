@@ -29,6 +29,29 @@ class Translator {
 		return $id;
 	}
 
+	public function getSupportedLocaleFromDirectory($dir) {
+		$fileList = Utils::getFileList($dir, '.locale');
+		// no locales found
+		if (count($fileList) === 0) {
+			return false;
+		}
+		// check if locale exists
+		if (in_array($this->currentLocale, $fileList, true)) {
+			return $this->currentLocale;
+		}
+		// fallback to englisch
+		if (in_array('en_US', $fileList, true)) {
+			return 'en_US';
+		}
+		// fallback to any supported locale
+		return $fileList[0];
+	}
+
+	public function translateFromLocaleFile($filePath, $id, ...$args) {
+		// TODO chaching of dict load/unload
+		// 2 levels
+	}
+
 	// --------------------------------------------------------------------------------------------
 
 	private function setLocaleAutomatically($defaultLanguage, $defaultCountry) {
@@ -70,6 +93,22 @@ class Translator {
 		}
 	}
 
+	// --------------------------------------------------------------------------------------------
+
+	public static function readHeaderFromLocaleFile($filePath) {
+		$header = [];
+		$localeFile = fopen($filePath, 'r');
+		$i = 0;
+		while(!feof($localeFile) && $i < 2) {
+			$row = fgets($localeFile);
+			if ($row !== false) {
+				$header[] = $row;
+			}
+			$i++;
+		}
+		fclose($localeFile);
+		return $header;
+	}
 }
 
 ?>

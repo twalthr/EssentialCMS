@@ -73,3 +73,4 @@ PAGE_EXTERNALID_EXISTS=Die eingegebene öffentliche Seiten-ID existiert bereits.
 PAGE_CREATED=Eine neue Seite wurde erfolgreich erstellt. Sie können die Seite nun mit Inhalt füllen.
 GOTO_PAGE=Zur Seite
 PAGE_NOT_FOUND=Die Seite konnte nicht gefunden werden.
+ADD_MODULE=Modul hinzufügen

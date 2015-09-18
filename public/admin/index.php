@@ -65,7 +65,9 @@ switch ($querySplitted[0]) {
 		}
 		$adminController->layoutLoggedInContent(1, null, null, new ModuleAdminEditPage($adminController, $pageId));
 		break;
-	
+	case 'select-module-dialog':
+		$adminController->layoutDialog(new ModuleAdminSelectModule($adminController));
+		break;
 	default:
 		echo "Invalid command.";
 }

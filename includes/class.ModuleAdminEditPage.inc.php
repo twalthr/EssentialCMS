@@ -58,6 +58,13 @@ class ModuleAdminEditPage extends BasicModule {
 					}
 				});
 				$('#pageCustomLastChange').trigger('change');
+				$('#header-add-module').click(function(e) {
+					e.preventDefault();
+					var returnCallback = function(state, data) {
+
+					};
+					openLightboxWithUrl('<?php echo $config->getPublicRoot()?>/admin/select-module-dialog', returnCallback);
+				});
 			});
 		</script>
 		<?php if (isset($this->state)) : ?>
@@ -162,15 +169,19 @@ class ModuleAdminEditPage extends BasicModule {
 			<?php if (isset($this->page)) : ?>
 				<section>
 					<h1><?php $this->text('HEADER_MODULES'); ?></h1>
+					<button id="header-add-module"><?php $this->text('ADD_MODULE'); ?></button>
 				</section>
 				<section>
 					<h1><?php $this->text('CONTENT_MODULES'); ?></h1>
+					<button id="content-add-module"><?php $this->text('ADD_MODULE'); ?></button>
 				</section>
 				<section>
 					<h1><?php $this->text('ASIDE_CONTENT_MODULES'); ?></h1>
+					<button id="aside-add-module"><?php $this->text('ADD_MODULE'); ?></button>
 				</section>
 				<section>
 					<h1><?php $this->text('FOOTER_MODULES'); ?></h1>
+					<button id="footer-add-module"><?php $this->text('ADD_MODULE'); ?></button>
 				</section>
 			<?php endif; ?>
 		</form>
@@ -241,7 +252,7 @@ class ModuleAdminEditPage extends BasicModule {
 		$this->createdPageId = $result;
 	}
 
-	private function handleCreatePage() {
+	private function handleEditPage() {
 
 	}
 

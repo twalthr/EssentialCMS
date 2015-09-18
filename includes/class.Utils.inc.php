@@ -17,7 +17,10 @@ class Utils {
 		$fileList = array();
 		if ($handle = opendir($dir)) {
 			while (false !== ($entry = readdir($handle))) {
-				if ($entry != "." && $entry != ".." && !is_dir($entry) && Utils::stringEndsWith($entry, $ending)) {
+				if ($entry !== '.'
+					&& $entry != '..'
+					&& !is_dir($dir . '/' . $entry)
+					&& Utils::stringEndsWith($entry, $ending)) {
 					$fileList[] = substr($entry, 0, -strlen($ending));
 				}
 			}

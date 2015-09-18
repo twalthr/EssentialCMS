@@ -23,11 +23,11 @@ abstract class RichModule extends BasicModule {
 		$this->$controller = $controller;
 	}
 
-	public function getUserModuleName() {
+	public function getLocalizedModuleName() {
 		return $this->getName();
 	}
 
-	public function getUserModuleDescription() {
+	public function getLocalizedModuleDescription() {
 		return '';
 	}
 
@@ -184,11 +184,34 @@ abstract class RichModule extends BasicModule {
 	}
 
 	final public function newFieldGroupAt($key, $order) {
-
-	}
-
-	final public function deleteFieldGroup() {
-
+		$this->verifyInPageProperties();
+		$db = $this->controller->getDB();
+		$result = $db->valueQuery('
+			SELECT COUNT(*) AS `count`
+			FROM `FieldGroups`
+			WHERE `module`=? AND `key`=?',
+			'is', $this->inPageModuleId, $key);
+		if ($result === false || $result['count'] <= $order) {
+			return false;
+		}
+		$result = $db->impactQuery('
+			UPDATE `FieldGroups`
+			SET `order` = `order` + 1
+			WHERE `module`=? AND `key`=? AND `order`>=?',
+			'isi', $this->inPageModuleId, $key, $order);
+		if ($result === false {
+			return false;
+		}
+		$fieldGroupId = $db->impactQueryWithId('
+			INSERT INTO `FieldGroups`
+			(`module`, `key`, `order`)
+			VALUES
+			(?,?,?)',
+			'isi', $this->inPageModuleId, $key, $order);
+		if ($fieldGroupId === false) {
+			return false;
+		}
+		return new FieldGroup($controller, $fieldGroupId);
 	}
 }
 

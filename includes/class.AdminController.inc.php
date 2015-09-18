@@ -128,6 +128,7 @@ class AdminController {
 					`key` VARCHAR(32) NOT NULL,
 					`type` INT(10) NOT NULL,
 					`content` TEXT NOT NULL,
+					`metaType` INT(10) NOT NULL,
 					`metaContent` TEXT NULL,
 					PRIMARY KEY (`fid`),
 					UNIQUE KEY `position` (`group`, `key`)

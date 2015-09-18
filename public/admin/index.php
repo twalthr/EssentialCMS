@@ -58,7 +58,7 @@ switch ($querySplitted[0]) {
 	case 'new-page':
 		$adminController->layoutLoggedInContent(1, null, null, new ModuleAdminEditPage($adminController));
 		break;
-	case 'edit-page':
+	case 'page':
 		$pageId = null;
 		if (count($querySplitted) > 1) {
 			$pageId = $querySplitted[1];

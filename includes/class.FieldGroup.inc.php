@@ -9,5 +9,6 @@ class FieldGroup {
 		$this->controller = $controller;
 		$this->fieldGroupId = $fieldGroupId;
 	}
-
 }
+
+?>

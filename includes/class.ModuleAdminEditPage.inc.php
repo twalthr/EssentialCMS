@@ -34,7 +34,7 @@ class ModuleAdminEditPage extends BasicModule {
 				<div class="dialog-success-message">
 				<?php $this->text('PAGE_CREATED'); ?>
 			</div>
-			<a href="<?php echo $config->getPublicRoot(); ?>/admin/edit-page/<?php echo $this->createdPageId; ?>"
+			<a href="<?php echo $config->getPublicRoot(); ?>/admin/page/<?php echo $this->createdPageId; ?>"
 				class="goto"><?php $this->text('GOTO_PAGE'); ?></a>
 			</div>
 		<?php return; ?>

@@ -13,11 +13,11 @@ class ModuleAdminPages extends BasicModule {
 		$controller->verifyLogin();
 
 		// handle menu operations
-		if (isset($_POST['operationSpace']) && $_POST['operationSpace'] === 'menu') {
+		if (Utils::isValidFieldNotEmpty('operationSpace') && Utils::getValidField('operationSpace') === 'menu') {
 			$this->handleMenuOperations();
 		}
 		// handle page operations
-		else if (isset($_POST['operationSpace']) && $_POST['operationSpace'] === 'page') {
+		else if (Utils::isValidFieldNotEmpty('operationSpace') && Utils::getValidField('operationSpace') === 'page') {
 			$this->handlePageOperations();
 		}
 
@@ -150,7 +150,6 @@ class ModuleAdminPages extends BasicModule {
 					e.preventDefault();
 					window.open('<?php echo $config->getPublicRoot()?>/admin/new-page', '_self');
 				});
-
 			});
 		</script>
 		<?php if (isset($this->state)) : ?>
@@ -245,15 +244,15 @@ class ModuleAdminPages extends BasicModule {
 			echo '<input type="checkbox" id="menuitem' . $item['mpid'] . '" name="menuitem[]"';
 			echo ' value="' . $item['mpid'] . '" class="propagateChecked" />';
 			echo '<label for="menuitem' . $item['mpid'] . '" class="checkbox">';
-			echo htmlspecialchars($item['title']) .' </label>';
+			echo Utils::escapeString($item['title']) .' </label>';
 			echo '<a href="' . $config->getPublicRoot() . '/admin/menu-item/' . $item['mpid'] . '"';
 			if (Utils::hasStringContent($item['hoverTitle'])) {
-				echo ' title="' . htmlspecialchars($item['hoverTitle']) . '"';
+				echo ' title="' . Utils::escapeString($item['hoverTitle']) . '"';
 			}
 			if ($item['options'] & MENUPATHS_OPTION_PRIVATE) {
 				echo ' class="private"';
 			}
-			echo '>' . htmlspecialchars($item['title']) . '</a>';
+			echo '>' . Utils::escapeString($item['title']) . '</a>';
 			if ($item['subMenu'] !== false) {
 				$this->printMenu($item['subMenu'], $config, false);
 			}
@@ -265,7 +264,7 @@ class ModuleAdminPages extends BasicModule {
 		foreach ($menu as &$item) {
 			echo '<option value="' . $item['mpid']. '">';
 			echo str_repeat('&nbsp;', $level);
-			echo htmlspecialchars($item['title']) . '</option>';
+			echo Utils::escapeString($item['title']) . '</option>';
 			if ($item['subMenu'] !== false) {
 				$this->printSelect($item['subMenu'], $level + 1);
 			}
@@ -285,18 +284,18 @@ class ModuleAdminPages extends BasicModule {
 			echo '<input type="checkbox" id="page' . $page['pid'] . '" name="page[]"';
 			echo ' value="' . $page['pid'] . '" />';
 			echo '<label for="page' . $page['pid'] . '" class="checkbox">';
-			echo htmlspecialchars($page['title']) .' </label>';
+			echo Utils::escapeString($page['title']) .' </label>';
 			echo '<a href="' . $config->getPublicRoot() . '/admin/page/' . $page['pid'] . '"';
 			if (Utils::hasStringContent($page['hoverTitle'])) {
-				echo ' title="' . htmlspecialchars($page['hoverTitle']) . '"';
+				echo ' title="' . Utils::escapeString($page['hoverTitle']) . '"';
 			}
 			if ($page['options'] & PAGES_OPTION_PRIVATE) {
 				echo ' class="private"';
 			}
-			echo '>' . htmlspecialchars($page['title']) . '</a>';
+			echo '>' . Utils::escapeString($page['title']) . '</a>';
 			if (Utils::hasStringContent($page['externalId'])) {
 				echo '<span class="rowAdditionalInfo">';
-				echo htmlspecialchars($page['hoverTitle']);
+				echo Utils::escapeString($page['hoverTitle']);
 				echo '</span>';
 			}
 			echo '</li>';
@@ -308,15 +307,13 @@ class ModuleAdminPages extends BasicModule {
 
 	private function handlePageOperations() {
 		global $DB;
-		if (!isset($_POST['operation'])
-			|| !isset($_POST['page'])
-			|| !is_array($_POST['page'])
-			|| count($_POST['page']) <= 0) {
+		if (!Utils::isValidFieldNotEmpty('operation')
+			|| !Utils::isValidFieldArrayWithContent('page')) {
 			return;
 		}
 
 		// normalize pages
-		$uniquePages = array_unique($_POST['page']);
+		$uniquePages = array_unique(Utils::getValidFieldArray('page'));
 		// check for existence of all pages
 		foreach ($uniquePages as $page) {
 			if(!$DB->resultQuery('SELECT `pid` FROM `Pages` WHERE `pid`=?', 'i', $page)) {
@@ -325,7 +322,7 @@ class ModuleAdminPages extends BasicModule {
 		}
 
 		// execute operation
-		$operation = $_POST['operation'];
+		$operation = Utils::getValidFieldString('operation');
 		switch ($operation) {
 			case 'public':
 				$result = true;
@@ -360,15 +357,13 @@ class ModuleAdminPages extends BasicModule {
 
 	private function handleMenuOperations() {
 		global $DB;
-		if (!isset($_POST['operation'])
-			|| !isset($_POST['menuitem'])
-			|| !is_array($_POST['menuitem'])
-			|| count($_POST['menuitem']) <= 0) {
+		if (!Utils::isValidFieldNotEmpty('operation')
+			|| !Utils::isValidFieldArrayWithContent('menuitem')) {
 			return;
 		}
 
 		// normalize menuitems
-		$uniqueMenuitems = array_unique($_POST['menuitem']);
+		$uniqueMenuitems = array_unique(Utils::getValidFieldArray('menuitem'));
 		// check for existence of all menuitems
 		foreach ($uniqueMenuitems as $menuitem) {
 			if(!$DB->resultQuery('SELECT `mpid` FROM `MenuPaths` WHERE `mpid`=?', 'i', $menuitem)) {
@@ -377,7 +372,7 @@ class ModuleAdminPages extends BasicModule {
 		}
 
 		// execute operation
-		$operation = $_POST['operation'];
+		$operation = Utils::getValidFieldString('operation');
 		switch ($operation) {
 			case 'public':
 				$result = true;
@@ -409,18 +404,18 @@ class ModuleAdminPages extends BasicModule {
 				break;
 			case 'move':
 			case 'copy':
-				if (!isset($_POST['operationTarget'])
-					|| !isset($_POST['target'])) {
+				if (!Utils::isValidFieldNotEmpty('operationTarget')
+					|| !Utils::isValidFieldNotEmpty('target')) {
 					return;
 				}
-				$operationTarget = $_POST['operationTarget'];
+				$operationTarget = Utils::getValidFieldString('operationTarget');
 
 				// normalize target
 				$target = $DB->valueQuery('
 					SELECT `mpid`, `parent`, `order`
 					FROM `MenuPaths`
 					WHERE `mpid`=?',
-					'i', $_POST['target']);
+					'i', Utils::getValidFieldString('target'));
 				// check for existence of target
 				if ($target === false) {
 					return;

@@ -38,11 +38,11 @@ class Database {
 	}
 
 	// for SELECT where actual result is unimportant but must exist
-	public function resultQuery($sql, $types = NULL, ...$vars) {
+	public function resultQuery($sql, $types = null, ...$vars) {
 		if (!$stmt = $this->mysqli->prepare($sql)) {
 			return false;
 		}
-		if ($types !== NULL) {
+		if ($types !== null) {
 			if (!$stmt->bind_param($types, ...$vars)) {
 				$stmt->close();
 				return false;
@@ -63,11 +63,11 @@ class Database {
 	}
 
 	// for INSERT, UPDATE, DELETE
-	public function impactQuery($sql, $types = NULL, ...$vars) {
+	public function impactQuery($sql, $types = null, ...$vars) {
 		if (!$stmt = $this->mysqli->prepare($sql)) {
 			return false;
 		}
-		if ($types !== NULL) {
+		if ($types !== null) {
 			if (!$stmt->bind_param($types, ...$vars)) {
 				$stmt->close();
 				return false;
@@ -83,7 +83,7 @@ class Database {
 	}
 
 		// for INSERT
-	public function impactQueryWithId($sql, $types = NULL, ...$vars) {
+	public function impactQueryWithId($sql, $types = null, ...$vars) {
 		if ($this->impactQuery($sql, $types, ...$vars) === false) {
 			return false;
 		}
@@ -91,11 +91,11 @@ class Database {
 	}
 
 	// for SELECT with escaping
-	public function valuesQuery($sql, $types = NULL, ...$vars) {
+	public function valuesQuery($sql, $types = null, ...$vars) {
 		if (!$stmt = $this->mysqli->prepare($sql)) {
 			return false;
 		}
-		if ($types !== NULL) {
+		if ($types !== null) {
 			if (!$stmt->bind_param($types, ...$vars)) {
 				$stmt->close();
 				return false;
@@ -118,26 +118,12 @@ class Database {
 		return $result;
 	}
 
-	public function valueQuery($sql, $types = NULL, ...$vars) {
+	public function valueQuery($sql, $types = null, ...$vars) {
 		$result = $this->valuesQuery($sql, $types, ...$vars);
 		if ($result === false || empty($result)) {
 			return false;
 		}
 		return $result[0];
-	}
-
-
-
-
-
-	public function numberQuery($sql) {
-		$r = $this->mysqli->query($sql);
-		if ($r == false) {
-			return 0;
-		}
-		$result = $r->num_rows;
-		$r->close();
-		return $result;
 	}
 
 	public function getLastError() {

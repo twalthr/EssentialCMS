@@ -85,7 +85,8 @@ class AdminController {
 					`key` VARCHAR(32) NOT NULL,
 					`value` VARCHAR(1024) NULL,
 					`order` INT(10) NOT NULL,
-					PRIMARY KEY (`key`)
+					PRIMARY KEY (`key`),
+					UNIQUE KEY `position` (`key`, `order`)
 				)
 			') && $DB->successQuery('
 				CREATE TABLE IF NOT EXISTS `MenuPaths` (
@@ -98,7 +99,38 @@ class AdminController {
 					`destPage` INT(10) NULL,
 					`destLink` VARCHAR(256) NULL,
 					`options` INT(10) NOT NULL,
-					PRIMARY KEY (`mpid`)
+					PRIMARY KEY (`mpid`),
+					UNIQUE KEY `position` (`parent`, `order`)
+				)
+			') && $DB->successQuery('
+				CREATE TABLE IF NOT EXISTS `Modules` (
+					`mid` INT(10) NOT NULL AUTO_INCREMENT,
+					`page` INT(10) NOT NULL,
+					`section` INT(10) NOT NULL,
+					`order` INT(10) NOT NULL,
+					`module` VARCHAR(32) NOT NULL,
+					PRIMARY KEY (`mid`),
+					UNIQUE KEY `position` (`page`, `section`, `order`)
+				)
+			') && $DB->successQuery('
+				CREATE TABLE IF NOT EXISTS `FieldContentGroup` (
+					`fcgid` INT(10) NOT NULL AUTO_INCREMENT,
+					`module` INT(10) NOT NULL,
+					`key` VARCHAR(32) NULL,
+					`order` INT(10) NOT NULL,
+					PRIMARY KEY (`fcgid`),
+					UNIQUE KEY `position` (`module`, `key`, `order`)
+				)
+			') && $DB->successQuery('
+				CREATE TABLE IF NOT EXISTS `FieldContent` (
+					`fcid` INT(10) NOT NULL AUTO_INCREMENT,
+					`group` INT(10) NOT NULL,
+					`key` VARCHAR(32) NOT NULL,
+					`type` INT(10) NOT NULL,
+					`content` TEXT NOT NULL,
+					`metaContent` TEXT NULL,
+					PRIMARY KEY (`fcid`),
+					UNIQUE KEY `position` (`group`, `key`)
 				)
 			') && $DB->impactQuery('
 				INSERT INTO `Configuration` (`key`, `value`, `order`) 

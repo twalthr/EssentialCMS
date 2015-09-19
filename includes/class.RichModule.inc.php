@@ -235,6 +235,38 @@ abstract class RichModule extends BasicModule {
 	// Static helper methods
 	// --------------------------------------------------------------------------------------------
 
+	public static function getLocalizedModuleInfo($moduleId) {
+		global $ROOT_DIRECTORY;
+		global $TR;
+		// check for directory with module.php inside
+		if (is_dir($ROOT_DIRECTORY . '/modules/' . $moduleId)
+			&& file_exists($ROOT_DIRECTORY . '/modules/' . $moduleId . '/module.php')) {
+			$module = [];
+			$module['id'] = $moduleId;
+			$module['name'] = $moduleId;
+			$module['description'] = null;
+			// check for locale information
+			$localeDir = $ROOT_DIRECTORY . '/modules/' . $moduleId . '/locales';
+			if (file_exists($localeDir) && is_dir($localeDir)) {
+				// check of current locale is supported
+				$supportedLocale = $TR->getSupportedLocaleFromDirectory($localeDir);
+				if ($supportedLocale !== false) {
+					$header = Translator::readHeaderFromLocaleFile($localeDir . '/' . 
+						$supportedLocale . '.locale');
+					// get translated module information from header
+					if (count($header) > 0) {
+						$module['name'] = $header[0];
+					}
+					if (count($header) > 1) {
+						$module['description'] = $header[1];
+					}
+				}
+			}
+			return $module;
+		}
+		return false;
+	}
+
 	public static function getLocalizedModulesList() {
 		global $ROOT_DIRECTORY;
 		global $TR;
@@ -243,34 +275,11 @@ abstract class RichModule extends BasicModule {
 		if ($handle = opendir($ROOT_DIRECTORY . '/modules')) {
 			while (false !== ($entry = readdir($handle))) {
 				// for each directory
-				if ($entry !== '.'
-					&& $entry !== '..'
-					&& is_dir($ROOT_DIRECTORY . '/modules/' . $entry)) {
-					// check for module.php
-					if (!file_exists($ROOT_DIRECTORY . '/modules/' . $entry . '/module.php')) {
-						continue;
+				if ($entry !== '.' && $entry !== '..') {
+					$module = getLocalizedModuleInfo($entry);
+					if ($module !== false) {
+						$moduleList[] = $module;
 					}
-					$module = [];
-					$module['name'] = $entry;
-					$module['description'] = null;
-					// check for locale information
-					$localeDir = $ROOT_DIRECTORY . '/modules/' . $entry . '/locales';
-					if (file_exists($localeDir) && is_dir($localeDir)) {
-						// check of current locale is supported
-						$supportedLocale = $TR->getSupportedLocaleFromDirectory($localeDir);
-						if ($supportedLocale !== false) {
-							$header = Translator::readHeaderFromLocaleFile($localeDir . '/' . 
-								$supportedLocale . '.locale');
-							// get translated module information from header
-							if (count($header) > 0) {
-								$module['name'] = $header[0];
-							}
-							if (count($header) > 1) {
-								$module['description'] = $header[1];
-							}
-						}
-					}
-					$moduleList[] = $module;
 				}
 			}
 			closedir($handle);

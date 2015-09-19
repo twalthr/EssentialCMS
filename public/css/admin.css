@@ -484,6 +484,11 @@ section.content .dialog-success-message + section, section.content .dialog-error
 
 p.empty {
 	text-align: center;
+	margin-bottom: 20px;
+}
+
+.tableLike {
+	margin-bottom: 20px;
 }
 
 .rowLike:last-child {
@@ -501,7 +506,7 @@ p.empty {
 	clear: both;
 }
 
-.rowLike:nth-child(2) {
+.rowLike:nth-child(2n) {
 	background-color: #FAFAFA;
 }
 
@@ -511,19 +516,19 @@ p.empty {
 	color: #DCDCDC;
 }
 
-/* --------------------------------------------------------------------------------------------- */
-/*                                      Admin pages style                                        */
-/* --------------------------------------------------------------------------------------------- */
-div.siteMap a, div.pageList a {
+a.componentLink {
 	font-size: 15px;
 }
 
-div.pageList {
-	margin-bottom: 20px;
+a.private {
+	text-decoration: line-through;
 }
 
-div.siteMap a.private, div.pageList a.private {
-	text-decoration: line-through;
+/* --------------------------------------------------------------------------------------------- */
+/*                                      Admin pages style                                        */
+/* --------------------------------------------------------------------------------------------- */
+div.siteMap a {
+	font-size: 15px;
 }
 
 div.siteMap .subLevel>li {
@@ -541,27 +546,55 @@ div.siteMap .topLevel>li:first-child {
 
 div.siteMap + * {
 	clear: both;
-	padding-top: 20px;
 }
 
 /* --------------------------------------------------------------------------------------------- */
 /*                                      Lightbox style                                           */
 /* --------------------------------------------------------------------------------------------- */
 
-.lightbox_overlay {
+.lightbox-overlay {
 	position: absolute;
 	top: 0;
 	left: 0;
 	height: 100%;
 	width: 100%;
-	background: #000;
+	background: #000000;
 	opacity: 0;
 	z-index: 50;
 }
 
-.lightbox_overlay_dialog {
+.lightbox-overlay-dialog {
 	position: absolute;
 	opacity: 0;
 	left: -9999px;
 	z-index: 51;
+	background-color: #FFFFFF;
+	overflow-y: auto;
+	min-width: 60%;
+}
+
+.lightbox-overlay-dialog>.dialog-window {
+	padding: 5px;
+	border: 1px solid #DCDCDC;
+}
+
+.lightbox-overlay-dialog>.dialog-window h1 {
+	font-size: 21px;
+	font-weight: 600;
+	line-height: normal;
+	border-bottom: 1px solid #DCDCDC;
+	margin-bottom: 20px;
+}
+
+.lightbox-overlay-dialog>.dialog-window h2 {
+	font-weight: 600;
+}
+
+.lightbox-overlay-dialog>.dialog-window p {
+	margin-bottom: 20px;
+}
+
+.lightbox-close {
+	float: right;
+	margin-right: 5px;
 }

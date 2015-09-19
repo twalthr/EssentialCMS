@@ -151,8 +151,12 @@ class Utils {
 		return false;
 	}
 
-	public static function escapeString(&$str) {
+	public static function escapeString($str) {
 		return htmlspecialchars($str);
+	}
+
+	public static function internalHtmlToText($html) {
+		return preg_replace('/\s\s+/', ' ', html_entity_decode(strip_tags($html)));
 	}
 }
 

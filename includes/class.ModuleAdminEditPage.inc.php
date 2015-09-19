@@ -60,10 +60,15 @@ class ModuleAdminEditPage extends BasicModule {
 				$('#pageCustomLastChange').trigger('change');
 				$('#header-add-module').click(function(e) {
 					e.preventDefault();
-					var returnCallback = function(state, data) {
+					var lightboxOpened = function() {
+						$('.lightbox-overlay-dialog #cancel-selection').click(closeLightbox);
+						$('.select-module').click(function() {
 
+						});
 					};
-					openLightboxWithUrl('<?php echo $config->getPublicRoot()?>/admin/select-module-dialog', returnCallback);
+					openLightboxWithUrl('<?php echo $config->getPublicRoot()?>/admin/select-module-dialog',
+						true,
+						lightboxOpened);
 				});
 			});
 		</script>
@@ -168,26 +173,114 @@ class ModuleAdminEditPage extends BasicModule {
 			</section>
 			<?php if (isset($this->page)) : ?>
 				<section>
-					<h1><?php $this->text('HEADER_MODULES'); ?></h1>
-					<button id="header-add-module"><?php $this->text('ADD_MODULE'); ?></button>
+					<h1><?php $this->text('PRE_CONTENT_MODULES'); ?></h1>
+					<button id="preContentAddModule"><?php $this->text('ADD_MODULE'); ?></button>
+					<div id="preContentModuleList">
+						<?php $this->printModuleList($config, MODULES_SECTION_PRE_CONTENT, 'preContent'); ?>
+					</div>
+					<div class="buttonSet">
+						<button class="upModule" disabled><?php $this->text('UP'); ?></button>
+						<button class="downModule" disabled><?php $this->text('DOWN'); ?></button>
+						<button class="copyModule" disabled><?php $this->text('COPY'); ?></button>
+						<button class="moveModule" disabled><?php $this->text('MOVE'); ?></button>
+						<button class="deleteModule" disabled><?php $this->text('DELETE'); ?></button>
+					</div>
 				</section>
 				<section>
 					<h1><?php $this->text('CONTENT_MODULES'); ?></h1>
-					<button id="content-add-module"><?php $this->text('ADD_MODULE'); ?></button>
+					<button id="contentAddModule"><?php $this->text('ADD_MODULE'); ?></button>
+					<div id="contentModuleList">
+						<?php $this->printModuleList($config, MODULES_SECTION_CONTENT, 'content'); ?>
+					</div>
+					<div class="buttonSet">
+						<button class="upModule" disabled><?php $this->text('UP'); ?></button>
+						<button class="downModule" disabled><?php $this->text('DOWN'); ?></button>
+						<button class="copyModule" disabled><?php $this->text('COPY'); ?></button>
+						<button class="moveModule" disabled><?php $this->text('MOVE'); ?></button>
+						<button class="deleteModule" disabled><?php $this->text('DELETE'); ?></button>
+					</div>
 				</section>
 				<section>
 					<h1><?php $this->text('ASIDE_CONTENT_MODULES'); ?></h1>
-					<button id="aside-add-module"><?php $this->text('ADD_MODULE'); ?></button>
+					<button id="asideContentAddModule"><?php $this->text('ADD_MODULE'); ?></button>
+					<div id="asideContentModuleList">
+						<?php $this->printModuleList($config, MODULES_SECTION_ASIDE_CONTENT, 'asideContent'); ?>
+					</div>
+					<div class="buttonSet">
+						<button class="upModule" disabled><?php $this->text('UP'); ?></button>
+						<button class="downModule" disabled><?php $this->text('DOWN'); ?></button>
+						<button class="copyModule" disabled><?php $this->text('COPY'); ?></button>
+						<button class="moveModule" disabled><?php $this->text('MOVE'); ?></button>
+						<button class="deleteModule" disabled><?php $this->text('DELETE'); ?></button>
+					</div>
 				</section>
 				<section>
-					<h1><?php $this->text('FOOTER_MODULES'); ?></h1>
-					<button id="footer-add-module"><?php $this->text('ADD_MODULE'); ?></button>
+					<h1><?php $this->text('POST_CONTENT_MODULES'); ?></h1>
+					<button id="postContentAddModule"><?php $this->text('ADD_MODULE'); ?></button>
+					<div id="postContentModuleList">
+						<?php $this->printModuleList($config, MODULES_SECTION_POST_CONTENT, 'postContent'); ?>
+					</div>
+					<div class="buttonSet">
+						<button class="upModule" disabled><?php $this->text('UP'); ?></button>
+						<button class="downModule" disabled><?php $this->text('DOWN'); ?></button>
+						<button class="copyModule" disabled><?php $this->text('COPY'); ?></button>
+						<button class="moveModule" disabled><?php $this->text('MOVE'); ?></button>
+						<button class="deleteModule" disabled><?php $this->text('DELETE'); ?></button>
+					</div>
 				</section>
 			<?php endif; ?>
 		</form>
 		<?php
 	}
 
+	// --------------------------------------------------------------------------------------------
+	// Printing methods
+	// --------------------------------------------------------------------------------------------
+
+	private function printModuleList($config, $section, $sectionString) {
+		global $DB;
+		$modules = $DB->valuesQuery('
+			SELECT `mid`, `module`
+			FROM `Modules`
+			WHERE `page`=? AND `section`=?
+			ORDER BY `order` ASC',
+			'ii', $this->page['pid'], $section);
+
+		if ($modules === false || empty($modules)) {
+			echo '<p class="empty">';
+			echo $this->text('NO_MODULES');
+			echo '</p>';
+			return;
+		}
+
+		echo '<ul class="tableLike">';
+		foreach ($modules as $module) {
+			$moduleInfo = RichModule::getLocalizedModuleInfo($module['module']);
+			if ($moduleInfo === false) {
+				continue;
+			}
+			echo '<li class="rowLike">';
+			echo '<input type="checkbox" id="' . $sectionString . 'Module' . $module['mid'] . '"';
+			echo ' name="' . $sectionString . 'Module[]"';
+			echo ' value="' . $module['mid'] . '" />';
+			echo '<label for="' . $sectionString . 'Module' . $module['mid'] . '" class="checkbox">';
+			echo Utils::escapeString($moduleInfo['name']) .' </label>';
+			echo '<a href="' . $config->getPublicRoot() . '/admin/module/' . $module['mid'] . '"';
+			if (!empty($moduleInfo['description'])) {
+				echo ' title="' . Utils::escapeString(Utils::internalHtmlToText($moduleInfo['description'])) . '"';
+			}
+			echo ' class="componentLink"';
+			echo '>' . Utils::escapeString($moduleInfo['name']) . '</a>';
+			echo '<span class="rowAdditionalInfo">';
+			echo Utils::escapeString($module['module']);
+			echo '</span>';
+			echo '</li>';
+		}
+		echo '</ul>';
+	}
+
+	// --------------------------------------------------------------------------------------------
+	// User input handling methods
 	// --------------------------------------------------------------------------------------------
 
 	private function handleNewPage() {

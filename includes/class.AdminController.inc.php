@@ -111,7 +111,7 @@ class AdminController {
 			') && $DB->successQuery('
 				CREATE TABLE IF NOT EXISTS `Modules` (
 					`mid` INT(10) NOT NULL AUTO_INCREMENT,
-					`page` INT(10) NOT NULL,
+					`page` INT(10) NULL,
 					`section` INT(10) NOT NULL,
 					`order` INT(10) NOT NULL,
 					`module` VARCHAR(32) NOT NULL,

@@ -18,14 +18,21 @@ function generateDate() {
 	return date.toISOString().slice(0, 19).replace('T', ' ');
 }
 
-function openLightboxWithHtml(html, returnCallback) {
+function openLightboxWithHtml(html, allowClosing, lightboxOpened) {
 	var dialog = $('<div>', {
-		'class': 'lightbox_overlay_dialog'
+		'class': 'lightbox-overlay-dialog'
 	});
 	dialog.append($.parseHTML(html));
 
 	// insert overlay
-	var overlay = $('<div class="lightbox_overlay"></div>');
+	var overlay = $('<div>', {
+		'class': 'lightbox-overlay',
+		'click': function() {
+			if (allowClosing) {
+				closeLightbox();
+			}
+		}
+	});
 	$(window).scroll(function() {
 		overlay.css({
 			// scrollbars do not hide when resizing
@@ -38,39 +45,72 @@ function openLightboxWithHtml(html, returnCallback) {
 
 	$('body').append(dialog);
 
-	$('.lightbox_overlay').animate({ opacity: 0.6 }, 200, 'linear', function() {
+	overlay.animate({ opacity: 0.6 }, 200, 'linear', function() {
 		// adapt dialog to dimensions of the window, so that the component is centered
 		dialog.css({
 			'top': '50%',
 			'left': '50%',
 			'margin-top': -(dialog.outerHeight() / 2),
-			'margin-left': -(dialog.outerWidth() / 2)
+			'margin-left': -(dialog.outerWidth() / 2),
+			'max-height': $(window).height() - 40,
+			'max-width': Math.min($(window).width() - 40, 978)
 		})
 		// make the dialog visible
-		.animate({ opacity: 1 }, 400, 'linear');
+		.animate({ opacity: 1 }, 400, 'linear', lightboxOpened);
 
-		$(window).scroll( function() {
-			dialog.css({
-				'margin-top': (dialog.outerHeight() < $(window).height()) ? 
-					-(dialog.outerHeight() / 2) + $(window).scrollTop() : +(dialog.outerHeight() / 2),
-				'margin-left': (dialog.outerWidth() < $(window).width()) ? 
-					-(dialog.outerWidth() / 2) + $(window).scrollLeft() : +(dialog.outerWidth() / 2)
-			});
-		});
-		$(window).trigger('scroll');
+		// allow closing with ESC
+		if (allowClosing) {
+			$(document).keyup(lightboxEscapeCallback);
+		}
+
+		// add refresh callbacks
+		$(window).scroll(lightboxRefresh);
+		$(window).resize(lightboxRefresh);
+		lightboxRefresh();
 	});
 }
 
-function openLightboxWithUrl(targetUrl, returnCallback) {
+function lightboxEscapeCallback(e) {
+	if (e.keyCode == 27) {
+		closeLightbox();
+	}
+}
+
+function lightboxRefresh() {
+	var dialog = $('.lightbox-overlay-dialog');
+	dialog.css({
+		'margin-top': (dialog.outerHeight() < $(window).height()) ? 
+			-(dialog.outerHeight() / 2) + $(window).scrollTop() : +(dialog.outerHeight() / 2),
+		'margin-left': (dialog.outerWidth() < $(window).width()) ? 
+			-(dialog.outerWidth() / 2) + $(window).scrollLeft() : +(dialog.outerWidth() / 2),
+		'max-height': $(window).height() - 40,
+		'max-width': Math.min($(window).width() - 40, 978)
+	});
+}
+
+function openLightboxWithUrl(targetUrl, allowClosing, lightboxOpened) {
 	$.ajax({
 		type: 'GET',
 		url: targetUrl,
 		dataType: 'html',
 		success: function(data, textStatus, jqXHR) {
-			openLightboxWithHtml(data, returnCallback);
+			openLightboxWithHtml(data, allowClosing, lightboxOpened);
 		},
 		error: function(jqXHR, textStatus, errorThrown) {
 			alert('Error');
 		}
+	});
+}
+
+function closeLightbox() {
+	$('.lightbox-overlay-dialog').animate({ opacity: 0 }, 200, 'linear', function() {
+		$(this).remove();
+		// remove overall overlay
+		$('.lightbox-overlay').animate({ opacity: 0 }, 400, 'linear', function() {
+				$(this).remove();
+				$(window).off('scroll', lightboxRefresh);
+				$(window).off('resize', lightboxRefresh);
+				$(document).off('keyup', lightboxEscapeCallback);
+		});
 	});
 }

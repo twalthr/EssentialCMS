@@ -224,6 +224,8 @@ class ModuleAdminPages extends BasicModule {
 	}
 
 	// --------------------------------------------------------------------------------------------
+	// Printing methods
+	// --------------------------------------------------------------------------------------------
 
 	private function printMenu(&$menu, &$config, $topLevel) {
 		if ($topLevel && ($menu === false || empty($menu))) {
@@ -278,7 +280,7 @@ class ModuleAdminPages extends BasicModule {
 			echo '</p>';
 			return;
 		}
-		echo '<ul>';
+		echo '<ul class="tableLike">';
 		foreach ($this->pages as $page) {
 			echo '<li class="rowLike">';
 			echo '<input type="checkbox" id="page' . $page['pid'] . '" name="page[]"';
@@ -290,7 +292,10 @@ class ModuleAdminPages extends BasicModule {
 				echo ' title="' . Utils::escapeString($page['hoverTitle']) . '"';
 			}
 			if ($page['options'] & PAGES_OPTION_PRIVATE) {
-				echo ' class="private"';
+				echo ' class="private componentLink"';
+			}
+			else {
+				echo ' class="componentLink"';
 			}
 			echo '>' . Utils::escapeString($page['title']) . '</a>';
 			if (Utils::hasStringContent($page['externalId'])) {
@@ -303,6 +308,8 @@ class ModuleAdminPages extends BasicModule {
 		echo '</ul>';
 	}
 
+	// --------------------------------------------------------------------------------------------
+	// User input handling methods
 	// --------------------------------------------------------------------------------------------
 
 	private function handlePageOperations() {

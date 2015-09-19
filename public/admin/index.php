@@ -9,17 +9,20 @@ if (isset($_GET['q'])) {
 
 $querySplitted = explode('/', $query);
 
-$adminController = new AdminController();
+$action = $querySplitted[0];
+$parameters = array_slice($querySplitted, 1);
 
-switch ($querySplitted[0]) {
+$controller = new AdminController();
+
+switch ($action) {
 	case '':
 		// uninitialized
-		if (!$adminController->isInstalled()) {
+		if (!$controller->isInstalled()) {
 			header('Location: ' . $PUBLIC_ROOT . '/admin/install');
 			exit;
 		}
 
-		$loggedIn = $adminController->login();
+		$loggedIn = $controller->login();
 		// logged in
 		if ($loggedIn === true) {
 			header('Location: ' . $PUBLIC_ROOT . '/admin/overview');
@@ -27,46 +30,48 @@ switch ($querySplitted[0]) {
 		}
 		// not logged in
 		else if ($loggedIn === false) {
-			$adminController->layoutContent(new ModuleAdminLogin());
+			$controller->layoutContent(new AdminLoginModule());
 		}
 		// error during login
 		else {
-			$module = new ModuleAdminLogin();
+			$module = new AdminLoginModule();
 			$module->setState($loggedIn);
-			$adminController->layoutContent($module);
+			$controller->layoutContent($module);
 		}
 		break;
 	case 'install':
-		$installed = $adminController->install();
+		$installed = $controller->install();
 		// not installed
 		if ($installed === false) {
-			$adminController->layoutContent(new ModuleAdminInstall());
+			$controller->layoutContent(new AdminInstallModule());
 		}
 		// success or error during installation
 		else {
-			$module = new ModuleAdminInstall();
+			$module = new AdminInstallModule();
 			$module->setState($installed);
-			$adminController->layoutContent($module);
+			$controller->layoutContent($module);
 		}
 		break;
 	case 'overview':
-		$adminController->layoutLoggedInContent(0, null, null, new ModuleAdminOverview($adminController));
+		$controller->verifyLogin();
+		$controller->layoutLoggedInContent(0, null, null, new AdminOverviewModule($controller));
 		break;
 	case 'pages':
-		$adminController->layoutLoggedInContent(1, null, null, new ModuleAdminPages($adminController));
+		$controller->verifyLogin();
+		$controller->layoutLoggedInContent(1, null, null, new AdminPagesModule($controller));
 		break;
 	case 'new-page':
-		$adminController->layoutLoggedInContent(1, null, null, new ModuleAdminEditPage($adminController));
+		$controller->verifyLogin();
+		$controller->layoutLoggedInContent(1, null, null, new AdminEditPageModule($controller));
 		break;
 	case 'page':
-		$pageId = null;
-		if (count($querySplitted) > 1) {
-			$pageId = $querySplitted[1];
-		}
-		$adminController->layoutLoggedInContent(1, null, null, new ModuleAdminEditPage($adminController, $pageId));
+		$controller->verifyLogin();
+		$module = new AdminEditPageModule($controller->getModuleOperations(), $parameters);
+		$controller->layoutLoggedInContent(1, null, null, $module);
 		break;
 	case 'select-module-dialog':
-		$adminController->layoutDialog(new ModuleAdminSelectModule($adminController));
+		$controller->verifyLogin();
+		$controller->layoutDialog(new AdminSelectModuleModule($controller));
 		break;
 	default:
 		echo "Invalid command.";

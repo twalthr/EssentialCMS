@@ -70,11 +70,13 @@ class Database {
 		if ($types !== null) {
 			if (!$stmt->bind_param($types, ...$vars)) {
 				$stmt->close();
+				echo "hello";
 				return false;
 			}
 		}
 		if (!$stmt->execute()) {
 			$stmt->close();
+			echo $this->mysqli->error;
 			return false;
 		}
 		$result = $this->mysqli->affected_rows > 0;

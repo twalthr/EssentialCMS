@@ -3,6 +3,9 @@ $(document).ready(function(){
 		var el = $(this);
 		el.parent().find('input[type="checkbox"]').prop('checked', el.prop('checked'));
 	});
+	$('button').click(function(e) {
+		e.preventDefault();
+	});
 });
 
 function generateIdentifierFromString(str) {

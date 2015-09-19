@@ -3,13 +3,17 @@
 class AdminController {
 
 	private $config;
+	private $modulesOperations;
 
 	public function __construct() {	
-		global $PUBLIC_ROOT, $CMS_FULLNAME, $CMS_URL;
+		global $DB, $PUBLIC_ROOT, $CMS_FULLNAME, $CMS_URL;
 		$this->config = new Configuration();
 		$this->config->setPublicRoot($PUBLIC_ROOT);
 		$this->config->setCmsFullname($CMS_FULLNAME);
 		$this->config->setCmsUrl($CMS_URL);
+
+		// database operations
+		$this->modulesOperations = new ModulesOperations($DB);
 	}
 
 	public function layoutDialog(...$contentModules) {
@@ -213,6 +217,10 @@ class AdminController {
 	public function getDB() {
 		global $DB;
 		return $DB;
+	}
+
+	public function getModuleOperations() {
+		return $this->modulesOperations;
 	}
 
 	// --------------------------------------------------------------------------------------------

@@ -1,6 +1,6 @@
 <?php
 
-class ModuleAdminInstall extends BasicModule {
+class AdminInstallModule extends BasicModule {
 
 	private $state;
 

@@ -1,6 +1,6 @@
 <?php
 
-class ModuleAdminPages extends BasicModule {
+class AdminPagesModule extends BasicModule {
 
 	private $state;
 	private $message;
@@ -10,7 +10,6 @@ class ModuleAdminPages extends BasicModule {
 	public function __construct(&$controller) {
 		global $CMS_VERSION, $DB;
 		parent::__construct($CMS_VERSION, 'admin-pages');
-		$controller->verifyLogin();
 
 		// handle menu operations
 		if (Utils::isValidFieldNotEmpty('operationSpace') && Utils::getValidField('operationSpace') === 'menu') {

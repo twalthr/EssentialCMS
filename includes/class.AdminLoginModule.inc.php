@@ -1,6 +1,6 @@
 <?php
 
-class ModuleAdminLogin extends BasicModule {
+class AdminLoginModule extends BasicModule {
 
 	private $state;
 

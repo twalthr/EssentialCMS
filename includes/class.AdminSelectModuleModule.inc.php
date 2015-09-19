@@ -1,13 +1,12 @@
 <?php
 
-class ModuleAdminSelectModule extends BasicModule {
+class AdminSelectModuleModule extends BasicModule {
 
 	private $modules;
 
 	public function __construct(&$controller) {
 		global $CMS_VERSION;
 		parent::__construct($CMS_VERSION, 'admin-select-module');
-		$controller->verifyLogin();
 
 		$this->loadModules();
 	}

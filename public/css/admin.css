@@ -388,7 +388,7 @@ body>.page>main {
 
 body>.page>main section.content {
 	max-width: 978px;
-	margin: 45px auto 0;
+	margin: 45px auto 45px;
 }
 
 body>.page>footer {
@@ -470,7 +470,7 @@ section.content section h1 {
 	margin-bottom: 20px;
 }
 
-section.content section {
+section.content section, section.content section+* {
 	margin-top: 45px;
 }
 

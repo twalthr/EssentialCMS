@@ -105,6 +105,13 @@ class Utils {
 		return trim($_POST[$str]);
 	}
 
+	public static function getUnmodifiedStringOrEmpty($str) {
+		if (isset($_POST[$str]) && is_string($_POST[$str])) {
+			return $_POST[$str];
+		}
+		return '';
+	}
+
 	public static function getValidFieldStringOrNull($str) {
 		$trimmed = trim($_POST[$str]);
 		if (strlen($trimmed) === 0) {

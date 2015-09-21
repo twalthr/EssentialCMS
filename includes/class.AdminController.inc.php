@@ -3,7 +3,7 @@
 class AdminController {
 
 	private $config;
-	private $modulesOperations;
+	private $moduleOperations;
 
 	public function __construct() {	
 		global $DB, $PUBLIC_ROOT, $CMS_FULLNAME, $CMS_URL;
@@ -13,7 +13,7 @@ class AdminController {
 		$this->config->setCmsUrl($CMS_URL);
 
 		// database operations
-		$this->modulesOperations = new ModulesOperations($DB);
+		$this->moduleOperations = new ModuleOperations($DB);
 	}
 
 	public function layoutDialog(...$contentModules) {
@@ -220,7 +220,7 @@ class AdminController {
 	}
 
 	public function getModuleOperations() {
-		return $this->modulesOperations;
+		return $this->moduleOperations;
 	}
 
 	// --------------------------------------------------------------------------------------------

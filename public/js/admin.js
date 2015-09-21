@@ -3,10 +3,58 @@ $(document).ready(function(){
 		var el = $(this);
 		el.parent().find('input[type="checkbox"]').prop('checked', el.prop('checked'));
 	});
+	$('.enableButtonsIfChecked').each(function() {
+		var list = $(this);
+		list.find('input[type="checkbox"]')
+			.change(function() {
+				var disabled = list.find('input[type="checkbox"]:checked').length == 0;
+				list.siblings('.buttonSet').find('button').prop('disabled', disabled);
+			});
+	});
+	$('.disableListIfClicked').click(function() {
+		var list = $(this).closest('.buttonSet').prev();
+		list.find('input[type="checkbox"]').prop('disabled', true);
+		// hide add button
+		list.parent().find('.addButton').addClass('hidden');
+		// hide button of buttonSet
+		list.siblings('.buttonSet').find('button').addClass('hidden');
+	});
 	$('button').click(function(e) {
 		e.preventDefault();
 	});
 });
+
+function enableList(button) {
+	var list = button.closest('.dialog-box').siblings('.enableButtonsIfChecked');
+	list.find('input[type="checkbox"]').prop('disabled', false);
+}
+
+function openButtonSetDialog(button, message, showElements) {
+	var dialog = button.parent().next();
+	dialog.removeClass('hidden');
+	dialog.find('.dialog-message').text(message);
+
+	var elements = dialog.find(showElements);
+	elements.removeClass('hidden');
+	// elements.filter(':input').prop('disabled', false);
+
+	var cancelButton = dialog.find('.cancel');
+	cancelButton.removeClass('hidden');
+	cancelButton.off('click');
+	cancelButton.click(function(e) {
+		e.preventDefault();
+		// hide dialog
+		dialog.addClass('hidden');
+		elements.addClass('hidden');
+		// elements.filter(':input').prop('disabled', true);
+
+		// enable list if it was disabled
+		var buttonSet = dialog.parent().find('.buttonSet');
+		buttonSet.find('button').removeClass('hidden');
+		buttonSet.prev().find('input[type="checkbox"]').prop('disabled', false);
+		buttonSet.parent().find('.addButton').removeClass('hidden');
+	});
+}
 
 function generateIdentifierFromString(str) {
 	return str

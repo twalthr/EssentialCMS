@@ -28,13 +28,23 @@ class Database {
 		}
 	}
 
-	// for CREATE TABLES
-	public function successQuery($sql) {
-		$result = false;
-		if($r = $this->mysqli->query($sql)) {
-			$result = true;
+	// for CREATE TABLES or UPDATE possibly without affected rows
+	public function successQuery($sql, $types = null, ...$vars) {
+		if (!$stmt = $this->mysqli->prepare($sql)) {
+			return false;
 		}
-		return $result;
+		if ($types !== null) {
+			if (!$stmt->bind_param($types, ...$vars)) {
+				$stmt->close();
+				return false;
+			}
+		}
+		if (!$stmt->execute()) {
+			$stmt->close();
+			return false;
+		}
+		$stmt->close();
+		return true;
 	}
 
 	// for SELECT where actual result is unimportant but must exist
@@ -70,13 +80,11 @@ class Database {
 		if ($types !== null) {
 			if (!$stmt->bind_param($types, ...$vars)) {
 				$stmt->close();
-				echo "hello";
 				return false;
 			}
 		}
 		if (!$stmt->execute()) {
 			$stmt->close();
-			echo $this->mysqli->error;
 			return false;
 		}
 		$result = $this->mysqli->affected_rows > 0;
@@ -130,6 +138,10 @@ class Database {
 
 	public function getLastError() {
 		return $this->lastError;
+	}
+
+	public function getError() {
+		return $this->mysqli->error;
 	}
 }
 

@@ -93,6 +93,23 @@ class Utils {
 		return false;
 	}
 
+	public static function isValidFieldInt($str) {
+		$notNullStr = Utils::getUnmodifiedStringOrEmpty($str);
+		return filter_var($notNullStr, FILTER_VALIDATE_INT) !== false;
+	}
+
+	public static function isValidFieldIntArray($str) {
+		if (!Utils::isValidFieldArray($str)) {
+			return false;
+		}
+		foreach ($_POST[$str] as $value) {
+			if (filter_var($value, FILTER_VALIDATE_INT) === false) {
+				return false;
+			}
+		}
+		return true;
+	}
+
 	public static function isValidFieldArray($str) {
 		return isset($_POST[$str]) && is_array($_POST[$str]);
 	}
@@ -164,6 +181,14 @@ class Utils {
 
 	public static function internalHtmlToText($html) {
 		return preg_replace('/\s\s+/', ' ', html_entity_decode(strip_tags($html)));
+	}
+
+	public static function getColumnWithValue($array, $column, $value) {
+		$key = array_search($value, array_column($array, $column), true);
+		if ($key === false) {
+			return false;
+		}
+		return $array[$key];
 	}
 }
 

@@ -3,7 +3,7 @@
 class AdminEditPageModule extends BasicModule {
 
 	// database operations
-	private $modulesOperations;
+	private $moduleOperations;
 
 	// UI state
 	private $state;
@@ -12,32 +12,40 @@ class AdminEditPageModule extends BasicModule {
 
 	// member variables
 	private $page;
+	private $modulesBySection;
 
-	public function __construct($modulesOperations, $parameters) {
+	public function __construct($moduleOperations, $parameters = null) {
 		global $CMS_VERSION;
 		parent::__construct($CMS_VERSION, 'admin-edit-page');
-		$this->modulesOperations = $modulesOperations;
+		$this->moduleOperations = $moduleOperations;
 
-		// page is present
-		if (count($parameters) > 0) {
+		// page id is present
+		if (isset($parameters) && count($parameters) > 0) {
 			$this->loadPage($parameters[0]);
+		}
+		// if page is present, load modules
+		if (isset($this->page)) {
+			$this->loadModulesBySection();
 		}
 
 		// handle new page
-		if (Utils::hasFields() && !isset($this->page)) {
+		if (!isset($this->page)
+			&& Utils::hasFields()) {
 			$this->handleNewPage();
 		}
 		// handle edit modules
-		else if (Utils::hasFields()
-			&& isset($this->page)
+		else if (isset($this->page)
 			&& Utils::getUnmodifiedStringOrEmpty('operationSpace') === 'module') {
 			$this->handleEditModules();
+			// refresh
+			$this->loadModulesBySection();
 		}
 		// handle edit page
-		else if (Utils::hasFields()
-			&& isset($this->page)
+		else if (isset($this->page)
 			&& Utils::getUnmodifiedStringOrEmpty('operationSpace') === 'page') {
 			$this->handleEditPage();
+			// refresh
+			$this->loadPage($parameters[0]);
 		}
 	}
 
@@ -56,15 +64,6 @@ class AdminEditPageModule extends BasicModule {
 
 		<script type="text/javascript">
 			$(document).ready(function() {
-				$('.moduleList').each(function() {
-					var moduleList = $(this);
-					moduleList
-						.find('input[type="checkbox"]')
-						.change(function() {
-							var disabled = moduleList.find('input[type="checkbox"]:checked').length == 0;
-							moduleList.next().find('button').prop('disabled', disabled);
-						});
-				});
 				$('#pageDirectAccess').change(function() {
 					var externalId = $('#externalId');
 					externalId.prop('disabled', !$(this).prop('checked'));
@@ -87,20 +86,58 @@ class AdminEditPageModule extends BasicModule {
 					$('.showInEditMode').removeClass('hidden');
 					$('.hiddenInEditMode').remove();
 				});
-				$('.addModule').click(function(e) {
-					var sectionId = $(this).val();
+				$('.addButton').click(function(e) {
+					var form = $(this).parents('form');
 					var lightboxOpened = function() {
 						$('.lightbox-overlay-dialog #cancel-selection').click(closeLightbox);
 						$('.select-module').click(function() {
-							$('#moduleOperation').val('add');
-							$('#moduleSection').val(sectionId);
-							$('#moduleParameter1').val($(this).val());
-							$('#moduleOperations').submit();
+							form.find('[name="operation"]').val('add');
+							form.find('[name="operationParameter"]').val($(this).val());
+							form.submit();
 						});
 					};
 					openLightboxWithUrl('<?php echo $config->getPublicRoot(); ?>/admin/select-module-dialog',
 						true,
 						lightboxOpened);
+				});				
+				$('.moveModule').click(function() {
+					var form = $(this).parents('form');
+					form.find('[name="operation"]').val('move');
+					openButtonSetDialog($(this),
+						'<?php $this->text('SELECT_MOVE_TARGET'); ?>',
+						'.moduleTarget, .moveConfirm');
+				});
+				$('.copyModule').click(function() {
+					var form = $(this).parents('form');
+					form.find('[name="operation"]').val('copy');
+					openButtonSetDialog($(this),
+						'<?php $this->text('SELECT_COPY_TARGET'); ?>',
+						'.moduleTarget, .copyConfirm');
+				});
+				$('.exportModule').click(function() {
+					// TODO
+				});
+				$('.deleteModule').click(function() {
+					var form = $(this).parents('form');
+					form.find('[name="operation"]').val('delete');
+					openButtonSetDialog($(this),
+						'<?php $this->text('DELETE_QUESTION'); ?>',
+						'.deleteConfirm');
+				});				
+				$('.moveConfirm').click(function() {
+					var form = $(this).parents('form');
+					enableList($(this));
+					form.submit();
+				});
+				$('.copyConfirm').click(function() {
+					var form = $(this).parents('form');
+					enableList($(this));
+					form.submit();
+				});
+				$('.deleteConfirm').click(function() {
+					var form = $(this).parents('form');
+					enableList($(this));
+					form.submit();
 				});
 				<?php endif; ?>
 
@@ -121,8 +158,7 @@ class AdminEditPageModule extends BasicModule {
 			<?php endif; ?>
 		<?php endif; ?>
 		<?php if (isset($this->page)) : ?>
-			<form method="post"
-				action="<?php echo $config->getPublicRoot(); ?>/admin/page/<?php echo $this->page['pid']; ?>">
+			<form method="post">
 		<?php else : ?>
 			<form method="post" action="<?php echo $config->getPublicRoot(); ?>/admin/new-page">
 		<?php endif; ?>
@@ -227,86 +263,26 @@ class AdminEditPageModule extends BasicModule {
 			</form>
 			<?php if (isset($this->page)) : ?>
 				<?php $this->printMissingModules(); ?>
-				<form method="post" id="moduleOperations"
-					action="<?php echo $config->getPublicRoot(); ?>/admin/page/<?php echo $this->page['pid']; ?>">
-					<input type="hidden" name="operationSpace" value="module" />
-					<input type="hidden" name="operation" id="moduleOperation" />
-					<input type="hidden" name="section" id="moduleSection" />
-					<input type="hidden" name="operationParameter1" id="moduleParameter1" />
-					<input type="hidden" name="operationParameter2" id="moduleParameter2" />
-					<section <?php $this->printHiddenClass(MODULES_SECTION_PRE_CONTENT); ?>>
-						<h1><?php $this->text('PRE_CONTENT_MODULES'); ?></h1>
-						<button class="hidden showInEditMode addModule" value="preContent">
-							<?php $this->text('ADD_MODULE'); ?></button>
-						<div class="moduleList">
-							<?php $this->printModuleList($config, MODULES_SECTION_PRE_CONTENT, 'preContent'); ?>
-						</div>
-						<div class="buttonSet hidden showInEditMode">
-							<button class="moveModule" value="preContent" disabled>
-								<?php $this->text('MOVE'); ?></button>
-							<button class="copyModule" value="preContent" disabled>
-								<?php $this->text('COPY'); ?></button>
-							<button class="importModule" value="preContent" disabled>
-								<?php $this->text('IMPORT'); ?></button>
-							<button class="deleteModule" value="preContent" disabled>
-								<?php $this->text('DELETE'); ?></button>
-						</div>
-					</section>
-					<section <?php $this->printHiddenClass(MODULES_SECTION_CONTENT); ?>>
-						<h1><?php $this->text('CONTENT_MODULES'); ?></h1>
-						<button class="hidden showInEditMode addModule" value="content">
-							<?php $this->text('ADD_MODULE'); ?></button>
-						<div class="moduleList">
-							<?php $this->printModuleList($config, MODULES_SECTION_CONTENT, 'content'); ?>
-						</div>
-						<div class="buttonSet hidden showInEditMode">
-							<button class="moveModule" value="content" disabled>
-								<?php $this->text('MOVE'); ?></button>
-							<button class="copyModule" value="content" disabled>
-								<?php $this->text('COPY'); ?></button>
-							<button class="importModule" value="content" disabled>
-								<?php $this->text('IMPORT'); ?></button>
-							<button class="deleteModule" value="content" disabled>
-								<?php $this->text('DELETE'); ?></button>
-						</div>
-					</section>
-					<section <?php $this->printHiddenClass(MODULES_SECTION_ASIDE_CONTENT); ?>>
-						<h1><?php $this->text('ASIDE_CONTENT_MODULES'); ?></h1>
-						<button class="hidden showInEditMode addModule" value="asideContent">
-							<?php $this->text('ADD_MODULE'); ?></button>
-						<div class="moduleList">
-							<?php $this->printModuleList($config, MODULES_SECTION_ASIDE_CONTENT, 'asideContent'); ?>
-						</div>
-						<div class="buttonSet hidden showInEditMode">
-							<button class="moveModule" value="asideContent" disabled>
-								<?php $this->text('MOVE'); ?></button>
-							<button class="copyModule" value="asideContent" disabled>
-								<?php $this->text('COPY'); ?></button>
-							<button class="importModule" value="asideContent" disabled>
-								<?php $this->text('IMPORT'); ?></button>
-							<button class="deleteModule" value="asideContent" disabled>
-								<?php $this->text('DELETE'); ?></button>
-						</div>
-					</section>
-					<section <?php $this->printHiddenClass(MODULES_SECTION_POST_CONTENT); ?>>
-						<h1><?php $this->text('POST_CONTENT_MODULES'); ?></h1>
-						<button class="hidden showInEditMode addModule" value="postContent">
-							<?php $this->text('ADD_MODULE'); ?></button>
-						<div class="moduleList">
-							<?php $this->printModuleList($config, MODULES_SECTION_POST_CONTENT, 'postContent'); ?>
-						</div>
-						<div class="buttonSet hidden showInEditMode">
-							<button class="moveModule" value="postContent" disabled>
-								<?php $this->text('MOVE'); ?></button>
-							<button class="copyModule" value="postContent" disabled>
-								<?php $this->text('COPY'); ?></button>
-							<button class="importModule" value="postContent" disabled>
-								<?php $this->text('IMPORT'); ?></button>
-							<button class="deleteModule" value="postContent" disabled>
-								<?php $this->text('DELETE'); ?></button>
-						</div>
-					</section>
-				</form>
+					<?php $this->printSection(
+						$config,
+						'PRE_CONTENT_MODULES',
+						'preContent', 
+						MODULES_SECTION_PRE_CONTENT); ?>
+					<?php $this->printSection(
+						$config,
+						'CONTENT_MODULES',
+						'content', 
+						MODULES_SECTION_CONTENT); ?>
+					<?php $this->printSection(
+						$config,
+						'ASIDE_CONTENT_MODULES',
+						'asideContent', 
+						MODULES_SECTION_ASIDE_CONTENT); ?>
+					<?php $this->printSection(
+						$config,
+						'POST_CONTENT_MODULES',
+						'postContent', 
+						MODULES_SECTION_POST_CONTENT); ?>
 			<?php endif; ?>
 		<?php
 	}
@@ -315,42 +291,66 @@ class AdminEditPageModule extends BasicModule {
 	// Printing methods
 	// --------------------------------------------------------------------------------------------
 
+	private function printSection($config, $sectionTitle, $sectionString, $section) {
+		?>
+		<form method="post">
+			<input type="hidden" name="operationSpace" value="module" />
+			<input type="hidden" name="section" value="<?php echo $sectionString; ?>" />
+			<input type="hidden" name="operation" />
+			<input type="hidden" name="operationParameter" />
+			<section class="<?php echo array_key_exists($section, $this->modulesBySection) ?
+				'' : 'hidden showInEditMode'; ?>">
+				<h1><?php $this->text($sectionTitle); ?></h1>
+				<button class="hidden showInEditMode addButton" value="<?php echo $sectionString; ?>">
+					<?php $this->text('ADD_MODULE'); ?></button>
+				<div class="moduleList enableButtonsIfChecked">
+					<?php $this->printModuleListAsTable($config, $section); ?>
+				</div>
+				<div class="buttonSet hidden showInEditMode">
+					<button class="moveModule disableListIfClicked"
+						value="<?php echo $sectionString; ?>" disabled>
+						<?php $this->text('MOVE'); ?>
+					</button>
+					<button class="copyModule disableListIfClicked"
+						value="<?php echo $sectionString; ?>" disabled>
+						<?php $this->text('COPY'); ?>
+					</button>
+					<button class="exportModule disableListIfClicked"
+						value="<?php echo $sectionString; ?>" disabled>
+						<?php $this->text('EXPORT'); ?>
+					</button>
+					<button class="deleteModule disableListIfClicked"
+						value="<?php echo $sectionString; ?>" disabled>
+						<?php $this->text('DELETE'); ?>
+					</button>
+				</div>
+				<div class="dialog-box hidden">
+					<div class="dialog-message"></div>
+					<div class="fields">
+						<?php $this->printModuleListAsSelect($section); ?>
+					</div>
+					<div class="options">
+						<button class="hidden copyConfirm"><?php $this->text('COPY'); ?></button>
+						<button class="hidden moveConfirm"><?php $this->text('MOVE'); ?></button>
+						<button class="hidden deleteConfirm"><?php $this->text('DELETE'); ?></button>
+						<button class="hidden cancel"><?php $this->text('CANCEL'); ?></button>
+					</div>
+				</div>
+			</section>
+		</form>
+		<?php
+	}
+
 	private function printMissingModules() {
-		global $DB;
-		$moduleCount = $DB->valueQuery('
-			SELECT COUNT(*) AS `count`
-			FROM `Modules`
-			WHERE `page`=?',
-			'i', $this->page['pid']);
-		if ($moduleCount === false || $moduleCount['count'] === 0) {
+		if (count($this->modulesBySection) === 0) {
 			echo '<p class="empty hiddenInEditMode">';
 			echo $this->text('NO_MODULES_IN_PAGE');
 			echo '</p>';
 		}
 	}
 
-	private function printHiddenClass($section) {
-		global $DB;
-		$moduleCount = $DB->valueQuery('
-			SELECT COUNT(*) AS `count`
-			FROM `Modules`
-			WHERE `page`=? AND `section`=?',
-			'ii', $this->page['pid'], $section);
-		if ($moduleCount === false || $moduleCount['count'] === 0) {
-			echo 'class="hidden showInEditMode"';
-		}
-	}
-
-	private function printModuleList($config, $section, $sectionString) {
-		global $DB;
-		$modules = $DB->valuesQuery('
-			SELECT `mid`, `module`
-			FROM `Modules`
-			WHERE `page`=? AND `section`=?
-			ORDER BY `order` ASC',
-			'ii', $this->page['pid'], $section);
-
-		if ($modules === false || empty($modules)) {
+	private function printModuleListAsTable($config, $section) {
+		if (!array_key_exists($section, $this->modulesBySection)) {
 			echo '<p class="empty">';
 			echo $this->text('NO_MODULES_IN_SECTION');
 			echo '</p>';
@@ -358,21 +358,22 @@ class AdminEditPageModule extends BasicModule {
 		}
 
 		echo '<ul class="tableLike">';
-		foreach ($modules as $module) {
+		foreach ($this->modulesBySection[$section] as $module) {
 			$moduleInfo = RichModule::getLocalizedModuleInfo($module['module']);
 			if ($moduleInfo === false) {
 				continue;
 			}
 			echo '<li class="rowLike">';
-			echo '<input type="checkbox" id="' . $sectionString . 'Module' . $module['mid'] . '"';
-			echo ' name="' . $sectionString . '[]"';
+			echo '<input type="checkbox" id="module' . $module['mid'] . '"';
+			echo ' name="modules[]"';
 			echo ' value="' . $module['mid'] . '" />';
-			echo '<label for="' . $sectionString . 'Module' . $module['mid'] . '"';
+			echo '<label for="module' . $module['mid'] . '"';
 			echo ' class="checkbox hidden showInEditMode">';
 			echo Utils::escapeString($moduleInfo['name']) .' </label>';
 			echo '<a href="' . $config->getPublicRoot() . '/admin/module/' . $module['mid'] . '"';
 			if (!empty($moduleInfo['description'])) {
-				echo ' title="' . Utils::escapeString(Utils::internalHtmlToText($moduleInfo['description'])) . '"';
+				echo ' title="' . Utils::escapeString(
+					Utils::internalHtmlToText($moduleInfo['description'])) . '"';
 			}
 			echo ' class="componentLink"';
 			echo '>' . Utils::escapeString($moduleInfo['name']) . '</a>';
@@ -382,6 +383,21 @@ class AdminEditPageModule extends BasicModule {
 			echo '</li>';
 		}
 		echo '</ul>';
+	}
+
+	private function printModuleListAsSelect($section) {
+		echo '<select name="operationTarget" class="hidden moduleTarget">';
+		$i = 0;
+		foreach ($this->modulesBySection[$section] as $module) {
+			echo '<option value="' . $i . '">';
+			echo Utils::escapeString(RichModule::getLocalizedModuleInfo($module['module'])['name']);
+			echo '</option>';
+			$i++;
+		}
+		echo '<option value="-1" selected>';
+		echo $this->text('INSERT_AT_END');
+		echo '</option>';
+		echo '</select>';
 	}
 
 	// --------------------------------------------------------------------------------------------
@@ -403,24 +419,27 @@ class AdminEditPageModule extends BasicModule {
 
 	private function handleEditModules() {
 		$operation = Utils::getUnmodifiedStringOrEmpty('operation');
-		$section = Utils::getUnmodifiedStringOrEmpty('section');
-		$operationParameter1 = Utils::getUnmodifiedStringOrEmpty('operationParameter1');
-		$operationParameter2 = Utils::getUnmodifiedStringOrEmpty('operationParameter2');
+		$sectionString = Utils::getUnmodifiedStringOrEmpty('section');
+		$operationParameter = Utils::getUnmodifiedStringOrEmpty('operationParameter');
+
+		// check section
+		if (!$this->isValidSectionString($sectionString)) {
+			return;
+		}
+		$section = $this->translateSectionString($sectionString);
+
+		// do operation
 		switch ($operation) {
 			case 'add':
-				// check section
-				if (!$this->isValidSectionString($section)) {
-					return;
-				}
-				// check operationParameter1
-				if (!RichModule::isValidModuleId($operationParameter1)) {
+				// check operationParameter
+				if (!RichModule::isValidModuleId($operationParameter)) {
 					return;
 				}
 				// add to database
-				$result = $this->modulesOperations->addModule(
+				$result = $this->moduleOperations->addModule(
 					$this->page['pid'],
-					$this->translateSectionString($section),
-					$operationParameter1);
+					$section,
+					$operationParameter);
 				if ($result === false) {
 					$this->state = false;
 					$this->message = 'UNKNOWN_ERROR';
@@ -428,6 +447,49 @@ class AdminEditPageModule extends BasicModule {
 				else {
 					$this->state = true;
 					$this->message = 'MODULE_ADDED';
+				}
+				break;
+			case 'move':
+				// check selected modules and target
+				if (!Utils::isValidFieldIntArray('modules')
+						|| !Utils::isValidFieldInt('operationTarget')) {
+					return;
+				}
+				// normalize and reverse selected modules
+				$moduleIds = array_reverse(array_unique(Utils::getValidFieldArray('modules')));
+				$operationTarget = (int) Utils::getUnmodifiedStringOrEmpty('operationTarget');
+
+				// foreach module
+				$result = true;
+				foreach ($moduleIds as $moduleId) {
+					// check if section exists
+					if (!array_key_exists($section, $this->modulesBySection)) {
+						return;
+					}
+					$modulesInSection = $this->modulesBySection[$section];
+					// check if module exists
+					$module = Utils::getColumnWithValue($modulesInSection, 'mid', (int) $moduleId);
+					if ($module === false) {
+						return;
+					}
+					// check target position
+					if ($operationTarget >= count($modulesInSection)) {
+						return;
+					}
+
+					// perform move
+					$result = $result
+						&& $this->moduleOperations->moveModuleWithinSection(
+							$module['mid'],
+							$operationTarget);
+				}
+				if ($result === false) {
+					$this->state = false;
+					$this->message = 'UNKNOWN_ERROR';
+				}
+				else {
+					$this->state = true;
+					$this->message = 'MODULE_MOVE_SUCCESSFUL';
 				}
 				break;
 		}
@@ -499,6 +561,10 @@ class AdminEditPageModule extends BasicModule {
 
 	}
 
+	// --------------------------------------------------------------------------------------------
+	// Database loading methods
+	// --------------------------------------------------------------------------------------------
+
 	private function loadPage($pageId) {
 		global $DB;
 		$result = ctype_digit($pageId)
@@ -514,6 +580,20 @@ class AdminEditPageModule extends BasicModule {
 		$this->page = $resultValue;
 	}
 
+	private function loadModulesBySection() {
+		$this->modulesBySection = [];
+		$sections = $this->moduleOperations->getModuleSections($this->page['pid']);
+		if ($sections === false) {
+			return;
+		}
+		foreach ($sections as $section) {
+			$modules = $this->moduleOperations->getModules($this->page['pid'], $section['section']);
+			if ($modules === false) {
+				continue;
+			}
+			$this->modulesBySection[$section['section']] = $modules;
+		}
+	}
 }
 
 ?>

@@ -3,6 +3,8 @@
 class AdminController {
 
 	private $config;
+	private $fieldOperations;
+	private $fieldGroupOperations;
 	private $moduleOperations;
 
 	public function __construct() {	
@@ -13,7 +15,9 @@ class AdminController {
 		$this->config->setCmsUrl($CMS_URL);
 
 		// database operations
-		$this->moduleOperations = new ModuleOperations($DB);
+		$this->fieldOperations = new FieldOperations($DB);
+		$this->fieldGroupOperations = new FieldGroupOperations($DB, $this->fieldOperations);
+		$this->moduleOperations = new ModuleOperations($DB, $this->fieldGroupOperations);
 	}
 
 	public function layoutDialog(...$contentModules) {
@@ -138,7 +142,7 @@ class AdminController {
 					`key` VARCHAR(32) NOT NULL,
 					`type` INT(10) NOT NULL,
 					`content` TEXT NOT NULL,
-					`metaType` INT(10) NOT NULL,
+					`metaType` INT(10) NULL,
 					`metaContent` TEXT NULL,
 					PRIMARY KEY (`fid`),
 					UNIQUE KEY `position` (`group`, `key`)

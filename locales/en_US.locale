@@ -85,6 +85,6 @@ EXPORT=Export
 EDIT_PAGE=Edit Page
 SAVE=Save
 MODULE_ADDED=Module has been added successfully.
-INSERT_AT_END=-- Insert at the end --
 MODULE_MOVE_SUCCESSFUL=Modules successfully moved.
 MODULE_COPY_SUCCESSFUL=Modules successfully copied.
+MODULE_DELETE_SUCCESSFUL=Modules successfully deleted.

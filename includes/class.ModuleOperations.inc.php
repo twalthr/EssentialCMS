@@ -3,14 +3,16 @@
 final class ModuleOperations {
 
 	private $db;
+	private $fieldGroupOperations;
 
-	public function __construct($db) {
+	public function __construct($db, $fieldGroupOperations) {
 		$this->db = $db;
+		$this->fieldGroupOperations = $fieldGroupOperations;
 	}
 
 	public function addModule($page, $section, $moduleId) {
 		$nextOrder = $this->db->valueQuery('
-			SELECT COALESCE(MAX(`order`), -1) + 1 AS `value`
+			SELECT COUNT(*) AS `value`
 			FROM `Modules`
 			WHERE `page`=? AND `section`=?',
 			'ii',
@@ -18,13 +20,27 @@ final class ModuleOperations {
 		if ($nextOrder === false) {
 			return false;
 		}
-		return $this->db->impactQuery('
+		$nextOrder = $nextOrder['value'];
+		return $this->db->impactQueryWithId('
 			INSERT INTO `Modules`
 			(`page`, `section`, `order`, `module`)
 			VALUES
 			(?, ?, ?, ?)',
 			'iiis',
-			$page, $section, $nextOrder['value'], $moduleId);
+			$page, $section, $nextOrder, $moduleId);
+	}
+
+	public function getModule($mid) {
+		$module = $this->db->valueQuery('
+			SELECT *
+			FROM `Modules`
+			WHERE `mid`=?',
+			'i',
+			$mid);
+		if ($module === false) {
+			return false;
+		}
+		return $module;
 	}
 
 	public function getModuleSections($page) {
@@ -55,62 +71,113 @@ final class ModuleOperations {
 		return $modules;
 	}
 
-	public function moveModuleWithinSection($module, $newOrder = -1) {
+	public function moveModuleWithinSection($mid, $newOrder) {
 		$oldPosition = $this->db->valueQuery('
 			SELECT `page`, `section`, `order`
 			FROM `Modules`
 			WHERE `mid`=?',
 			'i',
-			$module);
+			$mid);
 		if ($oldPosition === false) {
 			return false;
 		}
+		$page = $oldPosition['page'];
+		$section = $oldPosition['section'];
+		$oldOrder = $oldPosition['order'];
+
 		// move to same position can be skipped
-		if ($oldPosition['order'] === $newOrder) {
+		if ($oldOrder === $newOrder) {
 			return true;
 		}
-		// move to the end
-		else if ($newOrder < 0) {
-			$count = $this->db->valueQuery('
+
+		$count = $this->db->valueQuery('
 				SELECT COUNT(*) AS `value`
 				FROM `Modules`
 				WHERE `page`=? AND `section`=?',
 				'ii',
-				$oldPosition['page'], $oldPosition['section']);
-			if ($count === false) {
-				return false;
-			}
-			$newOrder = $count['value'];
+				$page, $section);
+		if ($count === false) {
+			return false;
 		}
+		$count = $count['value'];
 
-		// move all modules below new position downwards
-		// make a gap
-		$result = $this->db->successQuery('
-				UPDATE `Modules`
-				SET `order` = `order` + 1
-				WHERE `page`=? AND `section`=? AND `order`>=?
-				ORDER BY `order` DESC',
-				'iii',
-				$oldPosition['page'], $oldPosition['section'], $newOrder);
-
-		// move module to gap/new position
-		// gap at old position accrues
-		$result =  $result && $this->db->impactQuery('
+		$result = $this->db->impactQuery('
 				UPDATE `Modules`
 				SET `order`=?
 				WHERE `mid`=?',
 				'ii',
-				$newOrder, $module);
-		// update all modules below the gap because of movement until new postion 
-		// and below new position
-		$result =  $result && $this->db->successQuery('
+				$count, $mid);
+
+		// based on
+		// http://stackoverflow.com/questions/8607998/using-a-sort-order-column-in-a-database-table
+		if ($newOrder < $oldOrder) {
+			$result = $result && $this->db->impactQuery('
+				UPDATE `Modules`
+				SET `order` = `order` + 1
+				WHERE `page`=? AND `section`=? AND `order` BETWEEN ? AND ?
+				ORDER BY `order` DESC',
+				'iiii',
+				$page, $section, $newOrder, $oldOrder);
+		}
+
+		if ($newOrder > $oldOrder) {
+			$result = $result && $this->db->impactQuery('
 				UPDATE `Modules`
 				SET `order` = `order` - 1
-				WHERE `page`=? AND `section`=? AND ((`order`>? AND `order`<=?) OR `order`>?)
+				WHERE `page`=? AND `section`=? AND `order` BETWEEN ? AND ?
 				ORDER BY `order` ASC',
-				'iiiii',
-				$oldPosition['page'], $oldPosition['section'], $oldPosition['order'], $newOrder, $newOrder);
+				'iiii',
+				$page, $section, $oldOrder, $newOrder);
+		}
+
+		$result = $result && $this->db->impactQuery('
+				UPDATE `Modules`
+				SET `order`=?
+				WHERE `mid`=?',
+				'ii',
+				$newOrder, $mid);
+
 		return $result;
+	}
+
+	public function copyModuleWithinSection($mid, $newOrder) {
+		$module = $this->getModule($mid);
+		if ($module === false) {
+			return false;
+		}
+		$newMid = $this->addModule($module['page'], $module['section'], $module['module']);
+		if ($newMid === false) {
+			return false;
+		}
+		$result = $this->moveModuleWithinSection($newMid, $newOrder);
+		return $result && $this->fieldGroupOperations->copyFieldGroups($mid, $newMid);
+	}
+
+	public function deleteModule($mid) {
+		$module = $this->db->valueQuery('
+			SELECT `page`, `section`, `order`
+			FROM `Modules`
+			WHERE `mid`=?',
+			'i',
+			$mid);
+		if ($module === false) {
+			return false;
+		}
+		$result = $this->fieldGroupOperations->deleteFieldGroups($mid);
+
+		$result = $result && $this->db->impactQuery('
+			DELETE FROM `Modules`
+			WHERE `mid`=?',
+			'i',
+			$mid);
+
+		return $result && $this->db->successQuery('
+			UPDATE `Modules`
+				SET `order` = `order` - 1
+				WHERE `page`=? AND `section`=? AND `order`>?
+				ORDER BY `order` ASC',
+				'iii',
+				$module['page'], $module['section'], $module['order']);
 	}
 }
 

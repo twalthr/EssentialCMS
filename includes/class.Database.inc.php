@@ -41,6 +41,8 @@ class Database {
 		}
 		if (!$stmt->execute()) {
 			$stmt->close();
+			echo 'MIST' . var_dump(func_get_args());
+			echo var_dump($this->mysqli->error);
 			return false;
 		}
 		$stmt->close();

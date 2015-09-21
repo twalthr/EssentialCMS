@@ -394,9 +394,6 @@ class AdminEditPageModule extends BasicModule {
 			echo '</option>';
 			$i++;
 		}
-		echo '<option value="-1" selected>';
-		echo $this->text('INSERT_AT_END');
-		echo '</option>';
 		echo '</select>';
 	}
 
@@ -450,13 +447,15 @@ class AdminEditPageModule extends BasicModule {
 				}
 				break;
 			case 'move':
+			case 'copy':
+			case 'delete':
 				// check selected modules and target
 				if (!Utils::isValidFieldIntArray('modules')
 						|| !Utils::isValidFieldInt('operationTarget')) {
 					return;
 				}
-				// normalize and reverse selected modules
-				$moduleIds = array_reverse(array_unique(Utils::getValidFieldArray('modules')));
+				// normalize selected modules
+				$moduleIds = array_unique(Utils::getValidFieldArray('modules'));
 				$operationTarget = (int) Utils::getUnmodifiedStringOrEmpty('operationTarget');
 
 				// foreach module
@@ -473,24 +472,49 @@ class AdminEditPageModule extends BasicModule {
 						return;
 					}
 					// check target position
-					if ($operationTarget >= count($modulesInSection)) {
+					if ($operationTarget < 0 || $operationTarget >= count($modulesInSection)) {
 						return;
 					}
 
-					// perform move
-					$result = $result
-						&& $this->moduleOperations->moveModuleWithinSection(
-							$module['mid'],
-							$operationTarget);
+					if ($operation === 'move') {
+						// perform move
+						$result = $result
+							&& $this->moduleOperations->moveModuleWithinSection(
+								$module['mid'],
+								$operationTarget);
+					}
+					else if ($operation === 'copy') {
+						// perform copy
+						$result = $result
+							&& $this->moduleOperations->copyModuleWithinSection(
+								$module['mid'],
+								$operationTarget);
+					}
+					else if ($operation === 'delete') {
+						// perform delete
+						$result = $result
+							&& $this->moduleOperations->deleteModule($module['mid']);
+					}
 				}
 				if ($result === false) {
 					$this->state = false;
 					$this->message = 'UNKNOWN_ERROR';
 				}
-				else {
+				else if ($operation === 'move') {
 					$this->state = true;
 					$this->message = 'MODULE_MOVE_SUCCESSFUL';
 				}
+				else if ($operation === 'copy') {
+					$this->state = true;
+					$this->message = 'MODULE_COPY_SUCCESSFUL';
+				}
+				else if ($operation === 'delete') {
+					$this->state = true;
+					$this->message = 'MODULE_DELETE_SUCCESSFUL';
+				}
+				break;
+			case 'export':
+				// TODO
 				break;
 		}
 	}

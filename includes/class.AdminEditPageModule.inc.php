@@ -92,7 +92,7 @@ class AdminEditPageModule extends BasicModule {
 						$('.lightbox-overlay-dialog #cancel-selection').click(closeLightbox);
 						$('.select-module').click(function() {
 							form.find('[name="operation"]').val('add');
-							form.find('[name="operationParameter"]').val($(this).val());
+							form.find('[name="operationParameter1"]').val($(this).val());
 							form.submit();
 						});
 					};
@@ -115,7 +115,19 @@ class AdminEditPageModule extends BasicModule {
 						'.moduleTarget, .copyConfirm');
 				});
 				$('.exportModule').click(function() {
-					// TODO
+					var form = $(this).parents('form');
+					var lightboxOpened = function() {
+						$('.lightbox-overlay-dialog #cancel-selection').click(closeLightbox);
+						$('.select-section').click(function() {
+							form.find('[name="operation"]').val('export');
+							form.find('[name="operationParameter1"]').val($(this).val());
+							form.find('[name="operationParameter2"]').val($(this).val());
+							form.submit();
+						});
+					};
+					openLightboxWithUrl('<?php echo $config->getPublicRoot(); ?>/admin/export-module-dialog',
+						true,
+						lightboxOpened);
 				});
 				$('.deleteModule').click(function() {
 					var form = $(this).parents('form');
@@ -297,7 +309,8 @@ class AdminEditPageModule extends BasicModule {
 			<input type="hidden" name="operationSpace" value="module" />
 			<input type="hidden" name="section" value="<?php echo $sectionString; ?>" />
 			<input type="hidden" name="operation" />
-			<input type="hidden" name="operationParameter" />
+			<input type="hidden" name="operationParameter1" />
+			<input type="hidden" name="operationParameter2" />
 			<section class="<?php echo array_key_exists($section, $this->modulesBySection) ?
 				'' : 'hidden showInEditMode'; ?>">
 				<h1><?php $this->text($sectionTitle); ?></h1>
@@ -417,7 +430,7 @@ class AdminEditPageModule extends BasicModule {
 	private function handleEditModules() {
 		$operation = Utils::getUnmodifiedStringOrEmpty('operation');
 		$sectionString = Utils::getUnmodifiedStringOrEmpty('section');
-		$operationParameter = Utils::getUnmodifiedStringOrEmpty('operationParameter');
+		$operationParameter1 = Utils::getUnmodifiedStringOrEmpty('operationParameter1');
 
 		// check section
 		if (!$this->isValidSectionString($sectionString)) {
@@ -428,15 +441,15 @@ class AdminEditPageModule extends BasicModule {
 		// do operation
 		switch ($operation) {
 			case 'add':
-				// check operationParameter
-				if (!RichModule::isValidModuleId($operationParameter)) {
+				// check operationParameter1
+				if (!RichModule::isValidModuleId($operationParameter1)) {
 					return;
 				}
 				// add to database
 				$result = $this->moduleOperations->addModule(
 					$this->page['pid'],
 					$section,
-					$operationParameter);
+					$operationParameter1);
 				if ($result === false) {
 					$this->state = false;
 					$this->message = 'UNKNOWN_ERROR';

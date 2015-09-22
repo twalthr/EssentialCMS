@@ -55,7 +55,28 @@ final class FieldGroupOperations {
 	}
 
 	public function deleteFieldGroups($mid) {
-		return true;
+		$fieldGroups = $this->db->valuesQuery('
+			SELECT `fgid`
+			FROM `FieldGroups`
+			WHERE `module`=?
+			ORDER BY `key` ASC, `order` DESC',
+			'i',
+			$mid);
+		if ($fieldGroups === false) {
+			return false;
+		}
+		foreach ($fieldGroups as $fieldGroup) {
+			$result = $this->fieldOperations->removeFields($fieldGroup['fgid']);
+			if ($result === false) {
+				return false;
+			}
+		}
+		return $this->db->successQuery('
+			DELETE FROM `FieldGroups`
+			WHERE `module`=?
+			ORDER BY `key` ASC, `order` DESC',
+			'i',
+			$mid);
 	}
 }
 

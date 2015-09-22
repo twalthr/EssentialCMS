@@ -281,25 +281,25 @@ label {
 	padding-right: 20px;
 }
 
-form .fields {
+.fields {
 	display: table;
 	width: 100%;
 }
 
-form .fields .field {
+.fields .field {
 	display: table-row;
 }
 
-form .fields .field>* {
+.fields .field>* {
 	display: table-cell;
 	text-align: left;
 }
 
-form .fields .field .hint {
+.fields .field .hint {
 	padding-left: 20px;
 }
 
-form .fieldsRequired {
+.fieldsRequired {
 	padding-bottom: 20px;
 }
 
@@ -421,7 +421,16 @@ body>.page>*:nth-last-child(2) {
 	text-align: center;
 }
 
-.dialog-box form .fields {
+.dialog-box h1 {
+	font-size: 21px;
+	font-weight: 600;
+	line-height: normal;
+	border-bottom: 1px solid #DCDCDC;
+	margin-bottom: 20px;
+	text-align: left;
+}
+
+.dialog-box .fields {
 	width: auto;
 }
 
@@ -566,7 +575,6 @@ div.siteMap + * {
 	z-index: 51;
 	background-color: #FFFFFF;
 	overflow-y: auto;
-	min-width: 60%;
 }
 
 .lightbox-overlay-dialog>.dialog-window {
@@ -590,7 +598,7 @@ div.siteMap + * {
 	margin-bottom: 20px;
 }
 
-.lightbox-close {
+.lightbox-overlay-dialog>.dialog-window .lightbox-close {
 	float: right;
 	margin-right: 5px;
 }

@@ -73,6 +73,10 @@ switch ($action) {
 		$controller->verifyLogin();
 		$controller->layoutDialog(new AdminSelectModuleModule($controller));
 		break;
+	case 'export-module-dialog':
+		$controller->verifyLogin();
+		$controller->layoutDialog(new AdminExportModuleModule($controller->getPageOperations(), $parameters));
+		break;
 	default:
 		echo "Invalid command.";
 }

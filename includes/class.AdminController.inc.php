@@ -6,6 +6,7 @@ class AdminController {
 	private $fieldOperations;
 	private $fieldGroupOperations;
 	private $moduleOperations;
+	private $pageOperations;
 
 	public function __construct() {	
 		global $DB, $PUBLIC_ROOT, $CMS_FULLNAME, $CMS_URL;
@@ -18,6 +19,7 @@ class AdminController {
 		$this->fieldOperations = new FieldOperations($DB);
 		$this->fieldGroupOperations = new FieldGroupOperations($DB, $this->fieldOperations);
 		$this->moduleOperations = new ModuleOperations($DB, $this->fieldGroupOperations);
+		$this->pageOperations = new PageOperations($DB, $this->moduleOperations);
 	}
 
 	public function layoutDialog(...$contentModules) {
@@ -223,8 +225,20 @@ class AdminController {
 		return $DB;
 	}
 
+	public function getFieldOperations() {
+		return $this->fieldOperations;
+	}
+
+	public function getFieldGroupOperations() {
+		return $this->fieldGroupOperations;
+	}
+
 	public function getModuleOperations() {
 		return $this->moduleOperations;
+	}
+
+	public function getPageOperations() {
+		return $this->pageOperations;
 	}
 
 	// --------------------------------------------------------------------------------------------

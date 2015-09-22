@@ -17,6 +17,14 @@ final class FieldOperations {
 			'ii',
 			$toFgid, $fromFgid);
 	}
+
+	public function removeFields($fgid) {
+		return $this->db->successQuery('
+			DELETE FROM `Fields`
+			WHERE `group`=?',
+			'i',
+			$fgid);
+	}
 }
 
 ?>

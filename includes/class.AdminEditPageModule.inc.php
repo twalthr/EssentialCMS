@@ -1,9 +1,13 @@
 <?php
 
+// v1: FEATURE COMPLETE
+
 class AdminEditPageModule extends BasicModule {
 
 	// database operations
+	private $pageOperations;
 	private $moduleOperations;
+	private $menuItemOperations;
 
 	// UI state
 	private $state;
@@ -14,13 +18,16 @@ class AdminEditPageModule extends BasicModule {
 	private $page;
 	private $modulesBySection;
 
-	public function __construct($moduleOperations, $parameters = null) {
-		global $CMS_VERSION;
-		parent::__construct($CMS_VERSION, 'admin-edit-page');
+	public function __construct(
+			$pageOperations, $moduleOperations, $menuItemOperations, $parameters = null) {
+		parent::__construct(1, 'admin-edit-page');
+		$this->pageOperations = $pageOperations;
 		$this->moduleOperations = $moduleOperations;
+		$this->menuItemOperations = $menuItemOperations;
 
 		// page id is present
-		if (isset($parameters) && count($parameters) > 0) {
+		if (isset($parameters)
+			&& count($parameters) > 0) {
 			$this->loadPage($parameters[0]);
 		}
 		// if page is present, load modules
@@ -45,7 +52,7 @@ class AdminEditPageModule extends BasicModule {
 			&& Utils::getUnmodifiedStringOrEmpty('operationSpace') === 'page') {
 			$this->handleEditPage();
 			// refresh
-			$this->loadPage($parameters[0]);
+			$this->loadPage($this->page['pid']);
 		}
 	}
 
@@ -89,8 +96,7 @@ class AdminEditPageModule extends BasicModule {
 				$('.addButton').click(function(e) {
 					var form = $(this).parents('form');
 					var lightboxOpened = function() {
-						$('.lightbox-overlay-dialog #cancel-selection').click(closeLightbox);
-						$('.select-module').click(function() {
+						$('.dialog-window .selectModule').click(function() {
 							form.find('[name="operation"]').val('add');
 							form.find('[name="operationParameter1"]').val($(this).val());
 							form.submit();
@@ -117,11 +123,12 @@ class AdminEditPageModule extends BasicModule {
 				$('.exportModule').click(function() {
 					var form = $(this).parents('form');
 					var lightboxOpened = function() {
-						$('.lightbox-overlay-dialog #cancel-selection').click(closeLightbox);
-						$('.select-section').click(function() {
+						$('.dialog-box #exportConfirm').click(function() {
 							form.find('[name="operation"]').val('export');
-							form.find('[name="operationParameter1"]').val($(this).val());
-							form.find('[name="operationParameter2"]').val($(this).val());
+							form.find('[name="operationParameter1"]')
+								.val($('.dialog-box #exportTargetSection').val());
+							form.find('[name="operationParameter2"]')
+								.val($('.dialog-box #exportTargetPage').val());
 							form.submit();
 						});
 					};
@@ -177,9 +184,13 @@ class AdminEditPageModule extends BasicModule {
 			<input type="hidden" name="operationSpace" value="page" />
 				<section>
 					<?php if (isset($this->page)) : ?>
-						<h1 class="hiddenInEditMode"><?php echo Utils::escapeString($this->page['title']); ?></h1>
+						<h1 class="hiddenInEditMode">
+							<?php echo Utils::escapeString($this->page['title']); ?>
+						</h1>
 						<h1 class="hidden showInEditMode"><?php $this->text('PAGE_PROPERTIES'); ?></h1>
-						<button id="editPage" class="hiddenInEditMode"><?php $this->text('EDIT_PAGE'); ?></button>
+						<button id="editPage" class="hiddenInEditMode">
+							<?php $this->text('EDIT_PAGE'); ?>
+						</button>
 					<?php else : ?>
 						<h1><?php $this->text('NEW_PAGE'); ?></h1>
 					<?php endif; ?>
@@ -227,8 +238,8 @@ class AdminEditPageModule extends BasicModule {
 							<div class="field">
 								<label><?php $this->text('CUSTOM_PAGE_LAST_CHANGE'); ?></label>
 								<div class="checkboxWrapper">
-									<input type="checkbox" id="pageCustomLastChange" name="pageCustomLastChange"
-										value="custom-last-change"
+									<input type="checkbox" id="pageCustomLastChange"
+										name="pageCustomLastChange" value="custom-last-change"
 										<?php echo (Utils::getCheckedFieldOrVariable('pageCustomLastChange',
 											$this->page['externalLastChanged']))?
 									 	'checked' : ''; ?> />
@@ -241,9 +252,9 @@ class AdminEditPageModule extends BasicModule {
 							<div class="field">
 								<label for="externalLastChanged">
 									<?php $this->text('PAGE_EXTERNAL_LAST_CHANGED'); ?></label>
-								<input type="text" name="externalLastChanged" id="externalLastChanged" disabled 
+								<input type="text" name="externalLastChanged" id="externalLastChanged" 
 									value="<?php echo Utils::getEscapedFieldOrVariable('externalLastChanged',
-										$this->page['externalLastChanged']); ?>" />
+										$this->page['externalLastChanged']); ?>" disabled />
 							</div>
 							<div class="field">
 								<label><?php $this->text('PUBLICATION'); ?></label>
@@ -277,24 +288,16 @@ class AdminEditPageModule extends BasicModule {
 				<?php $this->printMissingModules(); ?>
 					<?php $this->printSection(
 						$config,
-						'PRE_CONTENT_MODULES',
-						'preContent', 
-						MODULES_SECTION_PRE_CONTENT); ?>
+						ModuleOperations::MODULES_SECTION_PRE_CONTENT); ?>
 					<?php $this->printSection(
 						$config,
-						'CONTENT_MODULES',
-						'content', 
-						MODULES_SECTION_CONTENT); ?>
+						ModuleOperations::MODULES_SECTION_CONTENT); ?>
 					<?php $this->printSection(
 						$config,
-						'ASIDE_CONTENT_MODULES',
-						'asideContent', 
-						MODULES_SECTION_ASIDE_CONTENT); ?>
+						ModuleOperations::MODULES_SECTION_ASIDE_CONTENT); ?>
 					<?php $this->printSection(
 						$config,
-						'POST_CONTENT_MODULES',
-						'postContent', 
-						MODULES_SECTION_POST_CONTENT); ?>
+						ModuleOperations::MODULES_SECTION_POST_CONTENT); ?>
 			<?php endif; ?>
 		<?php
 	}
@@ -303,37 +306,39 @@ class AdminEditPageModule extends BasicModule {
 	// Printing methods
 	// --------------------------------------------------------------------------------------------
 
-	private function printSection($config, $sectionTitle, $sectionString, $section) {
+	private function printSection($config, $section) {
 		?>
 		<form method="post">
 			<input type="hidden" name="operationSpace" value="module" />
-			<input type="hidden" name="section" value="<?php echo $sectionString; ?>" />
+			<input type="hidden" name="section"
+				value="<?php echo ModuleOperations::translateToSectionString($section); ?>" />
 			<input type="hidden" name="operation" />
 			<input type="hidden" name="operationParameter1" />
 			<input type="hidden" name="operationParameter2" />
 			<section class="<?php echo array_key_exists($section, $this->modulesBySection) ?
 				'' : 'hidden showInEditMode'; ?>">
-				<h1><?php $this->text($sectionTitle); ?></h1>
-				<button class="hidden showInEditMode addButton" value="<?php echo $sectionString; ?>">
+				<h1><?php $this->text(ModuleOperations::translateSectionToLocale($section)); ?></h1>
+				<button class="hidden showInEditMode addButton"
+					value="<?php echo ModuleOperations::translateToSectionString($section); ?>">
 					<?php $this->text('ADD_MODULE'); ?></button>
 				<div class="moduleList enableButtonsIfChecked">
 					<?php $this->printModuleListAsTable($config, $section); ?>
 				</div>
 				<div class="buttonSet hidden showInEditMode">
 					<button class="moveModule disableListIfClicked"
-						value="<?php echo $sectionString; ?>" disabled>
+						value="<?php echo ModuleOperations::translateToSectionString($section); ?>" disabled>
 						<?php $this->text('MOVE'); ?>
 					</button>
 					<button class="copyModule disableListIfClicked"
-						value="<?php echo $sectionString; ?>" disabled>
+						value="<?php echo ModuleOperations::translateToSectionString($section); ?>" disabled>
 						<?php $this->text('COPY'); ?>
 					</button>
-					<button class="exportModule disableListIfClicked"
-						value="<?php echo $sectionString; ?>" disabled>
+					<button class="exportModule"
+						value="<?php echo ModuleOperations::translateToSectionString($section); ?>" disabled>
 						<?php $this->text('EXPORT'); ?>
 					</button>
 					<button class="deleteModule disableListIfClicked"
-						value="<?php echo $sectionString; ?>" disabled>
+						value="<?php echo ModuleOperations::translateToSectionString($section); ?>" disabled>
 						<?php $this->text('DELETE'); ?>
 					</button>
 				</div>
@@ -414,29 +419,16 @@ class AdminEditPageModule extends BasicModule {
 	// User input handling methods
 	// --------------------------------------------------------------------------------------------
 
-	private function isValidSectionString($section) {
-		return in_array($section, ['preContent', 'content', 'asideContent', 'postContent'], true);
-	}
-
-	private function translateSectionString($section) {
-		switch ($section) {
-			case 'preContent': return MODULES_SECTION_PRE_CONTENT;
-			case 'content': return MODULES_SECTION_CONTENT;
-			case 'asideContent': return MODULES_SECTION_ASIDE_CONTENT;
-			case 'postContent': return MODULES_SECTION_POST_CONTENT;
-		}
-	}
-
 	private function handleEditModules() {
 		$operation = Utils::getUnmodifiedStringOrEmpty('operation');
 		$sectionString = Utils::getUnmodifiedStringOrEmpty('section');
 		$operationParameter1 = Utils::getUnmodifiedStringOrEmpty('operationParameter1');
 
 		// check section
-		if (!$this->isValidSectionString($sectionString)) {
+		if (!ModuleOperations::isStringValidPageSection($sectionString)) {
 			return;
 		}
-		$section = $this->translateSectionString($sectionString);
+		$section = ModuleOperations::translateSectionString($sectionString);
 
 		// do operation
 		switch ($operation) {
@@ -527,33 +519,93 @@ class AdminEditPageModule extends BasicModule {
 				}
 				break;
 			case 'export':
-				// TODO
+				// check operationParameter1
+				if (!ModuleOperations::isStringValidSection($operationParameter1)) {
+					return;
+				}
+				$targetSection = ModuleOperations::translateSectionString($operationParameter1);
+				$page = null;
+				// check page if non-global section
+				if (!ModuleOperations::isGlobalSection($targetSection)) {
+					// check operationParameter2
+					if (!Utils::isValidFieldInt('operationParameter2')) {
+						$this->state = false;
+						$this->message = 'PAGE_NEEDED';
+					}
+					$page = (int) Utils::getUnmodifiedStringOrEmpty('operationParameter2');
+					if (!$this->pageOperations->isValidPageId($page)) {
+						return;
+					}
+				}
+
+				// check selected modules
+				if (!Utils::isValidFieldIntArray('modules')) {
+					return;
+				}
+				// normalize selected modules
+				$moduleIds = array_unique(Utils::getValidFieldArray('modules'));
+
+				// foreach module
+				$result = true;
+				foreach ($moduleIds as $moduleId) {
+					// check if section exists
+					if (!array_key_exists($section, $this->modulesBySection)) {
+						return;
+					}
+					$modulesInSection = $this->modulesBySection[$section];
+					// check if module exists
+					$module = Utils::getColumnWithValue($modulesInSection, 'mid', (int) $moduleId);
+					if ($module === false) {
+						return;
+					}
+
+					// perform export
+					$result = $result
+							&& $this->moduleOperations->moveModuleBetweenSections(
+								$module['mid'],
+								$targetSection,
+								$page);
+				}
+				if ($result === false) {
+					$this->state = false;
+					$this->message = 'UNKNOWN_ERROR';
+				}
+				else {
+					$this->state = true;
+					$this->message = 'MODULE_EXPORT_SUCCESSFUL';
+				}
 				break;
 		}
 	}
 
-	private function handleNewPage() {
-		global $DB;
+	private function checkPageFields() {
 		if (!Utils::isValidFieldWithContentNoLinebreak('title', 256)) {
 			$this->state = false;
 			$this->message = 'INVALID_PAGE_TITLE';
-			return;
+			return false;
 		}
 		if (!Utils::isValidFieldNoLinebreak('hoverTitle', 256)) {
 			$this->state = false;
 			$this->message = 'INVALID_PAGE_HOVER_TITLE';
-			return;
+			return false;
 		}
 		if (Utils::isChecked('pageDirectAccess')
 			&& !Utils::isValidFieldIdentifier('externalId', 256)) {
 			$this->state = false;
 			$this->message = 'INVALID_PAGE_EXTERNAL_ID';
-			return;
+			return false;
 		}
 		if (Utils::isChecked('pageCustomLastChange')
 			&& !Utils::isValidFieldDate('externalLastChanged')) {
 			$this->state = false;
 			$this->message = 'INVALID_PAGE_EXTERNAL_DATE';
+			return false;
+		}
+		return true;
+	}
+
+	private function handleNewPage() {
+		if ($this->checkPageFields() === false) {
 			return;
 		}
 
@@ -562,22 +614,15 @@ class AdminEditPageModule extends BasicModule {
 		if (Utils::isChecked('pageDirectAccess')) {
 			$externalId = Utils::getValidFieldString('externalId');
 
-			$menuItemExists = $DB->resultQuery('SELECT `mpid` FROM `MenuPaths` WHERE `externalId`=?', 's', $externalId);
-			$pageExists = $DB->resultQuery('SELECT `pid` FROM `Pages` WHERE `externalId`=?', 's', $externalId);
-
-			if ($menuItemExists || $pageExists) {
+			if ($this->menuItemOperations->isValidExternalId($externalId)
+				|| $this->pageOperations->isValidExternalId($externalId)) {
 				$this->state = false;
 				$this->message = 'PAGE_EXTERNALID_EXISTS';
 				return;
 			}
 		}
 
-		$result = $DB->impactQueryWithId('
-			INSERT INTO `Pages`
-			(`title`, `hoverTitle`, `externalId`, `options`, `lastChanged`, `externalLastChanged`)
-			VALUES
-			(?,?,?,?,NOW(),?)',
-			'sssis',
+		$result = $this->pageOperations->addPage(
 			Utils::getValidFieldString('title'),
 			Utils::getValidFieldStringOrNull('hoverTitle'),
 			$externalId,
@@ -595,7 +640,65 @@ class AdminEditPageModule extends BasicModule {
 	}
 
 	private function handleEditPage() {
+		if ($this->checkPageFields() === false) {
+			return;
+		}
 
+		$updateColumns = [];
+		// check for updated title
+		$title = Utils::getValidFieldString('title');
+		if ($title !== $this->page['title']) {
+			$updateColumns['title'] = $title;
+		}
+		// check for updated hoverTitle
+		$hoverTitle = Utils::getValidFieldStringOrNull('hoverTitle');
+		if ($hoverTitle !== $this->page['hoverTitle']) {
+			$updateColumns['hoverTitle'] = $hoverTitle;
+		}
+		// check for updated externalId
+		if (Utils::isChecked('pageDirectAccess')) {
+			$externalId = Utils::getValidFieldString('externalId');
+			if ($externalId !== $this->page['externalId']) {
+				if ($this->menuItemOperations->isValidExternalId($externalId)
+					|| $this->pageOperations->isValidExternalId($externalId)) {
+					$this->state = false;
+					$this->message = 'PAGE_EXTERNALID_EXISTS';
+					return;
+				}
+				$updateColumns['externalId'] = $externalId;
+			}
+		}
+		else if (!Utils::isChecked('pageDirectAccess') && $this->page['externalId'] !== null) {
+			$updateColumns['externalId'] = null;
+		}
+		// check for updated options
+		if (Utils::isChecked('pageDeactivated') && !($this->page['options'] & PAGES_OPTION_PRIVATE)) {
+			$updateColumns['options'] = $this->page['options'] | PAGES_OPTION_PRIVATE;
+		}
+		else if (!Utils::isChecked('pageDeactivated') && ($this->page['options'] & PAGES_OPTION_PRIVATE)) {
+			$updateColumns['options'] = $this->page['options'] & ~PAGES_OPTION_PRIVATE;
+		}
+		// check for updated externalLastChanged
+		if (Utils::isChecked('pageCustomLastChange')) {
+			$externalLastChanged = Utils::getValidFieldString('externalLastChanged');
+			if ($externalLastChanged !== $this->page['externalLastChanged']) {
+				$updateColumns['externalLastChanged'] = $externalLastChanged;
+			}
+		}
+		else if (!Utils::isChecked('pageCustomLastChange')&& $this->page['externalLastChanged'] !== null) {
+			$updateColumns['externalLastChanged'] = null;
+		}
+
+		// perform update
+		$result = $this->pageOperations->updatePage($this->page['pid'], $updateColumns);
+
+		if ($result == false) {
+			$this->state = false;
+			$this->message = 'UNKNOWN_ERROR';
+			return;
+		}
+		$this->state = true;
+		$this->message = 'PAGE_EDITED';
 	}
 
 	// --------------------------------------------------------------------------------------------
@@ -603,18 +706,18 @@ class AdminEditPageModule extends BasicModule {
 	// --------------------------------------------------------------------------------------------
 
 	private function loadPage($pageId) {
-		global $DB;
-		$result = ctype_digit($pageId)
-			&& ($resultValue = $DB->valueQuery('
-				SELECT `pid`, `title`, `hoverTitle`, `externalId`, `options`, `lastChanged`, `externalLastChanged`
-				FROM `Pages`
-				WHERE `pid`=?', 'i', $pageId));
+		if (!Utils::isValidInt($pageId)) {
+			$this->state = false;
+			$this->message = 'PAGE_NOT_FOUND';
+			return;
+		}
+		$result = $this->pageOperations->getPage($pageId);
 		if ($result === false) {
 			$this->state = false;
 			$this->message = 'PAGE_NOT_FOUND';
 			return;
 		}
-		$this->page = $resultValue;
+		$this->page = $result;
 	}
 
 	private function loadModulesBySection() {

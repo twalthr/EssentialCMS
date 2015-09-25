@@ -175,6 +175,10 @@ class Utils {
 		return false;
 	}
 
+	public static function isValidInt($str) {
+		return filter_var($str, FILTER_VALIDATE_INT) !== false;
+	}
+
 	public static function escapeString($str) {
 		return htmlspecialchars($str);
 	}

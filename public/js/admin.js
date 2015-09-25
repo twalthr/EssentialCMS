@@ -73,7 +73,7 @@ function openLightboxWithHtml(html, allowClosing, lightboxOpened) {
 	var dialog = $('<div>', {
 		'class': 'lightbox-overlay-dialog'
 	});
-	dialog.append($.parseHTML(html));
+	dialog.append($.parseHTML(html, null, true));
 
 	// insert overlay
 	var overlay = $('<div>', {
@@ -112,6 +112,7 @@ function openLightboxWithHtml(html, allowClosing, lightboxOpened) {
 		// allow closing with ESC
 		if (allowClosing) {
 			$(document).keyup(lightboxEscapeCallback);
+			dialog.find('.lightbox-close').click(closeLightbox);
 		}
 
 		// add refresh callbacks

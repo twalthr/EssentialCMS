@@ -62,11 +62,18 @@ switch ($action) {
 		break;
 	case 'new-page':
 		$controller->verifyLogin();
-		$controller->layoutLoggedInContent(1, null, null, new AdminEditPageModule($controller));
+		$module = new AdminEditPageModule(
+			$controller->getPageOperations(),
+			null,
+			$controller->getMenuItemOperations());
+		$controller->layoutLoggedInContent(1, null, null, $module);
 		break;
 	case 'page':
 		$controller->verifyLogin();
-		$module = new AdminEditPageModule($controller->getModuleOperations(), $parameters);
+		$module = new AdminEditPageModule(
+			$controller->getPageOperations(),
+			$controller->getModuleOperations(),
+			$controller->getMenuItemOperations(), $parameters);
 		$controller->layoutLoggedInContent(1, null, null, $module);
 		break;
 	case 'select-module-dialog':

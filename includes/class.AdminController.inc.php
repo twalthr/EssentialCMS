@@ -3,6 +3,7 @@
 class AdminController {
 
 	private $config;
+	private $menuItemOperations;
 	private $fieldOperations;
 	private $fieldGroupOperations;
 	private $moduleOperations;
@@ -16,6 +17,7 @@ class AdminController {
 		$this->config->setCmsUrl($CMS_URL);
 
 		// database operations
+		$this->menuItemOperations = new MenuItemOperations($DB);
 		$this->fieldOperations = new FieldOperations($DB);
 		$this->fieldGroupOperations = new FieldGroupOperations($DB, $this->fieldOperations);
 		$this->moduleOperations = new ModuleOperations($DB, $this->fieldGroupOperations);
@@ -223,6 +225,10 @@ class AdminController {
 	public function getDB() {
 		global $DB;
 		return $DB;
+	}
+
+	public function getMenuItemOperations() {
+		return $this->menuItemOperations;
 	}
 
 	public function getFieldOperations() {

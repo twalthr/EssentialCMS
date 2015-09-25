@@ -25,7 +25,7 @@ class AdminSelectModuleModule extends BasicModule {
 							<p><?php echo $module['description']; ?></p>
 						<?php endif; ?>
 						<span class="rowAdditionalInfo">
-							<button class="select-module"
+							<button class="selectModule"
 								value="<?php echo Utils::escapeString($module['id']); ?>">
 								<?php $this->text('ADD'); ?>
 							</button>

@@ -133,16 +133,8 @@ abstract class RichModule extends BasicModule {
 
 	final public function getNumberOfFieldGroups($key) {
 		$this->verifyInPageProperties();
-		$db = $this->controller->getDB();
-		$result = $db->valueQuery('
-			SELECT COUNT(*) AS `count`
-			FROM `FieldGroups`
-			WHERE `module`=? AND `key`=?',
-			'is', $this->inPageModuleId, $key);
-		if ($result === false) {
-			return false;
-		}
-		return intval($result['count']);
+		$fieldGroupOperations = $this->controller->getFieldGroupOperations();
+		return $fieldGroupOperations->getNumberOfFieldGroups($this->inPageModuleId, $key);
 	}
 
 	final public function getFieldGroups($key) {
@@ -166,23 +158,11 @@ abstract class RichModule extends BasicModule {
 
 	final public function getConfigGroup() {
 		$this->verifyInPageProperties();
-		$db = $this->controller->getDB();
-		$fieldGroupId = $db->valueQuery('
-			SELECT `fgid`
-			FROM `FieldGroups`
-			WHERE `module`=? AND `key` IS NULL AND `order` IS NULL',
-			'i', $this->inPageModuleId);
-
-		// insert empty config
+		$fieldGroupOperations = $this->controller->getFieldGroupOperations();
+		$fieldGroupId = $fieldGroupOperations->getConfigFieldGroupId($this->inPageModuleId);
 		if ($fieldGroupId === false) {
-			$fieldGroupId = $db->impactQueryWithId('
-			INSERT INTO `FieldGroups`
-			(`module`, `key`, `order`)
-			VALUES
-			(?, NULL, NULL)',
-			'i', $this->inPageModuleId);
-
-			if ($fieldGroupId === false) {
+			$result = $fieldGroupOperations->addFieldGroup($this->inPageModuleId, null);
+			if ($result === false) {
 				return false;
 			}
 		}

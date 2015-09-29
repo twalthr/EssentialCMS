@@ -8,6 +8,23 @@ class DebugModule extends RichModule {
 
 	public function getConfigFieldInfo() {
 		$config = [];
+		// mixed small type without meta content
+		$config[] = new FieldInfo(
+			'plain', // key
+			false, // hasMetaContent
+			FieldInfo::TYPE_PLAIN | FieldInfo::TYPE_HTML | FieldInfo::TYPE_MARKDOWN, // allowedContentTypes
+			null, // allowedMetaContentTypes
+			'MIXED_TEXT', // name
+			null, // metaName
+			false, // largeContentField
+			false, // largeMetaContentField
+			0, // minContentLength
+			0, // minMetaContentLength
+			1024, // maxContentLength
+			1024, // maxMetaContentLength
+			null // additionalNames
+			);
+
 		// TYPE_PLAIN
 		$config[] = new FieldInfo(
 			'plain', // key

@@ -25,6 +25,19 @@ final class FieldOperations {
 			'i',
 			$fgid);
 	}
+
+	public function getFields($fgid) {
+		$fields = $this->db->valuesQuery('
+			SELECT *
+			FROM `Fields`
+			WHERE `group`=?',
+			'i',
+			$fgid);
+		if (count($fields) === 0) {
+			return null;
+		}
+		return $fields;
+	}
 }
 
 ?>

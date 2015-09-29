@@ -11,16 +11,22 @@ final class FieldGroupOperations {
 	}
 
 	public function addFieldGroup($mid, $key) {
-		$nextOrder = $this->db->valueQuery('
-			SELECT COUNT(*) AS `value`
-			FROM `FieldGroups`
-			WHERE `module`=? AND `key`=?',
-			'is',
-			$mid, $key);
-		if ($nextOrder === false) {
-			return false;
+		$nextOrder = false;
+		if ($key === null) {
+			$nextOrder = null;
 		}
-		$nextOrder = $nextOrder['value'];
+		else {
+			$nextOrder = $this->db->valueQuery('
+				SELECT COUNT(*) AS `value`
+				FROM `FieldGroups`
+				WHERE `module`=? AND `key`=?',
+				'is',
+				$mid, $key);
+			if ($nextOrder === false) {
+				return false;
+			}
+			$nextOrder = $nextOrder['value'];
+		}
 		return $this->db->impactQueryWithId('
 			INSERT INTO `FieldGroups`
 			(`module`, `key`, `order`)
@@ -77,6 +83,43 @@ final class FieldGroupOperations {
 			ORDER BY `key` ASC, `order` DESC',
 			'i',
 			$mid);
+	}
+
+	public function getNumberOfFieldGroups($mid, $key) {
+		$count = false;
+		if ($key === null) {
+			$count = $this->db->valueQuery('
+				SELECT COUNT(*) AS `value`
+				FROM `FieldGroups`
+				WHERE `module`=? AND `key` IS NULL',
+				'i',
+				$mid);
+		}
+		else {
+			$count = $this->db->valueQuery('
+				SELECT COUNT(*) AS `count`
+				FROM `FieldGroups`
+				WHERE `module`=? AND `key`=?',
+				'is',
+				$mid, $key);
+		}
+		if ($count === false) {
+			return false;
+		}
+		return intval($count['value']);
+	}
+
+	public function getConfigFieldGroupId($mid) {
+		$fieldGroupId = $this->db->valueQuery('
+			SELECT `fgid`
+			FROM `FieldGroups`
+			WHERE `module`=? AND `key` IS NULL AND `order` IS NULL',
+			'i',
+			$mid);
+		if ($fieldGroupId === false) {
+			return false;
+		}
+		return $fieldGroupId['fgid'];
 	}
 }
 

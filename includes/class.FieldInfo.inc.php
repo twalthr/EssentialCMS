@@ -60,7 +60,7 @@ class FieldInfo {
 		$this->minMetaContentLength = $minMetaContentLength;
 		$this->maxContentLength = $maxContentLength;
 		$this->maxMetaContentLength = $maxMetaContentLength;
-		$this->additionalName = $additionalName;
+		$this->additionalNames = $additionalNames;
 	}
 
 	public function getKey(){
@@ -118,6 +118,87 @@ class FieldInfo {
 	// --------------------------------------------------------------------------------------------
 	// Visualize field for administration
 	// --------------------------------------------------------------------------------------------
+	public static function isMultiTypeField($type) {
+		return count(FieldInfo::getTypesOfField($type)) > 1;
+	}
+
+	public static function getTypesOfField($type) {
+		$types = [];
+		if ($type & FieldInfo::TYPE_PLAIN) $types[] = FieldInfo::TYPE_PLAIN;
+		if ($type & FieldInfo::TYPE_HTML) $types[] = FieldInfo::TYPE_HTML;
+		if ($type & FieldInfo::TYPE_MARKDOWN) $types[] = FieldInfo::TYPE_MARKDOWN;
+		if ($type & FieldInfo::TYPE_IMAGE) $types[] = FieldInfo::TYPE_IMAGE;
+		if ($type & FieldInfo::TYPE_FILE) $types[] = FieldInfo::TYPE_FILE;
+		if ($type & FieldInfo::TYPE_TAGS) $types[] = FieldInfo::TYPE_TAGS;
+		if ($type & FieldInfo::TYPE_INT) $types[] = FieldInfo::TYPE_INT;
+		if ($type & FieldInfo::TYPE_BOOLEAN) $types[] = FieldInfo::TYPE_BOOLEAN;
+		if ($type & FieldInfo::TYPE_ENUM) $types[] = FieldInfo::TYPE_ENUM;
+		if ($type & FieldInfo::TYPE_DATE) $types[] = FieldInfo::TYPE_DATE;
+		if ($type & FieldInfo::TYPE_COLOR) $types[] = FieldInfo::TYPE_COLOR;
+		if ($type & FieldInfo::TYPE_LINK) $types[] = FieldInfo::TYPE_LINK;
+		if ($type & FieldInfo::TYPE_PAGE) $types[] = FieldInfo::TYPE_PAGE;
+		if ($type & FieldInfo::TYPE_ID) $types[] = FieldInfo::TYPE_ID;
+		if ($type & FieldInfo::TYPE_EMAIL) $types[] = FieldInfo::TYPE_EMAIL;
+		if ($type & FieldInfo::TYPE_LOCALE) $types[] = FieldInfo::TYPE_LOCALE;
+		return $types;
+	}
+
+	public static function translateTypeToString($type) {
+		switch ($type) {
+			case FieldInfo::TYPE_PLAIN: return 'TYPE_PLAIN';
+			case FieldInfo::TYPE_HTML: return 'TYPE_HTML';
+			case FieldInfo::TYPE_MARKDOWN: return 'TYPE_MARKDOWN';
+			case FieldInfo::TYPE_IMAGE: return 'TYPE_IMAGE';
+			case FieldInfo::TYPE_FILE: return 'TYPE_FILE';
+			case FieldInfo::TYPE_TAGS: return 'TYPE_TAGS';
+			case FieldInfo::TYPE_INT: return 'TYPE_INT';
+			case FieldInfo::TYPE_BOOLEAN: return 'TYPE_BOOLEAN';
+			case FieldInfo::TYPE_ENUM: return 'TYPE_ENUM';
+			case FieldInfo::TYPE_DATE: return 'TYPE_DATE';
+			case FieldInfo::TYPE_COLOR: return 'TYPE_COLOR';
+			case FieldInfo::TYPE_LINK: return 'TYPE_LINK';
+			case FieldInfo::TYPE_PAGE: return 'TYPE_PAGE';
+			case FieldInfo::TYPE_ID: return 'TYPE_ID';
+			case FieldInfo::TYPE_EMAIL: return 'TYPE_EMAIL';
+			case FieldInfo::TYPE_LOCALE: return 'TYPE_LOCALE';
+		}
+	}
+
+	public static function printField($postField, $defaultValue, $large, $minLength, $maxLength) {
+		switch ($type) {
+			case FieldInfo::TYPE_PLAIN:
+			case FieldInfo::TYPE_HTML:
+			case FieldInfo::TYPE_MARKDOWN:
+				UiUtils::printTextInput($postField, $defaultValue, $large, $minLength, $maxLength);
+				break;
+			case FieldInfo::TYPE_IMAGE:
+				break;
+			case FieldInfo::TYPE_FILE:
+				break;
+			case FieldInfo::TYPE_TAGS:
+				break;
+			case FieldInfo::TYPE_INT:
+				break;
+			case FieldInfo::TYPE_BOOLEAN:
+				break;
+			case FieldInfo::TYPE_ENUM:
+				break;
+			case FieldInfo::TYPE_DATE:
+				break;
+			case FieldInfo::TYPE_COLOR:
+				break;
+			case FieldInfo::TYPE_LINK:
+				break;
+			case FieldInfo::TYPE_PAGE:
+				break;
+			case FieldInfo::TYPE_ID:
+				break;
+			case FieldInfo::TYPE_EMAIL:
+				break;
+			case FieldInfo::TYPE_LOCALE:
+				break;
+		}
+	}
 
 	// --------------------------------------------------------------------------------------------
 	// Validate field for administration

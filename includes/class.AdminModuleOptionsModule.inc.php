@@ -15,6 +15,7 @@ class AdminModuleOptionsModule extends BasicModule {
 	private $module;
 	private $moduleInfo;
 	private $moduleDefinition;
+	private $moduleConfig;
 
 	public function __construct(
 			$moduleOperations, $fieldGroupOperations, $fieldOperations, $parameters = null) {
@@ -35,6 +36,7 @@ class AdminModuleOptionsModule extends BasicModule {
 		// if module info is present, load module definition
 		if (isset($this->moduleInfo)) {
 			$this->loadModuleDefinition();
+			$this->loadModuleConfig();
 		}
 	}
 
@@ -58,10 +60,11 @@ class AdminModuleOptionsModule extends BasicModule {
 		<?php endif; ?>
 		<?php if (isset($this->moduleDefinition)) : ?>
 				<section>
-						<h1>
-							<?php echo Utils::escapeString($this->moduleInfo['name']); ?>
-						</h1>
+					<h1>
+						<?php echo Utils::escapeString($this->moduleInfo['name']); ?>
+					</h1>
 
+					<?php $this->printFields($this->moduleDefinition->getConfigFieldInfo()); ?>
 				</section>
 		<?php endif; ?>
 		<?php
@@ -70,14 +73,54 @@ class AdminModuleOptionsModule extends BasicModule {
 	// --------------------------------------------------------------------------------------------
 	// Printing methods
 	// --------------------------------------------------------------------------------------------
-
-	
+	private function printFields($fields) {
+		echo '<div class="fields">';
+		foreach ($fields as $field) {
+			echo '<div class="richField">';
+			echo '	<label for="title">';
+			echo $this->moduleDefinition->text($field->getName());
+			echo '	</label>';
+			// check if multi type field
+			if (FieldInfo::isMultiTypeField($field->getAllowedContentTypes())) {
+				$types = FieldInfo::getTypesOfField($field->getAllowedContentTypes());
+				// print type selection
+				echo '<ul class="tabs typeSelection">';
+				foreach ($types as $type) {
+					echo '	<li>';
+					echo '		<a class="tab">';
+					echo $this->text(FieldInfo::translateTypeToString($type));
+					echo '		</a>';
+					echo '	</li>';
+				}
+				echo '</ul>';
+			}
+			/*$field->printField(
+				$field->getKey(),
+				, $large, $minLength, $maxLength);*/
+			echo '</div>';
+		}
+		echo '</div>';
+	}
 
 	// --------------------------------------------------------------------------------------------
 	// User input handling methods
 	// --------------------------------------------------------------------------------------------
 
-	
+
+	// --------------------------------------------------------------------------------------------
+	// Helper methods
+	// --------------------------------------------------------------------------------------------
+
+	private function getConfigValue($key) {
+		if (!isset($this->moduleConfig)) {
+			return null;
+		}
+		$value = Utils::getColumnWithValue($this->moduleConfig, 'key', $key);
+		if ($value === false) {
+			return null;
+		}
+		return $value;
+	}
 
 	// --------------------------------------------------------------------------------------------
 	// Database loading methods
@@ -115,6 +158,18 @@ class AdminModuleOptionsModule extends BasicModule {
 			return;
 		}
 		$this->moduleDefinition = $moduleDefinition;
+	}
+
+	private function loadModuleConfig() {
+		$moduleConfig = $this->fieldGroupOperations->getConfigFieldGroupId($this->module['mid']);
+		if ($moduleConfig === false) {
+			return;
+		}
+		$moduleConfigFields = $this->fieldOperations->getFields($moduleConfig);
+		if ($moduleConfigFields === false) {
+			return;
+		}
+		$this->moduleConfig = $moduleConfigFields;
 	}
 }
 

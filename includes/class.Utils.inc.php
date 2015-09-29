@@ -1,6 +1,6 @@
 <?php
 
-class Utils {
+abstract class Utils {
 	public static function hasStringContent($str) {
 		return isset($str) && !(trim($str) === '');
 	}

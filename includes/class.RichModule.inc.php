@@ -14,6 +14,7 @@ abstract class RichModule extends BasicModule {
 	private $inPageOrder;
 
 	private $currentCompilationPage;
+	private $interModuleProperties;
 
 	public function __construct($cmsVersion, $name) {
 		parent::__construct($cmsVersion, $name);
@@ -29,7 +30,7 @@ abstract class RichModule extends BasicModule {
 	}
 
 	// array of FieldInfo
-	public function getConfigFieldGroupInfo() {
+	public function getConfigFieldInfo() {
 		return [];
 	}
 
@@ -46,11 +47,11 @@ abstract class RichModule extends BasicModule {
 	// In page module properties
 	// --------------------------------------------------------------------------------------------
 
-	final public function setInPageProperties($moduleId, $pageId, $pageSection, $pageOrder) {
+	final public function setInPageProperties($moduleDefId, $pageId, $pageSection, $pageOrder) {
 		if (isset($this->inPageModuleId)) {
 			throw new Exception('In page properties are already set.');
 		}
-		$this->inPageModuleId = $moduleId;
+		$this->inPageModuleId = $moduleDefId;
 		$this->inPagePageId = $pageId;
 		$this->inPageSection = $pageSection;
 		$this->inPageOrder = $pageOrder;
@@ -98,6 +99,24 @@ abstract class RichModule extends BasicModule {
 			throw new Exception('External ID of first page can not be defined by module.');
 		}
 		return null;
+	}
+
+	public function definesInterModuleProperties() {
+		return false;
+	}
+
+	// function with higher priority can set inter module properties
+	// e.g. overview -> no rating on an overview page
+	public function defineInterModuleProperties() {
+		throw new Exception('Module does not define inter module properties.');
+	}
+
+	public function getProperties() {
+		return $this->interModuleProperties;
+	}
+
+	public function setProperties($properties) {
+		$this->interModuleProperties = $properties;
 	}
 
 	public function getStyleFiles() {
@@ -235,15 +254,15 @@ abstract class RichModule extends BasicModule {
 	// Static helper methods
 	// --------------------------------------------------------------------------------------------
 
-	public static function getLocalizedModuleInfo($moduleId) {
+	public static function getLocalizedModuleInfo($moduleDefId) {
 		global $ROOT_DIRECTORY;
 		global $TR;
 		$module = [];
-		$module['id'] = $moduleId;
-		$module['name'] = $moduleId;
+		$module['definitionId'] = $moduleDefId;
+		$module['name'] = $moduleDefId;
 		$module['description'] = null;
 		// check for locale information
-		$localeDir = $ROOT_DIRECTORY . '/modules/' . $moduleId . '/locales';
+		$localeDir = $ROOT_DIRECTORY . '/modules/' . $moduleDefId . '/locales';
 		if (file_exists($localeDir) && is_dir($localeDir)) {
 			// check of current locale is supported
 			$supportedLocale = $TR->getSupportedLocaleFromDirectory($localeDir);
@@ -281,15 +300,15 @@ abstract class RichModule extends BasicModule {
 		return $moduleList;
 	}
 
-	public static function isValidModuleId($moduleId) {
-		return in_array($moduleId, RichModule::getModulesList(), true);
+	public static function isValidModuleDefinitionId($moduleDefId) {
+		return in_array($moduleDefId, RichModule::getModulesList(), true);
 	}
 
 	public static function getLocalizedModulesList() {
 		$localizedList = [];
 		$moduleList = RichModule::getModulesList();
-		foreach ($moduleList as $moduleId) {
-			$localizedList[] = RichModule::getLocalizedModuleInfo($moduleId);
+		foreach ($moduleList as $moduleDefId) {
+			$localizedList[] = RichModule::getLocalizedModuleInfo($moduleDefId);
 		}
 		// sort list
 		function cmp($a, $b) {
@@ -298,6 +317,18 @@ abstract class RichModule extends BasicModule {
 		usort($localizedList, 'cmp');
 
 		return $localizedList;
+	}
+
+	public static function loadModuleDefinition($moduleDefId) {
+		global $ROOT_DIRECTORY;
+		if (!file_exists($ROOT_DIRECTORY . '/modules/' . $moduleDefId . '/module.php')) {
+			return false;
+		}
+		$module = @include $ROOT_DIRECTORY . '/modules/' . $moduleDefId . '/module.php';
+		if (!is_object($module) || !($module instanceof RichModule)) {
+			return false;
+		}
+		return $module;
 	}
 }
 

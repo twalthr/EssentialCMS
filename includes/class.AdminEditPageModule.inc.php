@@ -67,104 +67,106 @@ class AdminEditPageModule extends BasicModule {
 				class="goto"><?php $this->text('GOTO_PAGE'); ?></a>
 			</div>
 		<?php return; ?>
+		<?php else: ?>
+			<script type="text/javascript">
+				$(document).ready(function() {
+					$('#pageDirectAccess').change(function() {
+						var externalId = $('#externalId');
+						externalId.prop('disabled', !$(this).prop('checked'));
+						if (!externalId.prop('disabled') && externalId.val().length == 0)  {
+							externalId.val(generateIdentifierFromString($('#title').val()));
+						}
+					});
+					$('#pageDirectAccess').trigger('change');
+					$('#pageCustomLastChange').change(function() {
+						var externalLastChanged = $('#externalLastChanged');
+						externalLastChanged.prop('disabled', !$(this).prop('checked'));
+						if (!externalLastChanged.prop('disabled') && externalLastChanged.val().length == 0) {
+							externalLastChanged.val(generateDate());
+						}
+					});
+					$('#pageCustomLastChange').trigger('change');
+
+					<?php if (isset($this->page)) : ?>
+					$('#editPage').click(function() {
+						$('.showInEditMode').removeClass('hidden');
+						$('.hiddenInEditMode').remove();
+					});
+					$('.addButton').click(function(e) {
+						var form = $(this).parents('form');
+						var lightboxOpened = function() {
+							$('.dialog-window .selectModule').click(function() {
+								form.find('[name="operation"]').val('add');
+								form.find('[name="operationParameter1"]').val($(this).val());
+								form.submit();
+							});
+						};
+						openLightboxWithUrl(
+							'<?php echo $config->getPublicRoot(); ?>/admin/select-module-dialog',
+							true,
+							lightboxOpened);
+					});				
+					$('.moveModule').click(function() {
+						var form = $(this).parents('form');
+						form.find('[name="operation"]').val('move');
+						openButtonSetDialog($(this),
+							'<?php $this->text('SELECT_MOVE_TARGET'); ?>',
+							'.moduleTarget, .moveConfirm');
+					});
+					$('.copyModule').click(function() {
+						var form = $(this).parents('form');
+						form.find('[name="operation"]').val('copy');
+						openButtonSetDialog($(this),
+							'<?php $this->text('SELECT_COPY_TARGET'); ?>',
+							'.moduleTarget, .copyConfirm');
+					});
+					$('.exportModule').click(function() {
+						var form = $(this).parents('form');
+						var lightboxOpened = function() {
+							$('.dialog-box #exportConfirm').click(function() {
+								form.find('[name="operation"]').val('export');
+								form.find('[name="operationParameter1"]')
+									.val($('.dialog-box #exportTargetSection').val());
+								form.find('[name="operationParameter2"]')
+									.val($('.dialog-box #exportTargetPage').val());
+								form.submit();
+							});
+						};
+						openLightboxWithUrl(
+							'<?php echo $config->getPublicRoot(); ?>/admin/export-module-dialog',
+							true,
+							lightboxOpened);
+					});
+					$('.deleteModule').click(function() {
+						var form = $(this).parents('form');
+						form.find('[name="operation"]').val('delete');
+						openButtonSetDialog($(this),
+							'<?php $this->text('DELETE_QUESTION'); ?>',
+							'.deleteConfirm');
+					});				
+					$('.moveConfirm').click(function() {
+						var form = $(this).parents('form');
+						enableList($(this));
+						form.submit();
+					});
+					$('.copyConfirm').click(function() {
+						var form = $(this).parents('form');
+						enableList($(this));
+						form.submit();
+					});
+					$('.deleteConfirm').click(function() {
+						var form = $(this).parents('form');
+						enableList($(this));
+						form.submit();
+					});
+					<?php endif; ?>
+
+					<?php if (isset($this->page) && isset($this->state)) : ?>
+						$('#editPage').trigger('click');
+					<?php endif; ?>
+				});
+			</script>
 		<?php endif; ?>
-
-		<script type="text/javascript">
-			$(document).ready(function() {
-				$('#pageDirectAccess').change(function() {
-					var externalId = $('#externalId');
-					externalId.prop('disabled', !$(this).prop('checked'));
-					if (!externalId.prop('disabled') && externalId.val().length == 0)  {
-						externalId.val(generateIdentifierFromString($('#title').val()));
-					}
-				});
-				$('#pageDirectAccess').trigger('change');
-				$('#pageCustomLastChange').change(function() {
-					var externalLastChanged = $('#externalLastChanged');
-					externalLastChanged.prop('disabled', !$(this).prop('checked'));
-					if (!externalLastChanged.prop('disabled') && externalLastChanged.val().length == 0)  {
-						externalLastChanged.val(generateDate());
-					}
-				});
-				$('#pageCustomLastChange').trigger('change');
-
-				<?php if (isset($this->page)) : ?>
-				$('#editPage').click(function() {
-					$('.showInEditMode').removeClass('hidden');
-					$('.hiddenInEditMode').remove();
-				});
-				$('.addButton').click(function(e) {
-					var form = $(this).parents('form');
-					var lightboxOpened = function() {
-						$('.dialog-window .selectModule').click(function() {
-							form.find('[name="operation"]').val('add');
-							form.find('[name="operationParameter1"]').val($(this).val());
-							form.submit();
-						});
-					};
-					openLightboxWithUrl('<?php echo $config->getPublicRoot(); ?>/admin/select-module-dialog',
-						true,
-						lightboxOpened);
-				});				
-				$('.moveModule').click(function() {
-					var form = $(this).parents('form');
-					form.find('[name="operation"]').val('move');
-					openButtonSetDialog($(this),
-						'<?php $this->text('SELECT_MOVE_TARGET'); ?>',
-						'.moduleTarget, .moveConfirm');
-				});
-				$('.copyModule').click(function() {
-					var form = $(this).parents('form');
-					form.find('[name="operation"]').val('copy');
-					openButtonSetDialog($(this),
-						'<?php $this->text('SELECT_COPY_TARGET'); ?>',
-						'.moduleTarget, .copyConfirm');
-				});
-				$('.exportModule').click(function() {
-					var form = $(this).parents('form');
-					var lightboxOpened = function() {
-						$('.dialog-box #exportConfirm').click(function() {
-							form.find('[name="operation"]').val('export');
-							form.find('[name="operationParameter1"]')
-								.val($('.dialog-box #exportTargetSection').val());
-							form.find('[name="operationParameter2"]')
-								.val($('.dialog-box #exportTargetPage').val());
-							form.submit();
-						});
-					};
-					openLightboxWithUrl('<?php echo $config->getPublicRoot(); ?>/admin/export-module-dialog',
-						true,
-						lightboxOpened);
-				});
-				$('.deleteModule').click(function() {
-					var form = $(this).parents('form');
-					form.find('[name="operation"]').val('delete');
-					openButtonSetDialog($(this),
-						'<?php $this->text('DELETE_QUESTION'); ?>',
-						'.deleteConfirm');
-				});				
-				$('.moveConfirm').click(function() {
-					var form = $(this).parents('form');
-					enableList($(this));
-					form.submit();
-				});
-				$('.copyConfirm').click(function() {
-					var form = $(this).parents('form');
-					enableList($(this));
-					form.submit();
-				});
-				$('.deleteConfirm').click(function() {
-					var form = $(this).parents('form');
-					enableList($(this));
-					form.submit();
-				});
-				<?php endif; ?>
-
-				<?php if (isset($this->page) && isset($this->state)) : ?>
-					$('#editPage').trigger('click');
-				<?php endif; ?>
-			});
-		</script>
 		<?php if (isset($this->state)) : ?>
 			<?php if ($this->state === true) : ?>
 				<div class="dialog-success-message">
@@ -377,7 +379,7 @@ class AdminEditPageModule extends BasicModule {
 
 		echo '<ul class="tableLike">';
 		foreach ($this->modulesBySection[$section] as $module) {
-			$moduleInfo = RichModule::getLocalizedModuleInfo($module['module']);
+			$moduleInfo = RichModule::getLocalizedModuleInfo($module['definitionId']);
 			if ($moduleInfo === false) {
 				continue;
 			}
@@ -396,7 +398,7 @@ class AdminEditPageModule extends BasicModule {
 			echo ' class="componentLink"';
 			echo '>' . Utils::escapeString($moduleInfo['name']) . '</a>';
 			echo '<span class="rowAdditionalInfo">';
-			echo Utils::escapeString($module['module']);
+			echo Utils::escapeString($module['definitionId']);
 			echo '</span>';
 			echo '</li>';
 		}
@@ -408,7 +410,7 @@ class AdminEditPageModule extends BasicModule {
 		$i = 0;
 		foreach ($this->modulesBySection[$section] as $module) {
 			echo '<option value="' . $i . '">';
-			echo Utils::escapeString(RichModule::getLocalizedModuleInfo($module['module'])['name']);
+			echo Utils::escapeString(RichModule::getLocalizedModuleInfo($module['definitionId'])['name']);
 			echo '</option>';
 			$i++;
 		}
@@ -434,7 +436,7 @@ class AdminEditPageModule extends BasicModule {
 		switch ($operation) {
 			case 'add':
 				// check operationParameter1
-				if (!RichModule::isValidModuleId($operationParameter1)) {
+				if (!RichModule::isValidModuleDefinitionId($operationParameter1)) {
 					return;
 				}
 				// add to database

@@ -48,7 +48,7 @@ final class ModuleOperations {
 		$nextOrder = $nextOrder['value'];
 		return $this->db->impactQueryWithId('
 			INSERT INTO `Modules`
-			(`page`, `section`, `order`, `module`)
+			(`page`, `section`, `order`, `definitionId`)
 			VALUES
 			(?, ?, ?, ?)',
 			'iiis',
@@ -170,7 +170,7 @@ final class ModuleOperations {
 		if ($module === false) {
 			return false;
 		}
-		$newMid = $this->addModule($module['page'], $module['section'], $module['module']);
+		$newMid = $this->addModule($module['page'], $module['section'], $module['definitionId']);
 		if ($newMid === false) {
 			return false;
 		}

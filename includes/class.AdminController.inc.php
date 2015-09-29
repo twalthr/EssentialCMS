@@ -126,7 +126,7 @@ class AdminController {
 					`page` INT(10) NULL,
 					`section` INT(10) NOT NULL,
 					`order` INT(10) NOT NULL,
-					`module` VARCHAR(32) NOT NULL,
+					`definitionId` VARCHAR(32) NOT NULL,
 					PRIMARY KEY (`mid`),
 					UNIQUE KEY `position` (`page`, `section`, `order`)
 				)

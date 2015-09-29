@@ -82,7 +82,25 @@ switch ($action) {
 		break;
 	case 'export-module-dialog':
 		$controller->verifyLogin();
-		$controller->layoutDialog(new AdminExportModuleModule($controller->getPageOperations(), $parameters));
+		$module = new AdminExportModuleModule(
+			$controller->getPageOperations(), $parameters);
+		$controller->layoutDialog($module);
+		break;
+	case 'module':
+		$controller->verifyLogin();
+		$module = new AdminEditModuleModule(
+			$controller->getModuleOperations(),
+			$controller->getFieldGroupOperations(),
+			$controller->getFieldOperations(), $parameters);
+		$controller->layoutLoggedInContent(1, null, null, $module);
+		break;
+	case 'module-options':
+		$controller->verifyLogin();
+		$module = new AdminModuleOptionsModule(
+			$controller->getModuleOperations(),
+			$controller->getFieldGroupOperations(),
+			$controller->getFieldOperations(), $parameters);
+		$controller->layoutLoggedInContent(1, null, null, $module);
 		break;
 	default:
 		echo "Invalid command.";

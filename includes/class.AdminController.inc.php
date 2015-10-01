@@ -146,10 +146,8 @@ class AdminController {
 					`key` VARCHAR(32) NOT NULL,
 					`type` INT(10) NOT NULL,
 					`content` TEXT NOT NULL,
-					`metaType` INT(10) NULL,
-					`metaContent` TEXT NULL,
 					PRIMARY KEY (`fid`),
-					UNIQUE KEY `position` (`group`, `key`)
+					UNIQUE KEY `position` (`group`, `key`, `fid`)
 				)
 			') && $DB->impactQuery('
 				INSERT INTO `Configuration` (`key`, `value`, `order`) 

@@ -464,9 +464,9 @@ body>.page>*:nth-last-child(2) {
 	display: inline-block;
 }
 
-section.content section>* {
-	margin-left: 5px;
-	margin-right: 5px;
+section.content section {
+	padding-left: 5px;
+	padding-right: 5px;
 }
 
 section.content section h1 {
@@ -475,7 +475,7 @@ section.content section h1 {
 	line-height: normal;
 	border-bottom: 1px solid #DCDCDC;
 	padding-left: 5px;
-	margin-left: 0;
+	margin-left: -5px;
 	margin-bottom: 20px;
 }
 
@@ -533,6 +533,47 @@ a.private {
 	text-decoration: line-through;
 }
 
+.tabBox .tabs {
+	border-bottom: 1px solid #DCDCDC;
+}
+
+.tabBox .tabs li {
+	line-height: normal;
+	margin-left: 20px;
+	margin-bottom: -1px;
+	display: inline-block;
+}
+
+.tabBox .tabs li.current a, .tabBox .tabs li.current a:hover {
+	background-color: #FFFFFF;
+	border: 1px solid #DCDCDC;
+	border-bottom: 1px solid #FFFFFF;
+	cursor: default;
+	text-decoration: none;
+}
+
+.tabBox .tabs a {
+	color: #2A2A2A;
+	padding: 5px 20px 5px;
+	background-color: #EAEAEA;
+	border: 1px solid #DCDCDC;
+	border-top-right-radius: 2px;
+	border-top-left-radius: 2px;
+	display: block;
+}
+
+.tabBox .tabs a:hover {
+	background-color: #CCCCCC;
+	border: 1px solid #B5B4B4;
+	border-bottom: 1px solid #DCDCDC;
+	color: #000000;
+	cursor: pointer;
+}
+
+.tabBox .tabContent .tab {
+	padding-top: 5px;
+}
+
 /* --------------------------------------------------------------------------------------------- */
 /*                                      Admin pages style                                        */
 /* --------------------------------------------------------------------------------------------- */
@@ -556,7 +597,6 @@ div.siteMap + * {
 /* --------------------------------------------------------------------------------------------- */
 /*                                      Lightbox style                                           */
 /* --------------------------------------------------------------------------------------------- */
-
 .lightbox-overlay {
 	position: absolute;
 	top: 0;
@@ -601,4 +641,15 @@ div.siteMap + * {
 .lightbox-overlay-dialog>.dialog-window .lightbox-close {
 	float: right;
 	margin-right: 5px;
+}
+/* --------------------------------------------------------------------------------------------- */
+/*                                      Rich fields                                              */
+/* --------------------------------------------------------------------------------------------- */
+.fields .richField {
+	display: table-row;
+}
+
+.fields .richField>* {
+	display: table-cell;
+	text-align: left;
 }

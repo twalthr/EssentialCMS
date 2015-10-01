@@ -46,13 +46,21 @@ final class ModuleOperations {
 			return false;
 		}
 		$nextOrder = $nextOrder['value'];
-		return $this->db->impactQueryWithId('
+		$mid = $this->db->impactQueryWithId('
 			INSERT INTO `Modules`
 			(`page`, `section`, `order`, `definitionId`)
 			VALUES
 			(?, ?, ?, ?)',
 			'iiis',
 			$page, $section, $nextOrder, $moduleId);
+		if ($mid === false) {
+			return false;
+		}
+		$fgid = $this->fieldGroupOperations->addFieldGroup($mid, null);
+		if ($fgid === false) {
+			return false;
+		}
+		return $mid;
 	}
 
 	public function getModule($mid) {

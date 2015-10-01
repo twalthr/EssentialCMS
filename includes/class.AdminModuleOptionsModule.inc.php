@@ -13,9 +13,9 @@ class AdminModuleOptionsModule extends BasicModule {
 
 	// member variables
 	private $module;
-	private $moduleInfo;
-	private $moduleDefinition;
-	private $moduleConfig;
+	private $moduleInfo; // translated name and description
+	private $moduleDefinition; // instance of RichModule
+	private $moduleConfig; // config stored in database
 
 	public function __construct(
 			$moduleOperations, $fieldGroupOperations, $fieldOperations, $parameters = null) {
@@ -30,12 +30,27 @@ class AdminModuleOptionsModule extends BasicModule {
 			$this->loadModule($parameters[0]);
 		}
 		// if module is present, load module info
-		if (isset($this->module)) {
-			$this->loadModuleInfo();
+		if (!isset($this->module)) {
+			return;
 		}
+		$this->loadModuleInfo();
 		// if module info is present, load module definition
-		if (isset($this->moduleInfo)) {
-			$this->loadModuleDefinition();
+		// and the corresponding config
+		if (!isset($this->moduleInfo)) {
+			return;
+		}
+		$this->loadModuleDefinition();
+		$this->loadModuleConfig();
+
+		// if module config has been loaded
+		if (!isset($this->moduleDefinition) || !isset($this->moduleConfig)) {
+			return;
+		}
+
+		// handle user input
+		if (Utils::getUnmodifiedStringOrEmpty('operationSpace') === 'fields') {
+			$this->handleEditConfig();
+			// refresh
 			$this->loadModuleConfig();
 		}
 	}
@@ -59,13 +74,19 @@ class AdminModuleOptionsModule extends BasicModule {
 			<?php endif; ?>
 		<?php endif; ?>
 		<?php if (isset($this->moduleDefinition)) : ?>
+			<form method="post">
+				<input type="hidden" name="operationSpace" value="fields" />
 				<section>
 					<h1>
 						<?php echo Utils::escapeString($this->moduleInfo['name']); ?>
 					</h1>
 
 					<?php $this->printFields($this->moduleDefinition->getConfigFieldInfo()); ?>
+					<div class="buttonSet">
+						<input type="submit" value="<?php $this->text('SAVE'); ?>" />
+					</div>
 				</section>
+			</form>
 		<?php endif; ?>
 		<?php
 	}
@@ -73,31 +94,17 @@ class AdminModuleOptionsModule extends BasicModule {
 	// --------------------------------------------------------------------------------------------
 	// Printing methods
 	// --------------------------------------------------------------------------------------------
+
 	private function printFields($fields) {
 		echo '<div class="fields">';
 		foreach ($fields as $field) {
-			echo '<div class="richField">';
-			echo '	<label for="title">';
-			echo $this->moduleDefinition->text($field->getName());
-			echo '	</label>';
-			// check if multi type field
-			if (FieldInfo::isMultiTypeField($field->getAllowedContentTypes())) {
-				$types = FieldInfo::getTypesOfField($field->getAllowedContentTypes());
-				// print type selection
-				echo '<ul class="tabs typeSelection">';
-				foreach ($types as $type) {
-					echo '	<li>';
-					echo '		<a class="tab">';
-					echo $this->text(FieldInfo::translateTypeToString($type));
-					echo '		</a>';
-					echo '	</li>';
-				}
-				echo '</ul>';
+			$configValue = $this->getConfigValue($field->getKey());
+			if (isset($configValue)) {
+				$field->printFieldWithLabel($this->moduleDefinition, $configValue['type'], $configValue['content']);
 			}
-			/*$field->printField(
-				$field->getKey(),
-				, $large, $minLength, $maxLength);*/
-			echo '</div>';
+			else {
+				$field->printFieldWithLabel($this->moduleDefinition);
+			}
 		}
 		echo '</div>';
 	}
@@ -105,6 +112,24 @@ class AdminModuleOptionsModule extends BasicModule {
 	// --------------------------------------------------------------------------------------------
 	// User input handling methods
 	// --------------------------------------------------------------------------------------------
+
+	private function handleEditConfig() {
+		$fields = $this->moduleDefinition->getConfigFieldInfo();
+		foreach ($fields as $field) {
+			$result = true;
+			// check content
+			$result = $field->isValidContentInput('typeof_' . $field->getKey(), 'valueof_' . $field->getKey());
+
+			// validation was not successful
+			if ($result !== true) {
+				$this->state = false;
+				$this->message = $result;
+				return;
+			}
+
+			echo 'SUCCESS!!!!';
+		}
+	}
 
 
 	// --------------------------------------------------------------------------------------------

@@ -304,7 +304,7 @@ abstract class RichModule extends BasicModule {
 		if (!file_exists($ROOT_DIRECTORY . '/modules/' . $moduleDefId . '/module.php')) {
 			return false;
 		}
-		$module = @include $ROOT_DIRECTORY . '/modules/' . $moduleDefId . '/module.php';
+		$module = include $ROOT_DIRECTORY . '/modules/' . $moduleDefId . '/module.php';
 		if (!is_object($module) || !($module instanceof RichModule)) {
 			return false;
 		}

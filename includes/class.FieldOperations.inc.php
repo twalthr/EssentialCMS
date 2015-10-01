@@ -11,8 +11,8 @@ final class FieldOperations {
 	public function copyFields($fromFgid, $toFgid) {
 		return $this->db->successQuery('
 			INSERT INTO `Fields`
-			(`group`, `key`, `type`, `content`, `metaType`, `metaContent`)
-			SELECT ?, `key`, `type`, `content`, `metaType`, `metaContent`
+			(`group`, `key`, `type`, `content`)
+			SELECT ?, `key`, `type`, `content`
 			FROM `Fields` WHERE `group`=?',
 			'ii',
 			$toFgid, $fromFgid);
@@ -33,8 +33,8 @@ final class FieldOperations {
 			WHERE `group`=?',
 			'i',
 			$fgid);
-		if (count($fields) === 0) {
-			return null;
+		if ($fields === false) {
+			return false;
 		}
 		return $fields;
 	}

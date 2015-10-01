@@ -22,6 +22,17 @@ $(document).ready(function(){
 	$('button').click(function(e) {
 		e.preventDefault();
 	});
+	$('.tabBox .tabs a').click(function() {
+		var tab = $(this).parent();
+		tab.siblings().removeClass('current');
+		tab.addClass('current');
+		var tabContent = tab.closest('.tabBox').find('.tabContent .tab');
+		tabContent.addClass('hidden');
+		tabContent.find(':input').prop('disabled', true);
+		var openedTab = $(tabContent.get(tab.index()));
+		openedTab.removeClass('hidden');
+		openedTab.find(':input').prop('disabled', false);
+	});
 });
 
 function enableList(button) {

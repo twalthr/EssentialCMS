@@ -85,6 +85,13 @@ abstract class Utils {
 		return false;
 	}
 
+	public static function isValidField($str) {
+		if (isset($_POST[$str]) && is_string($_POST[$str])) {
+			return true;
+		}
+		return false;
+	}
+
 	public static function isValidFieldNotEmpty($str) {
 		if (isset($_POST[$str]) && is_string($_POST[$str])) {
 			$trimmed = trim($_POST[$str]);
@@ -187,12 +194,66 @@ abstract class Utils {
 		return preg_replace('/\s\s+/', ' ', html_entity_decode(strip_tags($html)));
 	}
 
-	public static function getColumnWithValue($array, $column, $value) {
+	public static function getColumnWithValue(&$array, $column, $value) {
 		$key = array_search($value, array_column($array, $column), true);
 		if ($key === false) {
 			return false;
 		}
 		return $array[$key];
+	}
+
+	public static function getColumnWithValues(&$array, $column, $value) {
+		$keys = array_keys(array_column($array, $column), $value, true);
+		$values = [];
+		foreach ($keys as $key) {
+			$values[] = &$array[$key];
+		}
+		if (count($values) === 0) {
+			return false;
+		}
+		return $values;
+	}
+
+	public static function project(&$array, ...$keys) {
+		foreach ($array as $key => $value) {
+			if (!in_array($key, $keys)) {
+				unset($array[$key]);
+			}
+		}
+	}
+
+	public static function sortArray(&$array, $fields) {
+		usort($array,
+			function ($a, $b) use (&$fields) {
+				foreach ($fields as $field) {
+					$diff = strcmp($a[$field], $b[$field]);
+					if($diff != 0) {
+						return $diff;
+					}
+				}
+				return 0;
+			});
+	}
+
+	public static function arrayEqual(&$array1, &$array2, ...$keys) {
+		if (!is_array($array1) || !is_array($array2) ) {
+			return $array1 == $array2;
+		}
+		// build new array1 with keys
+		$projectedArray1 = [];
+		foreach ($array1 as $value) {
+			Utils::project($value, ...$keys);
+			$projectedArray1[] = $value;
+		}
+		// build new array2 with keys
+		$projectedArray2 = [];
+		foreach ($array2 as $value) {
+			Utils::project($value, ...$keys);
+			$projectedArray2[] = $value;
+		}
+		Utils::sortArray($projectedArray1, $keys);
+		Utils::sortArray($projectedArray2, $keys);
+		return $projectedArray1 == $projectedArray2;
 	}
 }
 

@@ -10,12 +10,14 @@ class AdminModuleOptionsModule extends BasicModule {
 	// UI state
 	private $state;
 	private $message;
+	private $field;
 
 	// member variables
 	private $module;
 	private $moduleInfo; // translated name and description
 	private $moduleDefinition; // instance of RichModule
-	private $moduleConfig; // config stored in database
+	private $moduleConfigFieldGroup; // config field group stored in database
+	private $moduleConfigFields; // config fields stored in database
 
 	public function __construct(
 			$moduleOperations, $fieldGroupOperations, $fieldOperations, $parameters = null) {
@@ -43,7 +45,7 @@ class AdminModuleOptionsModule extends BasicModule {
 		$this->loadModuleConfig();
 
 		// if module config has been loaded
-		if (!isset($this->moduleDefinition) || !isset($this->moduleConfig)) {
+		if (!isset($this->moduleDefinition) || !isset($this->moduleConfigFields)) {
 			return;
 		}
 
@@ -69,6 +71,9 @@ class AdminModuleOptionsModule extends BasicModule {
 				</div>
 			<?php else: ?>
 				<div class="dialog-error-message">
+					<?php if (isset($this->field)) : ?>
+						<?php $this->moduleDefinition->text($this->field); ?>:
+					<?php endif; ?>
 					<?php $this->text($this->message); ?>
 				</div>
 			<?php endif; ?>
@@ -81,7 +86,7 @@ class AdminModuleOptionsModule extends BasicModule {
 						<?php echo Utils::escapeString($this->moduleInfo['name']); ?>
 					</h1>
 
-					<?php $this->printFields($this->moduleDefinition->getConfigFieldInfo()); ?>
+					<?php $this->printFields(); ?>
 					<div class="buttonSet">
 						<input type="submit" value="<?php $this->text('SAVE'); ?>" />
 					</div>
@@ -95,16 +100,13 @@ class AdminModuleOptionsModule extends BasicModule {
 	// Printing methods
 	// --------------------------------------------------------------------------------------------
 
-	private function printFields($fields) {
+	private function printFields() {
+		$fields = $this->moduleDefinition->getConfigFieldInfo();
 		echo '<div class="fields">';
 		foreach ($fields as $field) {
-			$configValue = $this->getConfigValue($field->getKey());
-			if (isset($configValue)) {
-				$field->printFieldWithLabel($this->moduleDefinition, $configValue['type'], $configValue['content']);
-			}
-			else {
-				$field->printFieldWithLabel($this->moduleDefinition);
-			}
+			$field->printFieldWithLabel(
+				$this->moduleDefinition,
+				$this->getConfigContent($field->getKey()));
 		}
 		echo '</div>';
 	}
@@ -118,17 +120,58 @@ class AdminModuleOptionsModule extends BasicModule {
 		foreach ($fields as $field) {
 			$result = true;
 			// check content
-			$result = $field->isValidContentInput('typeof_' . $field->getKey(), 'valueof_' . $field->getKey());
+			$result = $field->isValidContentInput();
 
 			// validation was not successful
 			if ($result !== true) {
 				$this->state = false;
 				$this->message = $result;
+				$this->field = $field->getName();
 				return;
 			}
 
-			echo 'SUCCESS!!!!';
+			// save fields if not equal
+			$content = $field->getValidContentInput();
+			$currentContent = $this->getConfigContent($field->getKey());
+
+			if (!Utils::arrayEqual($content, $currentContent, 'type', 'content')) {
+				// field not in database yet
+				if ($currentContent === null) {
+					// check if not default value
+					$currentContent = $field->getDefaultContent();
+					if (!Utils::arrayEqual($content, $currentContent, 'type', 'content')) {
+						foreach ($content as $value) {
+							$result = $result && $this->fieldOperations->addField(
+								$this->moduleConfigFieldGroup,
+								$field->getKey(),
+								$value['type'],
+								$value['content']);
+						}
+					}
+				}
+				// field already in database
+				else {
+					$result = $this->fieldOperations->removeField(
+						$this->moduleConfigFieldGroup,
+						$field->getKey());
+					foreach ($content as $value) {
+						$result = $result && $this->fieldOperations->addField(
+							$this->moduleConfigFieldGroup,
+							$field->getKey(),
+							$value['type'],
+							$value['content']);
+					}
+				}
+
+				if ($result !== true) {
+					$this->state = false;
+					$this->message = 'UNKNOWN_ERROR';
+					return;
+				}
+			}
 		}
+		$this->state = true;
+		$this->message = 'MODULE_CONFIG_CHANGED';
 	}
 
 
@@ -136,11 +179,11 @@ class AdminModuleOptionsModule extends BasicModule {
 	// Helper methods
 	// --------------------------------------------------------------------------------------------
 
-	private function getConfigValue($key) {
-		if (!isset($this->moduleConfig)) {
+	private function getConfigContent($key) {
+		if (!isset($this->moduleConfigFields)) {
 			return null;
 		}
-		$value = Utils::getColumnWithValue($this->moduleConfig, 'key', $key);
+		$value = Utils::getColumnWithValues($this->moduleConfigFields, 'key', $key);
 		if ($value === false) {
 			return null;
 		}
@@ -186,15 +229,16 @@ class AdminModuleOptionsModule extends BasicModule {
 	}
 
 	private function loadModuleConfig() {
-		$moduleConfig = $this->fieldGroupOperations->getConfigFieldGroupId($this->module['mid']);
-		if ($moduleConfig === false) {
+		$moduleConfigFieldGroup = $this->fieldGroupOperations->getConfigFieldGroupId($this->module['mid']);
+		if ($moduleConfigFieldGroup === false) {
 			return;
 		}
-		$moduleConfigFields = $this->fieldOperations->getFields($moduleConfig);
+		$this->moduleConfigFieldGroup = $moduleConfigFieldGroup;
+		$moduleConfigFields = $this->fieldOperations->getFields($moduleConfigFieldGroup);
 		if ($moduleConfigFields === false) {
 			return;
 		}
-		$this->moduleConfig = $moduleConfigFields;
+		$this->moduleConfigFields = $moduleConfigFields;
 	}
 }
 

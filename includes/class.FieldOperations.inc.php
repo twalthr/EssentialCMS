@@ -8,6 +8,16 @@ final class FieldOperations {
 		$this->db = $db;
 	}
 
+	public function addField($fgid, $key, $type, $content) {
+		return $this->db->impactQuery('
+			INSERT INTO `Fields`
+			(`group`, `key`, `type`, `content`)
+			VALUES
+			(?,?,?,?)',
+			'isis',
+			$fgid, $key, $type, $content);
+	}
+
 	public function copyFields($fromFgid, $toFgid) {
 		return $this->db->successQuery('
 			INSERT INTO `Fields`
@@ -16,6 +26,14 @@ final class FieldOperations {
 			FROM `Fields` WHERE `group`=?',
 			'ii',
 			$toFgid, $fromFgid);
+	}
+
+	public function removeField($fgid, $key) {
+		return $this->db->successQuery('
+			DELETE FROM `Fields`
+			WHERE `group`=? AND `key`=?',
+			'is',
+			$fgid, $key);
 	}
 
 	public function removeFields($fgid) {

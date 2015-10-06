@@ -2,17 +2,18 @@
 
 abstract class UiUtils {
 
-	public static function printHiddenTypeInput($typePostField, $type, $disabled) {
-		echo '<input name="' . $typePostField . '" type="hidden" value="' . FieldInfo::translateTypeToString($type) . '"';
+	public static function printHiddenTypeInput($postField, $type, $disabled) {
+		echo '<input name="' . $postField . '" type="hidden" value="' . FieldInfo::translateTypeToString($type) . '"';
 		if ($disabled === true) {
 			echo ' disabled';
 		}
 		echo ' />';
 	}
 
-	public static function printTextInput($type, $postField, $defaultValue, $disabled, $field) {
-		if ($field->isLargeContentField()) {
-			echo '<textarea name="' . $postField . '" class="' . FieldInfo::translateTypeToString($type) . '"';
+	public static function printTextInput($field, $type, $value, $disabled) {
+		$postFieldName = $field->getContentPostFieldName() . ($field->isArray() ? '[]' : '');
+		if ($field->isLargeContent()) {
+			echo '<textarea name="' . $postFieldName . '" class="' . FieldInfo::translateTypeToString($type) . '"';
 			if ($field->getMaxContentLength() !== null && $field->getMaxContentLength() > 0) {
 				echo ' maxlength="' . $field->getMaxContentLength() . '"';
 			}
@@ -25,14 +26,17 @@ abstract class UiUtils {
 			if ($disabled === true) {
 				echo ' disabled';
 			}
-			echo ' id="' . $postField . '">';
-			echo Utils::getEscapedFieldOrVariable($postField, $defaultValue);
+			if (!$field->isArray()) {
+				echo ' id="' . $postFieldName . '"';
+			}
+			echo '>';
+			echo Utils::escapeString($value);
 			echo '</textarea>';
 		}
 		else {
-			echo '<input name="' . $postField . '" type="text" class="large ' . FieldInfo::translateTypeToString($type) . '"';
+			echo '<input name="' . $postFieldName . '" type="text" class="large ' . FieldInfo::translateTypeToString($type) . '"';
 			echo ' value="';
-			echo Utils::getEscapedFieldOrVariable($postField, $defaultValue);
+			echo Utils::escapeString($value);
 			echo '"';
 			if ($field->getMaxContentLength() !== null && $field->getMaxContentLength() > 0) {
 				echo ' maxlength="' . $field->getMaxContentLength() . '"';
@@ -46,7 +50,10 @@ abstract class UiUtils {
 			if ($disabled === true) {
 				echo ' disabled';
 			}
-			echo ' id="' . $postField . '" />';
+			if (!$field->isArray()) {
+				echo ' id="' . $postFieldName . '"';
+			}
+			echo ' />';
 		}
 	}
 

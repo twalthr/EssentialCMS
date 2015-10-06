@@ -18,7 +18,7 @@ class DebugModule extends RichModule {
 		// mixed small type with default
 		$config[] = new FieldInfo(
 			'field2', // key
-			FieldInfo::TYPE_PLAIN | FieldInfo::TYPE_HTML | FieldInfo::TYPE_MARKDOWN, // allowedContentTypes
+			FieldInfo::TYPE_PLAIN | FieldInfo::TYPE_HTML | FieldInfo::TYPE_MARKDOWN, // allowedTypes
 			'FIELD_2', // name
 			null,
 			null,
@@ -33,10 +33,26 @@ class DebugModule extends RichModule {
 		// mixed small type required
 		$config[] = new FieldInfo(
 			'field3', // key
-			FieldInfo::TYPE_PLAIN | FieldInfo::TYPE_HTML | FieldInfo::TYPE_MARKDOWN, // allowedContentTypes
+			FieldInfo::TYPE_PLAIN | FieldInfo::TYPE_HTML | FieldInfo::TYPE_MARKDOWN, // allowedTypes
 			'FIELD_3', // name
 			null,
 			false
+			);
+
+		// array of TEXT
+		$config[] = new FieldInfo(
+			'field4', // key
+			FieldInfo::TYPE_PLAIN, // allowedTypes
+			'FIELD_4', // name
+			true
+			);
+
+		// array of mixed small type required
+		$config[] = new FieldInfo(
+			'field5', // key
+			FieldInfo::TYPE_PLAIN | FieldInfo::TYPE_HTML | FieldInfo::TYPE_MARKDOWN, // allowedTypes
+			'FIELD_5', // name
+			true
 			);
 
 		return $config;

@@ -554,7 +554,7 @@ a.private {
 
 .tabBox .tabs a {
 	color: #2A2A2A;
-	padding: 5px 20px 5px;
+	padding: 4px 10px 4px;
 	background-color: #EAEAEA;
 	border: 1px solid #DCDCDC;
 	border-top-right-radius: 2px;
@@ -652,4 +652,30 @@ div.siteMap + * {
 .fields .richField>* {
 	display: table-cell;
 	text-align: left;
+}
+
+.fields .richField .hint {
+	padding-left: 20px;
+}
+
+.fields .richField .array .arrayElement {
+	display: table;
+	width: 100%;
+}
+
+.fields .richField .array .arrayElement>* {
+	display: table-cell;
+	text-align: left;
+}
+
+.fields .richField .array .arrayElement .arrayElementOptions {
+	padding-left: 20px;
+}
+
+.fields .richField .array .arrayOptions {
+	display: table-row;
+}
+
+.fields .richField .array .arrayOptions button {
+	display: table-cell;
 }

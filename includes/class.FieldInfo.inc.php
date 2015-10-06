@@ -1,5 +1,6 @@
 <?php
 
+// Defines a field. Each field can have one or an array of a type and a content.
 class FieldInfo {
 
 	const TYPE_PLAIN = 1;
@@ -20,52 +21,58 @@ class FieldInfo {
 	const TYPE_LOCALE = 32768;
 
 	private $key;
-	private $allowedContentTypes;
+	private $allowedTypes;
 	private $name;
 	private $array;
 	private $required;
-	private $largeContentField;
+	private $largeContent;
 	private $minContentLength;
 	private $maxContentLength;
 	private $additionalNames; // e.g. for type boolean = checkbox string, for type enum = values
-	private $defaultContentType;
-	private $defaultContentValue;
+	private $defaultType;
+	private $defaultContent;
+
+	private $typePostFieldName;
+	private $contentPostFieldName;
 
 	public function __construct(
 		$key,
-		$allowedContentTypes,
+		$allowedTypes,
 		$name,
 		$array = null,
 		$required = null,
-		$largeContentField = null,
+		$largeContent = null,
 		$minContentLength = null,
 		$maxContentLength = null,
 		$additionalNames = null,
-		$defaultContentType = null,
-		$defaultContentValue = null) {
+		$defaultType = null,
+		$defaultContent = null) {
 		
 		$this->key = $key;
-		$this->allowedContentTypes = $allowedContentTypes;
+		$this->allowedTypes = $allowedTypes;
 		$this->name = $name;
 		$this->array = $array;
 		$this->required = $required;
-		$this->largeContentField = $largeContentField;
+		$this->largeContent = $largeContent;
 		$this->minContentLength = $minContentLength;
 		$this->maxContentLength = $maxContentLength;
 		$this->additionalNames = $additionalNames;
-		$this->defaultContentType = $defaultContentType;
-		$this->defaultContentValue = $defaultContentValue;
+		$this->defaultType = $defaultType;
+		$this->defaultContent = $defaultContent;
 
 		// validate parameters
 		// TODO
+
+		$this->typePostFieldName = 'typeof_' . $this->key;
+		$this->contentPostFieldName = 'contentof_' . $this->key;
 	}
 
 	public function getKey() {
 		return $this->key;
 	}
 
-	public function getAllowedContentTypes() {
-		return $this->allowedContentTypes;
+	public function getAllowedTypes() {
+		return $this->allowedTypes;
 	}
 
 	public function getName() {
@@ -73,15 +80,15 @@ class FieldInfo {
 	}
 
 	public function isArray() {
-		return $this->array;
+		return $this->array === true;
 	}
 
 	public function isRequired() {
 		return $this->required;
 	}
 
-	public function isLargeContentField() {
-		return $this->largeContentField;
+	public function isLargeContent() {
+		return $this->largeContent;
 	}
 
 	public function getMinContentLength() {
@@ -96,16 +103,24 @@ class FieldInfo {
 		return $this->additionalNames;
 	}
 
-	public function getDefaultContentType() {
-		return $this->defaultContentType;
+	public function getDefaultType() {
+		return $this->defaultType;
 	}
 
-	public function getDefaultContentValue() {
-		return $this->defaultContentValue;
+	public function getDefaultContent() {
+		return $this->defaultContent;
 	}
 
-	public function getAllowedContentTypesArray() {
-		$type = $this->allowedContentTypes;
+	public function getTypePostFieldName() {
+		return $this->typePostFieldName;
+	}
+
+	public function getContentPostFieldName() {
+		return $this->contentPostFieldName;
+	}
+
+	public function getAllowedTypesArray() {
+		$type = $this->allowedTypes;
 		$types = [];
 		foreach (FieldInfo::getTypeStringMapping() as $key => $value) {
 			if ($type & $key) {
@@ -115,27 +130,37 @@ class FieldInfo {
 		return $types;
 	}
 
-	public function isMultiTypeContent() {
-		return count($this->getAllowedContentTypesArray()) > 1;
+	public function isMultiTypeField() {
+		return count($this->getAllowedTypesArray()) > 1;
 	}
 
-	public function getDefaultContent() {
-		if (!isset($this->defaultContentType) || !isset($this->defaultContentValue)) {
-			return null;
+	public function getDefaultTypeAndContent() {
+		if (!isset($this->defaultType)) {
+			return [['type' => $this->getAllowedTypesArray()[0], 'content' => null]];
 		}
+		else if ($this->isArray() && !isset($this->defaultContent)) {
+			return [['type' => $this->defaultType[0], 'content' => null]];
+		}
+		else if (!$this->isArray() && !isset($this->defaultContent)) {
+			return [['type' => $this->defaultType, 'content' => null]];
+		}
+
 		// if field is array
-		if ($this->array === true) {
-			$defaultContent = [];
-			foreach ($this->defaultContentType as $key => $type) {
+		if ($this->isArray()) {
+			$defaultTypeAndContent = [];
+			foreach ($this->defaultType as $key => $type) {
 				$value['type'] = $type;
-				$value['content'] = $this->defaultContentValue[$key];
-				$defaultContent[] = $value;
+				$value['content'] = $this->defaultContent[$key];
+				$defaultTypeAndContent[] = $value;
 			}
-			return $defaultContent;
+			return $defaultTypeAndContent;
 		}
 		// non-array
 		else {
-			return [['type' => $this->getDefaultContentType(), 'content' => $this->getDefaultContentValue()]];
+			return [
+				['type' => $this->getDefaultType(),
+				'content' => $this->getDefaultContent()]
+				];
 		}
 	}
 
@@ -143,6 +168,67 @@ class FieldInfo {
 	// Validate field for administration
 	// --------------------------------------------------------------------------------------------
 
+	private function isValidType($typeString) {
+		if (!isset($typeString)) {
+			return false;
+		}
+		$type = FieldInfo::translateStringToType($typeString);
+		if ($type === false) {
+			return false;
+		}
+		if (!in_array($type, $this->getAllowedTypesArray(), true)) {
+			return false;
+		}
+		return true;
+	}
+
+	private function convertPostArraysToTypeAndContent() {
+		$typeArray = Utils::getValidFieldArray($this->typePostFieldName);
+		$contentArray = Utils::getValidFieldArray($this->contentPostFieldName);
+
+		$typeAndContent = [];
+
+		foreach ($typeArray as $key => $type) {
+			// each type must have a corresponding content
+			if (array_key_exists($key, $contentArray)) {
+				$newTypeAndContent = $this->convertToTypeAndContent($type, $contentArray[$key]);
+				if ($newTypeAndContent !== false) {
+					$typeAndContent[] = $newTypeAndContent;
+				}
+			}
+		}
+		return $typeAndContent;
+	}
+
+	private function convertToTypeAndContent($typeString, $content) {
+		if (!$this->isValidType($typeString)) {
+			return false;
+		}
+		$type = FieldInfo::translateStringToType($typeString);
+		return ['type' => $type, 'content' => trim($value)];
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// TODO
 	private function isValidContentInputValue($type, $inputValue) {
 		$value = '';
 		if (isset($inputValue) && is_string($inputValue)) {
@@ -168,7 +254,7 @@ class FieldInfo {
 					return 'FIELD_TOO_LONG';
 				}
 				// check largeness
-				if ($this->largeContentField !== true 
+				if ($this->largeContent !== true 
 					&& !(strpos($trimmed, "\r") === false && strpos($trimmed, "\n") === false)) {
 					return 'FIELD_CONTAINS_LINEBREAKS';
 				}
@@ -229,21 +315,20 @@ class FieldInfo {
 			return true;
 	}
 
+// TODO
 	public function isValidContentInput() {
-		$typeField = 'typeof_' . $this->key;
-		$valueField = 'valueof_' . $this->key;
+		$typeField = $this->typePostFieldName;
+		$valueField = $this->contentPostFieldName;
+
 		// check type
-		$typeString = Utils::getUnmodifiedStringOrEmpty($typeField);
+		$typeString = Utils::getUnmodifiedStringOrEmpty($typeField); // TODO array support
+		if ($this->isValidType($typeString) === false) {
+			return 'FIELD_INVALID_TYPE';
+		}
 		$type = FieldInfo::translateStringToType($typeString);
-		if ($type === false) {
-			return 'FIELD_INVALID_TYPE';
-		}
-		if (!in_array($type, $this->getAllowedContentTypesArray(), true)) {
-			return 'FIELD_INVALID_TYPE';
-		}
 
 		// for field arrays
-		if ($this->array === true && Utils::isValidFieldArray($valueField)) {
+		if ($this->isArray() && Utils::isValidFieldArray($valueField)) {
 			foreach (Utils::getValidFieldArray($valueField) as $value) {
 				$result = $this->isValidContentInputValue($type, $value);
 				if ($result !== true) {
@@ -252,7 +337,7 @@ class FieldInfo {
 			}
 		}
 		// array missing
-		else if ($this->array === true && !Utils::isValidFieldArray($valueField)) {
+		else if ($this->isArray() && !Utils::isValidFieldArray($valueField)) {
 			return 'FIELD_INVALID_TYPE';
 		}
 		// non array
@@ -261,6 +346,7 @@ class FieldInfo {
 		}
 	}
 
+// TODO
 	private function getValidContentInputValue($type, $inputValue) {
 		$value = '';
 		if (isset($inputValue) && is_string($inputValue)) {
@@ -307,6 +393,7 @@ class FieldInfo {
 		return $content;
 	}
 
+// TODO
 	public function getValidContentInput() {
 		$typeField = 'typeof_' . $this->key;
 		$valueField = 'valueof_' . $this->key;
@@ -316,7 +403,7 @@ class FieldInfo {
 		$content = [];
 
 		// for field arrays
-		if ($this->array === true) {
+		if ($this->isArray()) {
 			foreach (Utils::getValidFieldArray($valueField) as $value) {
 				$content[] = $this->getValidContentInputValue($type, $value);
 			}
@@ -330,18 +417,166 @@ class FieldInfo {
 	// Visualize field for administration
 	// --------------------------------------------------------------------------------------------
 
-	public function printField($type, $typePostField, $postField, $value, $disabled) {
-		UiUtils::printHiddenTypeInput($typePostField, $type, $disabled);
+	public function printFieldWithLabel($moduleDefinition, $databaseTypeAndContent) {
+		echo '<div class="richField">';
+		// print label (arrays have no for since a textfield might not be present)
+		if ($this->isArray()) {
+			echo '	<label>';
+		}
+		else {
+			echo '	<label for="' . $this->contentPostFieldName . '">';
+		}
+		$moduleDefinition->text($this->name);
+		if ($this->required) {
+			echo '*';
+		}
+		echo ':	</label>';
+
+		// print content
+		$types = $this->getAllowedTypesArray();
+
+		// find source of current content
+		$currentTypeAndContent = null;
+		// use post type and content for arrays
+		if ($this->isArray()
+				&& Utils::isValidFieldArray($this->typePostFieldName)
+				&& Utils::isValidFieldArray($this->contentPostFieldName)) {
+			$postTypeAndContent = $this->convertPostArraysToTypeAndContent();
+			$currentTypeAndContent = $postContent;
+		}
+		// use post content for non-arrays
+		else if (!$this->isArray()
+				&& Utils::isValidField($this->typePostFieldName)
+				&& Utils::isValidField($this->contentPostFieldName)) {
+			$postTypeAndContent = $this->convertToTypeAndContent(
+				Utils::getUnmodifiedStringOrEmpty($typeField),
+				Utils::getUnmodifiedStringOrEmpty($valueField));
+			if ($postTypeAndContent !== false) {
+				$currentTypeAndContent = [$postTypeAndContent];
+			}
+		}
+		// use database content
+		else if (isset($databaseTypeAndContent) && count($databaseTypeAndContent) > 0) {
+			$currentTypeAndContent = $databaseTypeAndContent;
+		}
+		// use default content as fallback
+		if ($currentTypeAndContent === null) {
+			$currentTypeAndContent = $this->getDefaultTypeAndContent();
+		}
+
+		if ($this->isArray()) {
+			echo '<div class="array">';
+		}
+
+		$this->printFieldTypeAndContent($types, $currentTypeAndContent, $moduleDefinition);
+
+		// add an 'add' button
+		if ($this->isArray()) {
+			echo '	<div class="arrayOptions">';
+			echo '		<button class="add">ADD</button>';
+			// store a template for a new array element
+			echo '		<div class="template hidden">';
+			$this->printFieldTypeAndContent($types, $this->getDefaultTypeAndContent(), $moduleDefinition);
+			echo '		</div>'; // class="template hidden"
+			echo '	</div>'; // class="arrayOptions"
+			echo '</div>'; // class="array"
+		}
+
+		echo '</div>'; // class="richField"
+	}
+
+	private function printFieldTypeAndContent($types, $typeAndContent, $moduleDefinition) {
+		if (count($types) === 1) {
+			if ($this->isArray()) {
+				echo '<div class="arrayElement">';
+			}
+			$this->printField(
+				$types[0],
+				$typeAndContent[0]['content'],
+				false,
+				true);
+			echo '<span class="hint">';
+			$moduleDefinition->text(FieldInfo::translateTypeToString($types[0]));
+			echo '</span>';
+			if ($this->isArray()) {
+				echo '	<div class="arrayElementOptions">';
+				echo '		<button class="remove">REMOVE</button>';
+				echo '	</div>'; // class="arrayElementOptions"
+				echo '</div>'; // class="arrayElement"
+			}
+		}
+		else {
+			// for each content value
+			foreach ($typeAndContent as $element) {
+				// split up array elements with an additional div
+				if ($this->isArray()) {
+					echo '<div class="arrayElement">';
+				}
+
+				// print type selection
+				echo '	<div class="tabBox">';
+				// print types
+				echo '		<ul class="tabs">';
+				foreach ($types as $type) {
+					if ($type === $element['type']) {
+						echo '		<li class="current">';
+					}
+					else {
+						echo '		<li>';
+					}
+					echo '				<a>';
+					$moduleDefinition->text(FieldInfo::translateTypeToString($type));
+					echo '				</a>';
+					echo '			</li>';
+				}
+				echo '		</ul>';
+
+				// print content for types
+				echo '		<div class="tabContent">';
+				foreach ($types as $key => $type) {
+					if ($type === $element['type']) {
+						echo '			<div class="tab">';
+						$this->printField(
+							$type,
+							$element['content'],
+							false,
+							$this->isArray());
+					}
+					else {
+						echo '			<div class="tab hidden">';
+						$this->printField(
+							$type,
+							null,
+							true,
+							$this->isArray());
+					}
+					echo '				</div>'; // class="tab hidden" or class="tab"
+				}
+				echo '		</div>'; // class="tabContent"
+				echo '	</div>'; // class="tabBox"
+
+				if ($this->isArray()) {
+					echo '	<div class="arrayElementOptions">';
+					echo '		<button class="remove">REMOVE</button>';
+					echo '	</div>'; // class="arrayElementOptions"
+					echo '</div>'; // class="arrayElement"
+				}
+			}
+		}
+	}
+
+	private function printField($type, $value, $disabled) {
+		UiUtils::printHiddenTypeInput($this->typePostFieldName . ($this->isArray() ? '[]' : ''),
+			$type, $disabled);
 		switch ($type) {
 			case FieldInfo::TYPE_PLAIN:
 			case FieldInfo::TYPE_HTML:
 			case FieldInfo::TYPE_MARKDOWN:
 				UiUtils::printTextInput(
+					$this,
 					$type,
-					$postField,
 					$value,
-					$disabled,
-					$this);
+					$disabled);
 				break;
 			case FieldInfo::TYPE_IMAGE:
 				break;
@@ -369,101 +604,6 @@ class FieldInfo {
 				break;
 			case FieldInfo::TYPE_LOCALE:
 				break;
-		}
-	}
-
-	public function printFieldWithLabel($moduleDefinition, $databaseContent) {
-		echo '<div class="richField">';
-		// print label
-		echo '	<label for="' . 'valueof_' . $this->key . '">';
-		echo $moduleDefinition->text($this->name);
-		if ($this->required) {
-			echo '*';
-		}
-		echo ':	</label>';
-
-		// print content
-		$types = $this->getAllowedContentTypesArray();
-
-		// find source of current content
-		$currentContent = null;
-		// use post content for arrays
-		if ($this->array
-			&& Utils::isValidFieldArray('typeof' . $this->key)
-			&& Utils::isValidFieldArray('valueof' . $this->key)) {
-			$postContent = $this->convertPostArrayToContent();
-			if ($postContent !== null) {
-				$currentContent = $postContent;
-			}
-		}
-		// use post content for non-arrays
-		else if (!$this->array
-			&& Utils::isValidField('typeof' . $this->key)
-			&& Utils::isValidField('valueof' . $this->key)) {
-			$postContent = $this->convertPostArrayToContent();
-			if ($postContent !== null) {
-				$currentContent = $postContent;
-			}
-		}
-		// use database content
-		else if (isset($databaseContent) && count($databaseContent) > 0) {
-			$currentContent = $databaseContent;
-		}
-		// use default content as fallback
-		if ($currentContent === null) {
-			$currentContent = $this->getDefaultContent();
-		}
-
-		// for each content value
-		foreach ($currentContent as $value) {
-			// print type selection
-			echo '	<div class="tabBox">';
-			// print types
-			echo '		<ul class="tabs">';
-			foreach ($types as $type) {
-				if ($type === $value['type']) {
-					echo '		<li class="current">';
-				}
-				else {
-					echo '		<li>';
-				}
-				echo '				<a>';
-				echo $moduleDefinition->text(FieldInfo::translateTypeToString($type));
-				echo '				</a>';
-				echo '			</li>';
-			}
-			echo '		</ul>';
-
-			// print content for types
-			echo '		<div class="tabContent">';
-			foreach ($types as $type) {
-				if ($type === $value['type']) {
-					echo '			<div class="tab">';
-					$this->printField(
-						$type,
-						'typeof_' . $this->key,
-						'valueof_' . $this->key,
-						$value['content'],
-						false);
-				}
-				else {
-					echo '			<div class="tab hidden">';
-					$this->printField(
-						$type,
-						'typeof_' . $this->key,
-						'valueof_' . $this->key,
-						null,
-						true);
-				}
-				echo '				</div>';
-			}
-			echo '		</div>';
-			echo '	</div>';
-			echo '</div>';
-		}
-		// add an 'add' button
-		if ($this->array) {
-			echo '<button class="add">ADD</button>';
 		}
 	}
 

@@ -187,6 +187,9 @@ abstract class Utils {
 	}
 
 	public static function escapeString($str) {
+		if (!isset($str)) {
+			return '';
+		}
 		return htmlspecialchars($str);
 	}
 

@@ -1,6 +1,6 @@
 <?php
 
-class AdminModuleOptionsModule extends BasicModule {
+class AdminModuleConfigModule extends BasicModule {
 
 	// database operations
 	private $moduleOperations;
@@ -21,7 +21,7 @@ class AdminModuleOptionsModule extends BasicModule {
 
 	public function __construct(
 			$moduleOperations, $fieldGroupOperations, $fieldOperations, $parameters = null) {
-		parent::__construct(1, 'admin-module-options');
+		parent::__construct(1, 'admin-module-config');
 		$this->moduleOperations = $moduleOperations;
 		$this->fieldGroupOperations = $fieldGroupOperations;
 		$this->fieldOperations = $fieldOperations;
@@ -61,7 +61,20 @@ class AdminModuleOptionsModule extends BasicModule {
 		?>
 		<script type="text/javascript">
 			$(document).ready(function() {
-				
+				$('.arrayElementOptions .remove').click(function() {
+					var button = $(this);
+					button.closest('.arrayElement').remove();
+				});
+				$('.arrayOptions .add').click(function() {
+					var button = $(this);
+					var newArrayElement = button
+							.siblings('.template')
+							.clone(true);
+					newArrayElement.find(':input').prop('disabled', false);
+					newArrayElement.find('.hidden :input').prop('disabled', true);
+					newArrayElement.removeClass('hidden');
+					button.parent().before(newArrayElement);
+				});
 			});
 		</script>
 		<?php if (isset($this->state)) : ?>
@@ -83,7 +96,7 @@ class AdminModuleOptionsModule extends BasicModule {
 				<input type="hidden" name="operationSpace" value="fields" />
 				<section>
 					<h1>
-						<?php echo Utils::escapeString($this->moduleInfo['name']); ?>
+						<?php $this->text('MODULE_CONFIG'); ?>
 					</h1>
 
 					<?php $this->printFields(); ?>
@@ -118,9 +131,8 @@ class AdminModuleOptionsModule extends BasicModule {
 	private function handleEditConfig() {
 		$fields = $this->moduleDefinition->getConfigFieldInfo();
 		foreach ($fields as $field) {
-			$result = true;
-			// check content
-			$result = $field->isValidContentInput();
+			// check input
+			$result = $field->isValidTypeAndContentInput();
 
 			// validation was not successful
 			if ($result !== true) {
@@ -131,7 +143,7 @@ class AdminModuleOptionsModule extends BasicModule {
 			}
 
 			// save fields if not equal
-			$content = $field->getValidContentInput();
+			$content = $field->getValidTypeAndContentInput();
 			$currentContent = $this->getConfigContent($field->getKey());
 
 			if (!Utils::arrayEqual($content, $currentContent, 'type', 'content')) {

@@ -96,7 +96,7 @@ switch ($action) {
 		break;
 	case 'module-options':
 		$controller->verifyLogin();
-		$module = new AdminModuleOptionsModule(
+		$module = new AdminModuleConfigModule(
 			$controller->getModuleOperations(),
 			$controller->getFieldGroupOperations(),
 			$controller->getFieldOperations(), $parameters);

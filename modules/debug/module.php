@@ -6,6 +6,20 @@ class DebugModule extends RichModule {
 		parent::__construct(1, 'debug');
 	}
 
+	/*
+// key,
+// allowedTypes,
+// name,
+// array
+// required
+// largeContent
+// minContentLength
+// maxContentLength
+// additionalNames
+// defaultType
+// defaultContent
+	*/
+
 	public function getConfigFieldInfo() {
 		$config = [];
 		// mixed small type
@@ -20,14 +34,14 @@ class DebugModule extends RichModule {
 			'field2', // key
 			FieldInfo::TYPE_PLAIN | FieldInfo::TYPE_HTML | FieldInfo::TYPE_MARKDOWN, // allowedTypes
 			'FIELD_2', // name
-			null,
-			null,
-			null,
-			null,
-			null,
-			null,
-			2,
-			'<b>THIS IS STRONG</b>'
+			null, // array
+			null, // required
+			null, // largeContent
+			null, // minContentLength
+			null, // maxContentLength
+			null, // additionalNames
+			FieldInfo::TYPE_HTML, // defaultType
+			'<b>THIS IS STRONG</b>' // defaultContent
 			);
 
 		// mixed small type required
@@ -35,8 +49,14 @@ class DebugModule extends RichModule {
 			'field3', // key
 			FieldInfo::TYPE_PLAIN | FieldInfo::TYPE_HTML | FieldInfo::TYPE_MARKDOWN, // allowedTypes
 			'FIELD_3', // name
-			null,
-			false
+			null, // array
+			true, // required
+			null, // largeContent
+			null, // minContentLength
+			null, // maxContentLength
+			null, // additionalNames
+			FieldInfo::TYPE_HTML, // defaultType
+			'<b>THIS IS STRONG</b>' // defaultContent
 			);
 
 		// array of TEXT

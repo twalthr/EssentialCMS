@@ -33,19 +33,6 @@ $(document).ready(function(){
 		openedTab.removeClass('hidden');
 		openedTab.find(':input').prop('disabled', false);
 	});
-	$('.arrayElementOptions .remove').click(function() {
-		var button = $(this);
-		button.closest('.arrayElement').remove();
-	});
-	$('.arrayOptions .add').click(function() {
-		var button = $(this);
-		button.parent().before(
-			button
-				.siblings('.template')
-				.clone(true)
-				.removeClass('hidden')
-			);
-	});
 });
 
 function enableList(button) {

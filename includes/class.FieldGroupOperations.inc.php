@@ -121,6 +121,27 @@ final class FieldGroupOperations {
 		}
 		return $fieldGroupId['fgid'];
 	}
+
+	public function getFieldGroups($mid, $key) {
+		$fieldGroups = $this->db->valuesQuery('
+			SELECT `fgid`, `order`
+			FROM `FieldGroups`
+			WHERE `module`=? AND `key`=? ORDER BY `order` ASC',
+			'is',
+			$mid, $key);
+		return $fieldGroups;
+	}
+
+	public function getFieldGroupsWithTitle($mid, $key) {
+		$fieldGroups = $this->db->valuesQuery('
+			SELECT `fgid`, `order`, `content`
+			FROM `FieldGroups` `fg`
+			LEFT JOIN `Fields` `f` ON `f`.`group` = `fg`.`fgid` AND `f`.`key` = "title"
+			WHERE `fg`.`module`=? AND `fg`.`key`=? ORDER BY `fg`.`order` ASC',
+			'is',
+			$mid, $key);
+		return $fieldGroups;
+	}
 }
 
 ?>

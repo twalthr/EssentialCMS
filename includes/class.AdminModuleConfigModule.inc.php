@@ -59,6 +59,7 @@ class AdminModuleConfigModule extends BasicModule {
 
 	public function printContent($config) {
 		?>
+		<?php if (isset($this->moduleDefinition)) : ?>
 		<script type="text/javascript">
 			$(document).ready(function() {
 				$('.arrayElementOptions .remove').click(function() {
@@ -75,8 +76,13 @@ class AdminModuleConfigModule extends BasicModule {
 					newArrayElement.removeClass('hidden');
 					button.parent().before(newArrayElement);
 				});
+				$('#cancelConfig').click(function() {
+					window.open('<?php echo $config->getPublicRoot(); ?>/admin/module/<?php 
+						echo $this->module['mid']; ?>', '_self');
+				});
 			});
 		</script>
+		<?php endif; ?>
 		<?php if (isset($this->state)) : ?>
 			<?php if ($this->state === true) : ?>
 				<div class="dialog-success-message">
@@ -98,11 +104,11 @@ class AdminModuleConfigModule extends BasicModule {
 					<h1>
 						<?php $this->text('MODULE_CONFIG'); ?>
 					</h1>
-
-					<?php $this->printFields(); ?>
-					<div class="buttonSet">
+					<div class="buttonSet general">
 						<input type="submit" value="<?php $this->text('SAVE'); ?>" />
+						<button id="cancelConfig"><?php $this->text('CANCEL'); ?></button>
 					</div>
+					<?php $this->printFields(); ?>
 				</section>
 			</form>
 		<?php endif; ?>
@@ -116,7 +122,7 @@ class AdminModuleConfigModule extends BasicModule {
 	private function printFields() {
 		$fields = $this->moduleDefinition->getConfigFieldInfo();
 		echo '<div class="fields">';
-		foreach ($fields as $field) {
+		foreach ($fields as &$field) {
 			$field->printFieldWithLabel(
 				$this->moduleDefinition,
 				$this->getConfigContent($field->getKey()));

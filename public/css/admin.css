@@ -144,7 +144,17 @@ a.goto::after {
 	color: #2A2A2A;
 }
 
-a.goto:hover::after {
+a.gotoBack::before {
+	content: '◀';
+	font-size: 9px;
+	padding-right: 5px;
+	vertical-align: top;
+	line-height: 21px;
+	display: inline-block;
+	color: #2A2A2A;
+}
+
+a.goto:hover::after, a.gotoBack:hover::before {
 	color: #000000;
 }
 
@@ -301,6 +311,11 @@ label {
 
 .fieldsRequired {
 	padding-bottom: 20px;
+}
+
+.buttonSet.general {
+	padding-bottom: 20px;
+	text-align: left;
 }
 
 .buttonSet {
@@ -480,7 +495,7 @@ section.content section h1 {
 }
 
 section.content section, section.content section+* {
-	margin-top: 45px;
+	margin-top: 20px;
 }
 
 section.content section:first-child {

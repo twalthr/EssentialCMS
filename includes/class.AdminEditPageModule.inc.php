@@ -70,6 +70,9 @@ class AdminEditPageModule extends BasicModule {
 		<?php else: ?>
 			<script type="text/javascript">
 				$(document).ready(function() {
+					$('#editPageCancel').click(function() {
+						window.open('<?php echo $config->getPublicRoot(); ?>/admin/pages', '_self');
+					});
 					$('#pageDirectAccess').change(function() {
 						var externalId = $('#externalId');
 						externalId.prop('disabled', !$(this).prop('checked'));
@@ -190,9 +193,14 @@ class AdminEditPageModule extends BasicModule {
 							<?php echo Utils::escapeString($this->page['title']); ?>
 						</h1>
 						<h1 class="hidden showInEditMode"><?php $this->text('PAGE_PROPERTIES'); ?></h1>
-						<button id="editPage" class="hiddenInEditMode">
-							<?php $this->text('EDIT_PAGE'); ?>
-						</button>
+						<div class="buttonSet general">
+							<button id="editPage" class="hiddenInEditMode">
+								<?php $this->text('EDIT_PAGE'); ?>
+							</button>
+							<button id="editPageCancel">
+								<?php $this->text('CANCEL'); ?>
+							</button>
+						</div>
 					<?php else : ?>
 						<h1><?php $this->text('NEW_PAGE'); ?></h1>
 					<?php endif; ?>

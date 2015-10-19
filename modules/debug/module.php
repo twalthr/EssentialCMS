@@ -79,7 +79,16 @@ class DebugModule extends RichModule {
 	}
 
 	public function getFieldGroupInfo() {
-		return [];
+		$fields = [];
+		$fields[] = new FieldInfo(
+			'field1', // key
+			FieldInfo::TYPE_PLAIN | FieldInfo::TYPE_HTML | FieldInfo::TYPE_MARKDOWN, // allowedTypes
+			'FIELD_1', // name
+			true
+			);
+
+		$fieldGroup = new FieldGroupInfo('fieldGroup1', 'BLOGPOST', 'BLOGPOSTS', $fields);
+		return [$fieldGroup];
 	}
 
 }

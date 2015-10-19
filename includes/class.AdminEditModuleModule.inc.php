@@ -13,8 +13,8 @@ class AdminEditModuleModule extends BasicModule {
 
 	// member variables
 	private $module;
-	private $moduleInfo;
-	private $moduleDefinition;
+	private $moduleInfo; // translated name and description
+	private $moduleDefinition; // instance of RichModule
 
 	public function __construct(
 			$moduleOperations, $fieldGroupOperations, $fieldOperations, $parameters = null) {
@@ -40,15 +40,20 @@ class AdminEditModuleModule extends BasicModule {
 
 	public function printContent($config) {
 		?>
-		<script type="text/javascript">
-			$(document).ready(function() {
-				$('#editModuleOptions').click(function() {
-					var moduleId = $(this).val();
-					window.open('<?php echo $config->getPublicRoot(); ?>/admin/module-options/'
-						+ moduleId, '_self');
+		<?php if (isset($this->moduleDefinition)) : ?>
+			<script type="text/javascript">
+				$(document).ready(function() {
+					$('#editModuleOptions').click(function() {
+						window.open('<?php echo $config->getPublicRoot(); ?>/admin/module-options/<?php
+							echo $this->module['mid']; ?>', '_self');
+					});
+					$('#editModuleCancel').click(function() {
+						window.open('<?php echo $config->getPublicRoot(); ?>/admin/page/<?php
+							echo $this->module['page']; ?>', '_self');
+					});
 				});
-			});
-		</script>
+			</script>
+		<?php endif; ?>
 		<?php if (isset($this->state)) : ?>
 			<?php if ($this->state === true) : ?>
 				<div class="dialog-success-message">
@@ -63,12 +68,19 @@ class AdminEditModuleModule extends BasicModule {
 		<?php if (isset($this->moduleDefinition)) : ?>
 			<section>
 					<h1>
+						<?php $this->text('MODULE'); ?>
 						<?php echo Utils::escapeString($this->moduleInfo['name']); ?>
 					</h1>
-					<button id="editModuleOptions" value="<?php echo $this->module['mid']; ?>">
-						<?php $this->text('EDIT_MODULE_OPTIONS'); ?>
-					</button>
+					<div class="buttonSet general">
+						<button id="editModuleOptions">
+							<?php $this->text('EDIT_MODULE_CONFIG'); ?>
+						</button>
+						<button id="editModuleCancel">
+							<?php $this->text('CANCEL'); ?>
+						</button>
+					</div>
 			</section>
+			<?php $this->printFieldGroups(); ?>
 		<?php endif; ?>
 		<?php
 	}
@@ -77,7 +89,26 @@ class AdminEditModuleModule extends BasicModule {
 	// Printing methods
 	// --------------------------------------------------------------------------------------------
 
-	
+	private function printFieldGroups() {
+		$fieldGroups = $this->moduleDefinition->getFieldGroupInfo();
+		echo '<div class="fieldGroups">';
+		foreach ($fieldGroups as &$fieldGroup) {
+			$fieldGroups = false;
+			if ($fieldGroup->isOnePagePerGroup) {
+				$fieldGroups = $fieldOperations->getFieldGroupsWithTitle(
+					$this->module['mid'], $fieldGroup->getKey());
+			}
+			else {
+				$fieldGroups = $fieldOperations->getFieldGroups(
+					$this->module['mid'], $fieldGroup->getKey());
+			}
+			if ($fieldGroups === false) {
+				continue;
+			}
+			$fieldGroup->printFieldGroupSection($this->moduleDefinition, $fieldGroups, $this->fieldOperations);
+		}
+		echo '</div>';
+	}
 
 	// --------------------------------------------------------------------------------------------
 	// User input handling methods

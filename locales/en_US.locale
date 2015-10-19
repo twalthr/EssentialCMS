@@ -135,3 +135,4 @@ FIELD_TOO_LARGE=Field value is too large.
 FIELD_CONTAINS_WHITESPACE=Field value contains whitespace characters.
 MODULE_CONFIG_CHANGED=Module options successfully changed.
 MODULE_CONFIG=Module Options
+MODULE=Module:

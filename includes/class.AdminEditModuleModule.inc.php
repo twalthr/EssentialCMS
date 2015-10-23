@@ -80,7 +80,7 @@ class AdminEditModuleModule extends BasicModule {
 						</button>
 					</div>
 			</section>
-			<?php $this->printFieldGroups(); ?>
+			<?php $this->printFieldGroups($config); ?>
 		<?php endif; ?>
 		<?php
 	}
@@ -89,25 +89,116 @@ class AdminEditModuleModule extends BasicModule {
 	// Printing methods
 	// --------------------------------------------------------------------------------------------
 
-	private function printFieldGroups() {
+	private function printFieldGroups($config) {
 		$fieldGroups = $this->moduleDefinition->getFieldGroupInfo();
 		echo '<div class="fieldGroups">';
 		foreach ($fieldGroups as &$fieldGroup) {
-			$fieldGroups = false;
-			if ($fieldGroup->isOnePagePerGroup) {
-				$fieldGroups = $fieldOperations->getFieldGroupsWithTitle(
+			$fieldGroupContent = false;
+			if ($fieldGroup->isOnePagePerGroup()) {
+				$fieldGroupContent = $this->fieldGroupOperations->getFieldGroupsWithTitle(
 					$this->module['mid'], $fieldGroup->getKey());
 			}
 			else {
-				$fieldGroups = $fieldOperations->getFieldGroups(
+				$fieldGroupContent = $this->fieldGroupOperations->getFieldGroups(
 					$this->module['mid'], $fieldGroup->getKey());
 			}
-			if ($fieldGroups === false) {
+			if ($fieldGroupContent === false) {
 				continue;
 			}
-			$fieldGroup->printFieldGroupSection($this->moduleDefinition, $fieldGroups, $this->fieldOperations);
+			$this->printFieldGroupSection($fieldGroup, $fieldGroupContent, $config);
 		}
 		echo '</div>';
+	}
+
+	private function printFieldGroupSection($fieldGroup, $fieldGroupContent, $config) {
+		?>
+		<form method="post">
+			<section>
+				<h1>
+					<?php if ($fieldGroup->getMaxNumberOfGroups() === 1) : ?>
+						<?php $this->moduleDefinition->text($fieldGroup->getName()); ?>
+					<?php else : ?>
+						<?php $this->moduleDefinition->text($fieldGroup->getNamePlural()); ?>
+					<?php endif; ?>
+				</h1>
+				<?php if ($fieldGroup->getMaxNumberOfGroups() === null
+						|| count($fieldGroupContent) < $fieldGroup->getMaxNumberOfGroups()) : ?>
+					<div class="buttonSet general">
+						<button id="editModuleOptions">
+							<?php $this->text('ADD_FIELDGROUP',
+									Utils::escapeString($fieldGroup->getName())); ?>
+						</button>
+					</div>
+				<?php endif; ?>
+				<?php if (count($fieldGroupContent) === 0) : ?>
+					<p class="empty">
+						<?php $this->text('NO_FIELDGROUP',
+								Utils::escapeString($fieldGroup->getNamePlural())) ?>
+					</p>;
+				<?php endif; ?>
+				<?php if ($fieldGroup->isOnePagePerGroup()) : ?>
+					<ul class="tableLike enableButtonsIfChecked">
+						<?php foreach ($fieldGroupContent as &$content) : ?>
+							<li class="rowLike">
+								<input type="checkbox" id="fieldGroup<?php echo $content['fgid']; ?>"
+										name="fieldGroup[]"
+										value="<?php echo $content['fgid']; ?>" />
+								<label for="fieldGroup<?php echo $content['fgid']; ?>"
+										class="checkbox">
+									<?php echo Utils::escapeString($content['title']); ?>
+								</label>
+								<a href="<?php echo $config->getPublicRoot(); ?>/admin/field-group/<?php 
+										echo $content['fgid']; ?>"
+										<?php if (isset($content['private']) 
+												&& $content['private'] === '1') : ?>
+											class="private componentLink"
+										<?php else : ?>
+											class="componentLink"
+										<?php endif; ?>
+										>
+									<?php echo Utils::escapeString($content['title']); ?>
+								</a>
+							</li>
+						<?php endforeach; ?>
+					</ul>
+					<div class="buttonSet">
+						<?php if ($fieldGroup->hasOrder()) : ?>
+							<button class="moveModule disableListIfClicked"
+								value="<?php echo $fieldGroup->getKey(); ?>" disabled>
+								<?php $this->text('MOVE'); ?>
+							</button>
+						<?php endif; ?>
+						<button class="copyModule disableListIfClicked"
+							value="<?php echo $fieldGroup->getKey(); ?>" disabled>
+							<?php $this->text('COPY'); ?>
+						</button>
+						<button class="exportModule"
+							value="<?php echo $fieldGroup->getKey(); ?>" disabled>
+							<?php $this->text('EXPORT'); ?>
+						</button>
+						<button class="deleteModule disableListIfClicked"
+							value="<?php echo $fieldGroup->getKey(); ?>" disabled>
+							<?php $this->text('DELETE'); ?>
+						</button>
+					</div>
+					<div class="dialog-box hidden">
+						<div class="dialog-message"></div>
+						<div class="fields">
+							
+						</div>
+						<div class="options">
+							<button class="hidden copyConfirm"><?php $this->text('COPY'); ?></button>
+							<button class="hidden moveConfirm"><?php $this->text('MOVE'); ?></button>
+							<button class="hidden deleteConfirm"><?php $this->text('DELETE'); ?></button>
+							<button class="hidden cancel"><?php $this->text('CANCEL'); ?></button>
+						</div>
+					</div>
+				<?php else : ?>
+					<?php $fieldGroup->printFieldsWithLabel(); ?>
+				<?php endif; ?>
+			</section>
+		</form>
+		<?php
 	}
 
 	// --------------------------------------------------------------------------------------------

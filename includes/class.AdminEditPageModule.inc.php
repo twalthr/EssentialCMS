@@ -328,9 +328,11 @@ class AdminEditPageModule extends BasicModule {
 			<section class="<?php echo array_key_exists($section, $this->modulesBySection) ?
 				'' : 'hidden showInEditMode'; ?>">
 				<h1><?php $this->text(ModuleOperations::translateSectionToLocale($section)); ?></h1>
-				<button class="hidden showInEditMode addButton"
-					value="<?php echo ModuleOperations::translateToSectionString($section); ?>">
-					<?php $this->text('ADD_MODULE'); ?></button>
+				<div class="buttonSet general">
+					<button class="hidden showInEditMode addButton"
+						value="<?php echo ModuleOperations::translateToSectionString($section); ?>">
+						<?php $this->text('ADD_MODULE'); ?></button>
+				</div>
 				<div class="moduleList enableButtonsIfChecked">
 					<?php $this->printModuleListAsTable($config, $section); ?>
 				</div>
@@ -372,7 +374,7 @@ class AdminEditPageModule extends BasicModule {
 	private function printMissingModules() {
 		if (count($this->modulesBySection) === 0) {
 			echo '<p class="empty hiddenInEditMode">';
-			echo $this->text('NO_MODULES_IN_PAGE');
+			$this->text('NO_MODULES_IN_PAGE');
 			echo '</p>';
 		}
 	}
@@ -380,7 +382,7 @@ class AdminEditPageModule extends BasicModule {
 	private function printModuleListAsTable($config, $section) {
 		if (!array_key_exists($section, $this->modulesBySection)) {
 			echo '<p class="empty">';
-			echo $this->text('NO_MODULES_IN_SECTION');
+			$this->text('NO_MODULES_IN_SECTION');
 			echo '</p>';
 			return;
 		}

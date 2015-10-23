@@ -135,4 +135,6 @@ FIELD_TOO_LARGE=Feldwert ist zu groß.
 FIELD_CONTAINS_WHITESPACE=Feldwert enthält Leerzeichen.
 MODULE_CONFIG_CHANGED=Moduloptionen erfolgreich geändert.
 MODULE_CONFIG=Moduloptionen
-MODULE=Modul:
+MODULE=Modul
+ADD_FIELDGROUP=%1$s erstellen
+NO_FIELDGROUP=Keine %1$s vorhanden.

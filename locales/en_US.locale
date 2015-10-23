@@ -136,3 +136,5 @@ FIELD_CONTAINS_WHITESPACE=Field value contains whitespace characters.
 MODULE_CONFIG_CHANGED=Module options successfully changed.
 MODULE_CONFIG=Module Options
 MODULE=Module:
+ADD_FIELDGROUP=New %1$s
+NO_FIELDGROUP=No %1$s are created yet.

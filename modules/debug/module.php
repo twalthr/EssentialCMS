@@ -87,7 +87,7 @@ class DebugModule extends RichModule {
 			true
 			);
 
-		$fieldGroup = new FieldGroupInfo('fieldGroup1', 'BLOGPOST', 'BLOGPOSTS', $fields);
+		$fieldGroup = new FieldGroupInfo('fieldGroup1', 'BLOGPOST', 'BLOGPOSTS', $fields, 0, null, true, true);
 		return [$fieldGroup];
 	}
 

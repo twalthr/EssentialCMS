@@ -23,7 +23,7 @@ class FieldGroupInfo {
 		$this->hasOrder = $hasOrder;
 
 		// validate parameters
-		// TODO check that title present if one pager
+		// TODO check that title present if one pager and private
 	}
 
 	public function getKey() {
@@ -62,26 +62,9 @@ class FieldGroupInfo {
 	// Visualize field group for administration
 	// --------------------------------------------------------------------------------------------
 
-	public function printFieldGroupSection($moduleDefinition, $fieldGroups, $fieldOperations) {
-		echo '<form method="post">';
-		echo '<section>';
-		echo '<h1>';
-		if ($this->maxNumberOfGroups === 1) {
-			$moduleDefinition->text($this->name);
-		}
-		else {
-			$moduleDefinition->text($this->namePlural);
-		}
-		echo '</h1>';
+	public function printFieldsWithLabel() {
 		
-		if ($this->isOnePagePerGroup()) {
-
-		}
-		else {
-
-		}
-		echo '</section>';
-		echo '</form>';
+		
 	}
 }
 

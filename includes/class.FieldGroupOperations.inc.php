@@ -134,9 +134,10 @@ final class FieldGroupOperations {
 
 	public function getFieldGroupsWithTitle($mid, $key) {
 		$fieldGroups = $this->db->valuesQuery('
-			SELECT `fgid`, `order`, `content`
+			SELECT `fgid`, `order`, `f1`.`content` AS `title`, `f2`.`content` AS `private`
 			FROM `FieldGroups` `fg`
-			LEFT JOIN `Fields` `f` ON `f`.`group` = `fg`.`fgid` AND `f`.`key` = "title"
+			LEFT JOIN `Fields` `f1` ON `f1`.`group` = `fg`.`fgid` AND `f1`.`key` = "title"
+			LEFT JOIN `Fields` `f2` ON `f2`.`group` = `fg`.`fgid` AND `f2`.`key` = "private"
 			WHERE `fg`.`module`=? AND `fg`.`key`=? ORDER BY `fg`.`order` ASC',
 			'is',
 			$mid, $key);

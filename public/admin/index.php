@@ -102,6 +102,22 @@ switch ($action) {
 			$controller->getFieldOperations(), $parameters);
 		$controller->layoutLoggedInContent(1, null, null, $module);
 		break;
+	case 'field-group':
+		$controller->verifyLogin();
+		$module = new AdminModuleEditFieldGroup(
+			$controller->getModuleOperations(),
+			$controller->getFieldGroupOperations(),
+			$controller->getFieldOperations(), $parameters);
+		$controller->layoutLoggedInContent(1, null, null, $module);
+		break;
+	case 'new-field-group':
+		$controller->verifyLogin();
+		$module = new AdminModuleEditFieldGroup(
+			$controller->getModuleOperations(),
+			$controller->getFieldGroupOperations(),
+			$controller->getFieldOperations(), $parameters);
+		$controller->layoutLoggedInContent(1, null, null, $module);
+		break;
 	default:
 		echo "Invalid command.";
 }

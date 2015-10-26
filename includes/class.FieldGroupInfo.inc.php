@@ -54,8 +54,8 @@ class FieldGroupInfo {
 		return $this->onePagePerGroup === true;
 	}
 
-	public function getHasOrder() {
-		return $this->hasOrder;
+	public function hasOrder() {
+		return $this->hasOrder === true;
 	}
 
 	// --------------------------------------------------------------------------------------------

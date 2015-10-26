@@ -104,7 +104,7 @@ switch ($action) {
 		break;
 	case 'field-group':
 		$controller->verifyLogin();
-		$module = new AdminModuleEditFieldGroup(
+		$module = new AdminEditFieldGroupModule(
 			$controller->getModuleOperations(),
 			$controller->getFieldGroupOperations(),
 			$controller->getFieldOperations(), $parameters);
@@ -112,11 +112,17 @@ switch ($action) {
 		break;
 	case 'new-field-group':
 		$controller->verifyLogin();
-		$module = new AdminModuleEditFieldGroup(
+		$module = new AdminEditFieldGroupModule(
 			$controller->getModuleOperations(),
 			$controller->getFieldGroupOperations(),
 			$controller->getFieldOperations(), $parameters);
 		$controller->layoutLoggedInContent(1, null, null, $module);
+		break;
+	case 'export-field-group-dialog':
+		$controller->verifyLogin();
+		$module = new AdminExportFieldGroupModule(
+			$controller->getModuleOperations(), $parameters);
+		$controller->layoutDialog($module);
 		break;
 	default:
 		echo "Invalid command.";

@@ -418,7 +418,7 @@ class AdminEditPageModule extends BasicModule {
 	private function printModuleListAsSelect($section) {
 		echo '<select name="operationTarget" class="hidden moduleTarget">';
 		$i = 0;
-		foreach ($this->modulesBySection[$section] as $module) {
+		foreach ($this->modulesBySection[$section] as &$module) {
 			echo '<option value="' . $i . '">';
 			echo Utils::escapeString(RichModule::getLocalizedModuleInfo($module['definitionId'])['name']);
 			echo '</option>';
@@ -466,6 +466,12 @@ class AdminEditPageModule extends BasicModule {
 			case 'move':
 			case 'copy':
 			case 'delete':
+				// check if section exists
+				if (!array_key_exists($section, $this->modulesBySection)) {
+					return;
+				}
+				$modulesInSection = $this->modulesBySection[$section];
+
 				// check selected modules and target
 				if (!Utils::isValidFieldIntArray('modules')
 						|| !Utils::isValidFieldInt('operationTarget')) {
@@ -475,21 +481,17 @@ class AdminEditPageModule extends BasicModule {
 				$moduleIds = array_unique(Utils::getValidFieldArray('modules'));
 				$operationTarget = (int) Utils::getUnmodifiedStringOrEmpty('operationTarget');
 
+				// check target position
+				if ($operationTarget < 0 || $operationTarget >= count($modulesInSection)) {
+					return;
+				}
+
 				// foreach module
 				$result = true;
-				foreach ($moduleIds as $moduleId) {
-					// check if section exists
-					if (!array_key_exists($section, $this->modulesBySection)) {
-						return;
-					}
-					$modulesInSection = $this->modulesBySection[$section];
+				foreach ($moduleIds as &$moduleId) {
 					// check if module exists
 					$module = Utils::getColumnWithValue($modulesInSection, 'mid', (int) $moduleId);
 					if ($module === false) {
-						return;
-					}
-					// check target position
-					if ($operationTarget < 0 || $operationTarget >= count($modulesInSection)) {
 						return;
 					}
 

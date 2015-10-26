@@ -72,7 +72,7 @@ final class FieldGroupOperations {
 			return false;
 		}
 		foreach ($fieldGroups as $fieldGroup) {
-			$result = $this->fieldOperations->removeFields($fieldGroup['fgid']);
+			$result = $this->fieldOperations->deleteFields($fieldGroup['fgid']);
 			if ($result === false) {
 				return false;
 			}
@@ -132,6 +132,19 @@ final class FieldGroupOperations {
 		return $fieldGroups;
 	}
 
+	public function getFieldGroup($fgid) {
+		$fieldGroup = $this->db->valueQuery('
+			SELECT *
+			FROM `FieldGroups`
+			WHERE `fgid`=?',
+			'i',
+			$fgid);
+		if ($fieldGroup === false) {
+			return false;
+		}
+		return $fieldGroup;
+	}
+
 	public function getFieldGroupsWithTitle($mid, $key) {
 		$fieldGroups = $this->db->valuesQuery('
 			SELECT `fgid`, `order`, `f1`.`content` AS `title`, `f2`.`content` AS `private`
@@ -142,6 +155,115 @@ final class FieldGroupOperations {
 			'is',
 			$mid, $key);
 		return $fieldGroups;
+	}
+
+	public function moveFieldGroupWithinSameKey($fgid, $newOrder) {
+		$oldPosition = $this->db->valueQuery('
+			SELECT `module`, `key`, `order`
+			FROM `FieldGroups`
+			WHERE `fgid`=?',
+			'i',
+			$fgid);
+		if ($oldPosition === false) {
+			return false;
+		}
+		$module = $oldPosition['module'];
+		$key = $oldPosition['key'];
+		$oldOrder = $oldPosition['order'];
+
+		// move to same position can be skipped
+		if ($oldOrder === $newOrder) {
+			return true;
+		}
+
+		$count = $this->db->valueQuery('
+				SELECT COUNT(*) AS `value`
+				FROM `FieldGroups`
+				WHERE `module`=? AND `key`=?',
+				'is',
+				$module, $key);
+		if ($count === false) {
+			return false;
+		}
+		$count = $count['value'];
+
+		$result = $this->db->impactQuery('
+				UPDATE `FieldGroups`
+				SET `order`=?
+				WHERE `fgid`=?',
+				'ii',
+				$count, $fgid);
+
+		// based on
+		// http://stackoverflow.com/questions/8607998/using-a-sort-order-column-in-a-database-table
+		if ($newOrder < $oldOrder) {
+			$result = $result && $this->db->impactQuery('
+				UPDATE `FieldGroups`
+				SET `order` = `order` + 1
+				WHERE `module`=? AND `key`=? AND `order` BETWEEN ? AND ?
+				ORDER BY `order` DESC',
+				'isii',
+				$module, $key, $newOrder, $oldOrder);
+		}
+
+		if ($newOrder > $oldOrder) {
+			$result = $result && $this->db->impactQuery('
+				UPDATE `FieldGroups`
+				SET `order` = `order` - 1
+				WHERE `module`=? AND `key`=? AND `order` BETWEEN ? AND ?
+				ORDER BY `order` ASC',
+				'isii',
+				$module, $key, $oldOrder, $newOrder);
+		}
+
+		$result = $result && $this->db->impactQuery('
+				UPDATE `FieldGroups`
+				SET `order`=?
+				WHERE `fgid`=?',
+				'ii',
+				$newOrder, $fgid);
+
+		return $result;
+	}
+
+	public function copyFieldGroupWithinSameKey($fgid, $newOrder) {
+		$fieldGroup = $this->getFieldGroup($fgid);
+		if ($fieldGroup === false) {
+			return false;
+		}
+		$newFgid = $this->addFieldGroup($fieldGroup['module'], $fieldGroup['key']);
+		if ($newFgid === false) {
+			return false;
+		}
+		$result = $this->moveFieldGroupWithinSameKey($newFgid, $newOrder);
+		return $result && $this->fieldOperations->copyFields($fgid, $newFgid);
+	}
+
+	public function deleteFieldGroup($fgid) {
+		$fieldGroup = $this->db->valueQuery('
+			SELECT `module`, `key`, `order`
+			FROM `FieldGroups`
+			WHERE `fgid`=?',
+			'i',
+			$fgid);
+		if ($fieldGroup === false) {
+			return false;
+		}
+		$result = $this->fieldOperations->deleteFields($fgid);
+
+		$result = $result && $this->db->impactQuery('
+			DELETE FROM `FieldGroups`
+			WHERE `fgid`=?',
+			'i',
+			$fgid);
+
+		return $result && $this->db->successQuery('
+			UPDATE `FieldGroups`
+				SET `order` = `order` - 1
+				WHERE `module`=? AND `key`=? AND `order`>?
+				ORDER BY `order` ASC',
+				'isi',
+				$fieldGroup['module'], $fieldGroup['key'], $fieldGroup['order']);
 	}
 }
 

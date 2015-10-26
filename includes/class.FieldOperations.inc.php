@@ -28,7 +28,7 @@ final class FieldOperations {
 			$toFgid, $fromFgid);
 	}
 
-	public function removeField($fgid, $key) {
+	public function deleteField($fgid, $key) {
 		return $this->db->successQuery('
 			DELETE FROM `Fields`
 			WHERE `group`=? AND `key`=?',
@@ -36,7 +36,7 @@ final class FieldOperations {
 			$fgid, $key);
 	}
 
-	public function removeFields($fgid) {
+	public function deleteFields($fgid) {
 		return $this->db->successQuery('
 			DELETE FROM `Fields`
 			WHERE `group`=?',

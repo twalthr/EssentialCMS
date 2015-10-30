@@ -126,7 +126,7 @@ final class FieldGroupOperations {
 		$fieldGroups = $this->db->valuesQuery('
 			SELECT `fgid`, `order`
 			FROM `FieldGroups`
-			WHERE `module`=? AND `key`=? ORDER BY `order` ASC',
+			WHERE `module`=? AND `key`=? ORDER BY `order` DESC',
 			'is',
 			$mid, $key);
 		return $fieldGroups;
@@ -151,7 +151,7 @@ final class FieldGroupOperations {
 			FROM `FieldGroups` `fg`
 			LEFT JOIN `Fields` `f1` ON `f1`.`group` = `fg`.`fgid` AND `f1`.`key` = "title"
 			LEFT JOIN `Fields` `f2` ON `f2`.`group` = `fg`.`fgid` AND `f2`.`key` = "private"
-			WHERE `fg`.`module`=? AND `fg`.`key`=? ORDER BY `fg`.`order` ASC',
+			WHERE `fg`.`module`=? AND `fg`.`key`=? ORDER BY `fg`.`order` DESC',
 			'is',
 			$mid, $key);
 		return $fieldGroups;

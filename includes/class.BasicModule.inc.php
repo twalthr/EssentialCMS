@@ -7,6 +7,8 @@ abstract class BasicModule {
 	public function __construct($cmsVersion, $name) {
 		$this->cmsVersion = $cmsVersion;
 		$this->name = $name;
+
+		// TODO validate name 
 	}
 
 	public function getCmsVersion() {
@@ -32,6 +34,11 @@ abstract class BasicModule {
 	public function text($id, ...$args) {
 		global $TR;
 		echo $TR->translate($id, ...$args);
+	}
+
+	public function textString($id, ...$args) {
+		global $TR;
+		return $TR->translate($id, ...$args);
 	}
 }
 

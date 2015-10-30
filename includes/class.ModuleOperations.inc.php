@@ -262,6 +262,17 @@ final class ModuleOperations {
 				$oldPosition['page'], $oldPosition['section'], $oldPosition['order']);
 	}
 
+	public function getSimilarModulesWithPage($definitionId) {
+		return $this->db->valuesQuery('
+			SELECT `title`, `section`, `order`, `mid` 
+			FROM `Modules` `m`
+			JOIN `Pages` `p` ON `m`.`page` = `p`.`pid`
+			WHERE `definitionId`=?
+			ORDER BY `page` ASC, `section` ASC, `order` ASC',
+			's',
+			$definitionId);
+	}
+
 	// --------------------------------------------------------------------------------------------
 	// Static helper methods
 	// --------------------------------------------------------------------------------------------

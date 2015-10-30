@@ -84,7 +84,8 @@ class AdminEditModuleModule extends BasicModule {
 							});
 						};
 						openLightboxWithUrl(
-							'<?php echo $config->getPublicRoot(); ?>/admin/export-field-group-dialog',
+							'<?php echo $config->getPublicRoot(); ?>/admin/export-field-group-dialog/' +
+								$(this).val(),
 							true,
 							lightboxOpened);
 					});
@@ -124,7 +125,10 @@ class AdminEditModuleModule extends BasicModule {
 				</div>
 			<?php elseif ($this->state === true && isset($this->fieldGroupNamePlural)) : ?>
 				<div class="dialog-success-message">
-					<?php $this->moduleDefinition->text($this->message, $this->fieldGroupNamePlural); ?>
+					<?php $this->text($this->message,
+						Utils::escapeString(
+							$this->moduleDefinition->textString($fieldGroupInfo->getNamePlural())
+						)); ?>
 				</div>
 			<?php endif; ?>
 		<?php endif; ?>
@@ -192,14 +196,18 @@ class AdminEditModuleModule extends BasicModule {
 					<div class="buttonSet general">
 						<button class="addFieldGroup" value="<?php echo $fieldGroupInfo->getKey(); ?>">
 							<?php $this->text('ADD_FIELDGROUP',
-									Utils::escapeString($fieldGroupInfo->getName())); ?>
+								Utils::escapeString(
+									$this->moduleDefinition->textString($fieldGroupInfo->getNamePlural())
+								)); ?>
 						</button>
 					</div>
 				<?php endif; ?>
 				<?php if (count($fieldGroupContent) === 0) : ?>
 					<p class="empty">
 						<?php $this->text('NO_FIELDGROUP',
-								Utils::escapeString($fieldGroupInfo->getNamePlural())) ?>
+							Utils::escapeString(
+								$this->moduleDefinition->textString($fieldGroupInfo->getNamePlural())
+							)); ?>
 					</p>;
 				<?php endif; ?>
 				<?php if ($fieldGroupInfo->isOnePagePerGroup()) : ?>
@@ -239,7 +247,8 @@ class AdminEditModuleModule extends BasicModule {
 							<?php $this->text('COPY'); ?>
 						</button>
 						<button class="exportFieldGroup"
-							value="<?php echo $fieldGroupInfo->getKey(); ?>" disabled>
+							value="<?php echo $this->moduleDefinition->getName() . '/'
+								 . $fieldGroupInfo->getKey(); ?>" disabled>
 							<?php $this->text('EXPORT'); ?>
 						</button>
 						<button class="deleteFieldGroup disableListIfClicked"

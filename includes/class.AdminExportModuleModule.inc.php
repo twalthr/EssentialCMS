@@ -9,8 +9,7 @@ class AdminExportModuleModule extends BasicModule {
 	private $pages;
 
 	public function __construct($pageOperations, $parameters = null) {
-		global $CMS_VERSION;
-		parent::__construct($CMS_VERSION, 'admin-export-module');
+		parent::__construct(1, 'admin-export-module');
 		$this->pageOperations = $pageOperations;
 
 		$this->loadPages();

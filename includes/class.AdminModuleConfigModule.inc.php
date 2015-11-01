@@ -62,20 +62,6 @@ class AdminModuleConfigModule extends BasicModule {
 		<?php if (isset($this->moduleDefinition)) : ?>
 		<script type="text/javascript">
 			$(document).ready(function() {
-				$('.arrayElementOptions .remove').click(function() {
-					var button = $(this);
-					button.closest('.arrayElement').remove();
-				});
-				$('.arrayOptions .add').click(function() {
-					var button = $(this);
-					var newArrayElement = button
-							.siblings('.template')
-							.clone(true);
-					newArrayElement.find(':input').prop('disabled', false);
-					newArrayElement.find('.hidden :input').prop('disabled', true);
-					newArrayElement.removeClass('hidden');
-					button.parent().before(newArrayElement);
-				});
 				$('#cancelConfig').click(function() {
 					window.open('<?php echo $config->getPublicRoot(); ?>/admin/module/<?php 
 						echo $this->module['mid']; ?>', '_self');
@@ -169,7 +155,7 @@ class AdminModuleConfigModule extends BasicModule {
 				}
 				// field already in database
 				else {
-					$result = $this->fieldOperations->removeField(
+					$result = $this->fieldOperations->deleteField(
 						$this->moduleConfigFieldGroup,
 						$field->getKey());
 					foreach ($content as $value) {

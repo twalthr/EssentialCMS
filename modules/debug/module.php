@@ -80,14 +80,25 @@ class DebugModule extends RichModule {
 
 	public function getFieldGroupInfo() {
 		$fields = [];
+
+		// mixed small type with default
 		$fields[] = new FieldInfo(
-			'field1', // key
+			'field2', // key
 			FieldInfo::TYPE_PLAIN | FieldInfo::TYPE_HTML | FieldInfo::TYPE_MARKDOWN, // allowedTypes
-			'FIELD_1', // name
-			true
+			'FIELD_2', // name
+			null, // array
+			null, // required
+			null, // largeContent
+			null, // minContentLength
+			null, // maxContentLength
+			null, // additionalNames
+			FieldInfo::TYPE_HTML, // defaultType
+			'<b>COOL</b>' // defaultContent
 			);
 
+
 		$fieldGroup = new FieldGroupInfo('fieldGroup1', 'BLOGPOST', 'BLOGPOSTS', $fields, 0, null, true, true);
+		
 		return [$fieldGroup];
 	}
 

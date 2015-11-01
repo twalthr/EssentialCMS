@@ -11,9 +11,9 @@ class AdminExportFieldGroupModule extends BasicModule {
 	private $errorMessage;
 
 	// member variables
-	private $moduleInfo;
-	private $moduleDefinition;
-	private $fieldGroupInfo;
+	private $moduleInfo; // translated name and description
+	private $moduleDefinition; // instance of RichModule
+	private $fieldGroupInfo; // field group defined by module definition
 	private $similarModules;
 
 	public function __construct($moduleOperations, $parameters = null) {
@@ -27,7 +27,7 @@ class AdminExportFieldGroupModule extends BasicModule {
 		}
 		// parameters invalid
 		else {
-			$this->errorMessage = 'FIELD_GROUP_NOT_FOUND';
+			$this->errorMessage = 'PARAMETERS_INVALID';
 		}
 		// field group valid -> load similar modules
 		if (isset($this->fieldGroupInfo)) {

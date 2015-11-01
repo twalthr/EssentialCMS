@@ -198,16 +198,16 @@ class AdminEditModuleModule extends BasicModule {
 						|| count($fieldGroupContent) < $fieldGroupInfo->getMaxNumberOfGroups()) : ?>
 					<div class="buttonSet general">
 						<button class="addFieldGroup" value="<?php echo $fieldGroupInfo->getKey(); ?>">
-							<?php $this->text('ADD_FIELDGROUP',
+							<?php $this->text('ADD_FIELD_GROUP',
 								Utils::escapeString(
-									$this->moduleDefinition->textString($fieldGroupInfo->getNamePlural())
+									$this->moduleDefinition->textString($fieldGroupInfo->getName())
 								)); ?>
 						</button>
 					</div>
 				<?php endif; ?>
 				<?php if (count($fieldGroupContent) === 0) : ?>
 					<p class="empty">
-						<?php $this->text('NO_FIELDGROUP',
+						<?php $this->text('NO_FIELD_GROUP',
 							Utils::escapeString(
 								$this->moduleDefinition->textString($fieldGroupInfo->getNamePlural())
 							)); ?>

@@ -33,6 +33,20 @@ $(document).ready(function(){
 		openedTab.removeClass('hidden');
 		openedTab.find(':input').prop('disabled', false);
 	});
+	$('.arrayElementOptions .remove').click(function() {
+		var button = $(this);
+		button.closest('.arrayElement').remove();
+	});
+	$('.arrayOptions .add').click(function() {
+		var button = $(this);
+		var newArrayElement = button
+				.siblings('.template')
+				.clone(true);
+		newArrayElement.find(':input').prop('disabled', false);
+		newArrayElement.find('.hidden :input').prop('disabled', true);
+		newArrayElement.removeClass('hidden');
+		button.parent().before(newArrayElement);
+	});
 });
 
 function enableList(button) {

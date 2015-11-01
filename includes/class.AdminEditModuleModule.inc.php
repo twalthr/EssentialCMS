@@ -80,6 +80,8 @@ class AdminEditModuleModule extends BasicModule {
 						var lightboxOpened = function() {
 							$('.dialog-box #exportConfirm').click(function() {
 								form.find('[name="operation"]').val('export');
+								form.find('[name="operationParameter"]')
+									.val($('.dialog-box #exportTargetModule').val());
 								form.submit();
 							});
 						};
@@ -127,7 +129,7 @@ class AdminEditModuleModule extends BasicModule {
 				<div class="dialog-success-message">
 					<?php $this->text($this->message,
 						Utils::escapeString(
-							$this->moduleDefinition->textString($fieldGroupInfo->getNamePlural())
+							$this->moduleDefinition->textString($this->fieldGroupNamePlural)
 						)); ?>
 				</div>
 			<?php endif; ?>
@@ -159,7 +161,7 @@ class AdminEditModuleModule extends BasicModule {
 	private function printFieldGroups($config) {
 		$fieldGroupInfos = $this->moduleDefinition->getFieldGroupInfo();
 		echo '<div class="fieldGroups">';
-		foreach ($fieldGroupInfos as &$fieldGroupInfo) {
+		foreach ($fieldGroupInfos as $fieldGroupInfo) {
 			$fieldGroupContent = false;
 			if ($fieldGroupInfo->isOnePagePerGroup()) {
 				$fieldGroupContent = $this->fieldGroupOperations->getFieldGroupsWithTitle(
@@ -183,6 +185,7 @@ class AdminEditModuleModule extends BasicModule {
 			<input type="hidden" name="operationSpace" value="fieldGroup" />
 			<input type="hidden" name="fieldGroupInfo" value="<?php echo $fieldGroupInfo->getKey(); ?>" />
 			<input type="hidden" name="operation" />
+			<input type="hidden" name="operationParameter" />
 			<section>
 				<h1>
 					<?php if ($fieldGroupInfo->getMaxNumberOfGroups() === 1) : ?>
@@ -212,7 +215,7 @@ class AdminEditModuleModule extends BasicModule {
 				<?php endif; ?>
 				<?php if ($fieldGroupInfo->isOnePagePerGroup()) : ?>
 					<ul class="tableLike enableButtonsIfChecked">
-						<?php foreach ($fieldGroupContent as &$content) : ?>
+						<?php foreach ($fieldGroupContent as $content) : ?>
 							<li class="rowLike">
 								<input type="checkbox" id="fieldGroup<?php echo $content['fgid']; ?>"
 										name="fieldGroups[]"
@@ -279,7 +282,7 @@ class AdminEditModuleModule extends BasicModule {
 	private function printFieldGroupsAsSelect($fieldGroupContent) {
 		echo '<select name="operationTarget" class="hidden fieldGroupTarget">';
 		$i = 0;
-		foreach ($fieldGroupContent as &$content) {
+		foreach ($fieldGroupContent as $content) {
 			echo '<option value="' . $i . '">';
 			echo Utils::escapeString($content['title']);
 			echo '</option>';
@@ -334,7 +337,7 @@ class AdminEditModuleModule extends BasicModule {
 
 				// foreach field group
 				$result = true;
-				foreach ($fieldGroupIds as &$fieldGroupId) {
+				foreach ($fieldGroupIds as $fieldGroupId) {
 					// check if field group exists
 					$fieldGroup = Utils::getColumnWithValue($fieldGroupContent, 'fgid', (int) $fieldGroupId);
 					if ($fieldGroup === false) {
@@ -344,14 +347,14 @@ class AdminEditModuleModule extends BasicModule {
 					if ($operation === 'move') {
 						// perform move
 						$result = $result
-							&& $this->fieldGroupOperations->moveFieldGroupWithinSameKey(
+							&& $this->fieldGroupOperations->moveFieldGroupWithinModule(
 								$fieldGroup['fgid'],
 								$operationTarget);
 					}
 					else if ($operation === 'copy') {
 						// perform copy
 						$result = $result
-							&& $this->fieldGroupOperations->copyFieldGroupWithinSameKey(
+							&& $this->fieldGroupOperations->copyFieldGroupWithinModule(
 								$fieldGroup['fgid'],
 								$operationTarget);
 					}
@@ -382,6 +385,47 @@ class AdminEditModuleModule extends BasicModule {
 				}
 				break;
 			case 'export':
+				// check selected field groups
+				if (!Utils::isValidFieldIntArray('fieldGroups')) {
+					return;
+				}
+				// normalize selected field groups
+				$fieldGroupIds = array_unique(Utils::getValidFieldArray('fieldGroups'));
+				// check operationParameter1
+				if (!Utils::isValidFieldInt('operationParameter')) {
+					return;
+				}
+				$targetMid = (int) Utils::getUnmodifiedStringOrEmpty('operationParameter');
+				$targetModule = $this->moduleOperations->getModule($targetMid);
+
+				// check for module equality
+				if ($targetModule['definitionId'] != $this->module['definitionId']) {
+					return;
+				}
+
+				// foreach field group
+				$result = true;
+				foreach ($fieldGroupIds as $fieldGroupId) {
+					// check if field group exists
+					$fieldGroup = Utils::getColumnWithValue($fieldGroupContent, 'fgid', (int) $fieldGroupId);
+					if ($fieldGroup === false) {
+						return;
+					}
+
+					// perform export
+					$result = $result
+							&& $this->fieldGroupOperations->moveFieldGroupWithinModules(
+								$fieldGroup['fgid'],
+								$targetModule['mid']);
+				}
+				if ($result === false) {
+					$this->state = false;
+					$this->message = 'UNKNOWN_ERROR';
+				}
+				else {
+					$this->state = true;
+					$this->message = 'MODULE_EXPORT_SUCCESSFUL';
+				}
 				break;
 		}
 	}

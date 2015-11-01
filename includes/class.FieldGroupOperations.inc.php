@@ -157,7 +157,7 @@ final class FieldGroupOperations {
 		return $fieldGroups;
 	}
 
-	public function moveFieldGroupWithinSameKey($fgid, $newOrder) {
+	public function moveFieldGroupWithinModule($fgid, $newOrder) {
 		$oldPosition = $this->db->valueQuery('
 			SELECT `module`, `key`, `order`
 			FROM `FieldGroups`
@@ -226,7 +226,7 @@ final class FieldGroupOperations {
 		return $result;
 	}
 
-	public function copyFieldGroupWithinSameKey($fgid, $newOrder) {
+	public function copyFieldGroupWithinModule($fgid, $newOrder) {
 		$fieldGroup = $this->getFieldGroup($fgid);
 		if ($fieldGroup === false) {
 			return false;
@@ -235,7 +235,7 @@ final class FieldGroupOperations {
 		if ($newFgid === false) {
 			return false;
 		}
-		$result = $this->moveFieldGroupWithinSameKey($newFgid, $newOrder);
+		$result = $this->moveFieldGroupWithinModule($newFgid, $newOrder);
 		return $result && $this->fieldOperations->copyFields($fgid, $newFgid);
 	}
 
@@ -264,6 +264,39 @@ final class FieldGroupOperations {
 				ORDER BY `order` ASC',
 				'isi',
 				$fieldGroup['module'], $fieldGroup['key'], $fieldGroup['order']);
+	}
+
+	public function moveFieldGroupWithinModules($fgid, $toMid) {
+		$oldPosition = $this->getFieldGroup($fgid);
+		if ($oldPosition === false) {
+			return false;
+		}
+
+		$nextOrder = $this->db->valueQuery('
+			SELECT COUNT(*) as `value`
+			FROM `FieldGroups`
+			WHERE `module`=? AND `key`=?',
+			'is',
+			$toMid, $oldPosition['key']);
+		if ($nextOrder === false) {
+			return false;
+		}
+		$nextOrder = $nextOrder['value'];
+
+		$result = $this->db->impactQuery('
+			UPDATE `FieldGroups`
+			SET `module`=?, `key`=?, `order`=?
+			WHERE `fgid`=?',
+			'isii',
+			$toMid, $oldPosition['key'], $nextOrder, $fgid);
+
+		return $result
+			&& $this->db->successQuery('
+				UPDATE `FieldGroups`
+				SET `order` = `order` - 1
+				WHERE `module`=? AND `key`=? AND `order`>?',
+				'isi',
+				$oldPosition['module'], $oldPosition['key'], $oldPosition['order']);
 	}
 }
 

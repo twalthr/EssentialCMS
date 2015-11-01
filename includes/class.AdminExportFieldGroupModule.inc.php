@@ -1,15 +1,17 @@
 <?php
 
+// v1: FEATURE COMPLETE
+
 class AdminExportFieldGroupModule extends BasicModule {
 
 	// database operations
 	private $moduleOperations;
 
 	// UI state
-	private $state;
-	private $message;
+	private $errorMessage;
 
 	// member variables
+	private $moduleInfo;
 	private $moduleDefinition;
 	private $fieldGroupInfo;
 	private $similarModules;
@@ -23,34 +25,22 @@ class AdminExportFieldGroupModule extends BasicModule {
 			&& count($parameters) > 1) {
 			$this->loadModuleAndFieldGroupInfo($parameters[0], $parameters[1]);
 		}
+		// parameters invalid
+		else {
+			$this->errorMessage = 'FIELD_GROUP_NOT_FOUND';
+		}
 		// field group valid -> load similar modules
-		if (isset($fieldGroupInfo)) {
+		if (isset($this->fieldGroupInfo)) {
 			$this->loadSimilarModules();
 		}
-
 	}
 
 	public function printContent($config) {
 		?>
-		<?php if (!isset($this->state)) : ?>
-		<script type="text/javascript">
-			$(document).ready(function() {
-				$('#exportTargetSection').change(function() {
-					var select = $(this).val();
-					if (select === 'empty' || select.indexOf('global') === 0) {
-						$('#exportTargetSectionField').addClass('hidden');
-					}
-					else {
-						$('#exportTargetSectionField').removeClass('hidden');
-					}
-				});
-			});
-		</script>
-		<?php endif; ?>
 		<div class="dialog-box">
-			<?php if (isset($this->state)) : ?>
+			<?php if (isset($this->errorMessage)) : ?>
 				<div class="dialog-error-message">
-					<?php $this->text($this->message); ?>
+					<?php $this->text($this->errorMessage); ?>
 				</div>
 			<?php else: ?>
 				<h1>
@@ -66,12 +56,8 @@ class AdminExportFieldGroupModule extends BasicModule {
 				</div>
 				<div class="fields">
 					<div class="field">
-						<label for="exportTargetSection"><?php $this->text('TARGET_SECTION'); ?></label>
-						<?php $this->printSectionListAsSelect(); ?>
-					</div>
-					<div class="field hidden" id="exportTargetSectionField">
-						<label for="exportTargetPage"><?php $this->text('TARGET_PAGE'); ?></label>
-						<?php $this->printPageListAsSelect(); ?>
+						<label for="exportTargetModule"><?php $this->text('TARGET_MODULE'); ?></label>
+						<?php $this->printSimilarModuleSelect(); ?>
 					</div>
 				</div>
 				<div class="options">
@@ -87,6 +73,42 @@ class AdminExportFieldGroupModule extends BasicModule {
 	// Printing methods
 	// --------------------------------------------------------------------------------------------
 
+	private function printSimilarModuleSelect() {
+		echo '<select id="exportTargetModule">';
+		echo '	<option value="empty" selected>';
+		$this->text('PLEASE_SELECT');
+		echo '	</option>';
+		// for each page
+		$lastPid = null;
+		$lastSection = null;
+		foreach ($this->similarModules as $similarModule) {
+			if ($lastPid != $similarModule['pid']) {
+				if (isset($lastPid)) {
+					echo '</optgroup>';
+				}
+				echo '<optgroup label="' . $similarModule['title'] . '">';
+				$lastPid = $similarModule['pid'];
+				$lastSection = null;
+			}
+			if ($lastSection != $similarModule['section']) {
+				if (isset($lastSection)) {
+					echo '</optgroup>';
+				}
+				echo '<optgroup label="&nbsp;&nbsp;';
+				$this->text(ModuleOperations::translateSectionToLocale($similarModule['section']));
+				echo '">';
+				$lastSection = $similarModule['section'];
+			}
+			echo '<option value="' . $similarModule['mid'] . '">' . $this->moduleInfo['name'] . '</option>';
+		}
+		if (isset($lastSection)) {
+			echo '</optgroup>';
+		}
+		if (isset($lastPid)) {
+			echo '</optgroup>';
+		}
+		echo '</select>';
+	}
 
 	// --------------------------------------------------------------------------------------------
 	// Database loading methods
@@ -95,30 +117,35 @@ class AdminExportFieldGroupModule extends BasicModule {
 	private function loadModuleAndFieldGroupInfo($moduleDefId, $fieldGroupKey) {
 		// check module definition id
 		if (!RichModule::isValidModuleDefinitionId($moduleDefId)) {
-			$this->state = false;
-			$this->message = 'MODULE_DEFINITION_INVALID';
+			$this->errorMessage = 'MODULE_DEFINITION_INVALID';
 			return;
 		}
 		// load module definition
 		$moduleDefinition = RichModule::loadModuleDefinition($moduleDefId);
 		if ($moduleDefinition === false) {
-			$this->state = false;
-			$this->message = 'MODULE_DEFINITION_INVALID';
+			$this->errorMessage = 'MODULE_DEFINITION_INVALID';
 			return;
 		}
 		$this->moduleDefinition = $moduleDefinition;
+		// load module info
+		$this->moduleInfo = RichModule::getLocalizedModuleInfo($moduleDefId);
+		// load field info
 		$fieldGroupInfo = $moduleDefinition->getFieldGroupInfoOfKey($fieldGroupKey);
 		if ($fieldGroupInfo === false) {
-			$this->state = false;
-			$this->message = 'FIELD_GROUP_NOT_FOUND';
+			$this->errorMessage = 'FIELD_GROUP_NOT_FOUND';
 			return;
 		}
 		$this->fieldGroupInfo = $fieldGroupInfo;
 	}
 
 	private function loadSimilarModules() {
-		$similarModules = $this->moduleOperations->getSimilarModulesWithPage($moduleDefinition->getName());
-		echo var_dump($similarModules);
+		$similarModules = $this->moduleOperations->getSimilarModulesWithPage(
+			$this->moduleDefinition->getName());
+		if ($similarModules === false) {
+			$this->errorMessage = 'UNKNOWN_ERROR';
+			return;
+		}
+		$this->similarModules = $similarModules;
 	}
 }
 

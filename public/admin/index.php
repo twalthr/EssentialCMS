@@ -121,7 +121,7 @@ switch ($action) {
 	case 'export-field-group-dialog':
 		$controller->verifyLogin();
 		$module = new AdminExportFieldGroupModule(
-			$controller->getFieldGroupOperations(), $parameters);
+			$controller->getModuleOperations(), $parameters);
 		$controller->layoutDialog($module);
 		break;
 	default:

@@ -264,7 +264,7 @@ final class ModuleOperations {
 
 	public function getSimilarModulesWithPage($definitionId) {
 		return $this->db->valuesQuery('
-			SELECT `title`, `section`, `order`, `mid` 
+			SELECT `pid` ,`title`, `section`, `mid` 
 			FROM `Modules` `m`
 			JOIN `Pages` `p` ON `m`.`page` = `p`.`pid`
 			WHERE `definitionId`=?

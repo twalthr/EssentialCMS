@@ -418,7 +418,7 @@ class AdminEditPageModule extends BasicModule {
 	private function printModuleListAsSelect($section) {
 		echo '<select name="operationTarget" class="hidden moduleTarget">';
 		$i = 0;
-		foreach ($this->modulesBySection[$section] as &$module) {
+		foreach ($this->modulesBySection[$section] as $module) {
 			echo '<option value="' . $i . '">';
 			echo Utils::escapeString(RichModule::getLocalizedModuleInfo($module['definitionId'])['name']);
 			echo '</option>';
@@ -488,7 +488,7 @@ class AdminEditPageModule extends BasicModule {
 
 				// foreach module
 				$result = true;
-				foreach ($moduleIds as &$moduleId) {
+				foreach ($moduleIds as $moduleId) {
 					// check if module exists
 					$module = Utils::getColumnWithValue($modulesInSection, 'mid', (int) $moduleId);
 					if ($module === false) {

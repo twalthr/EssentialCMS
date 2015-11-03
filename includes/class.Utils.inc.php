@@ -1,6 +1,12 @@
 <?php
 
 abstract class Utils {
+
+	public static function redirect($url, $statusCode = 303) {
+		header('Location: ' . $url, true, $statusCode);
+		die();
+	}
+
 	public static function hasStringContent($str) {
 		return isset($str) && !(trim($str) === '');
 	}

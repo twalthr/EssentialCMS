@@ -105,6 +105,7 @@ switch ($action) {
 	case 'field-group':
 		$controller->verifyLogin();
 		$module = new AdminEditFieldGroupModule(
+			null,
 			$controller->getModuleOperations(),
 			$controller->getFieldGroupOperations(),
 			$controller->getFieldOperations(), $parameters);
@@ -113,6 +114,7 @@ switch ($action) {
 	case 'new-field-group':
 		$controller->verifyLogin();
 		$module = new AdminEditFieldGroupModule(
+			$controller->getConfig(),
 			$controller->getModuleOperations(),
 			$controller->getFieldGroupOperations(),
 			$controller->getFieldOperations(), $parameters);

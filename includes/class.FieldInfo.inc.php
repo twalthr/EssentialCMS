@@ -107,11 +107,11 @@ class FieldInfo {
 	}
 
 	public function isRequired() {
-		return $this->required;
+		return $this->required === true;
 	}
 
 	public function isLargeContent() {
-		return $this->largeContent;
+		return $this->largeContent === true;
 	}
 
 	public function getMinContentLength() {

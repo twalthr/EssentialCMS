@@ -225,6 +225,10 @@ class AdminController {
 		return $DB;
 	}
 
+	public function getConfig() {
+		return $this->config;
+	}
+
 	public function getMenuItemOperations() {
 		return $this->menuItemOperations;
 	}

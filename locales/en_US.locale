@@ -148,3 +148,5 @@ TARGET_MODULE=Target module:
 PARAMETERS_INVALID=Parameters are invalid.
 CREATE=Create
 EDIT_FIELD_GROUP=Edit %1$s
+FIELD_GROUP_CREATED=%1$s successfully created.
+FIELD_GROUP_CHANGED=%1$s successfully changed.

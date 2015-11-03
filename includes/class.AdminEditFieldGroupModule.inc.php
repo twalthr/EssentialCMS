@@ -13,33 +13,38 @@ class AdminEditFieldGroupModule extends BasicModule {
 	private $field;
 
 	// member variables
+	private $config;
 	private $fieldGroup; // field group stored in database
 	private $module; // module stored in database
 	private $moduleDefinition; // instance of RichModule
 	private $fieldGroupInfo; // field group defined by module definition
 	private $fieldContent; // field content stored in database
 
-	public function __construct(
-			$moduleOperations, $fieldGroupOperations, $fieldOperations, $parameters = null) {
+	public function __construct($config, $moduleOperations, $fieldGroupOperations,
+			$fieldOperations, $parameters = null) {
 		parent::__construct(1, 'admin-edit-field-group');
+		$this->config = $config;
 		$this->moduleOperations = $moduleOperations;
 		$this->fieldGroupOperations = $fieldGroupOperations;
 		$this->fieldOperations = $fieldOperations;
 
 		// module id and field group key is present
 		// for new fieldgroup
-		if (isset($parameters)
-				&& count($parameters) > 1) {
+		if (isset($parameters) && count($parameters) > 1 && $parameters[1] !== '.success') {
 			$this->loadModuleAndFieldGroupInfo($parameters[0], $parameters[1]);
 		}
 		// field group id is present
 		// for editing existing field group
-		else if (isset($parameters)
-				&& count($parameters) > 0) {
+		else if (isset($parameters) && count($parameters) > 0) {
 			$this->loadFieldGroup($parameters[0]);
 			// load module and field group info
 			if (isset($this->fieldGroup)) {
 				$this->loadModuleAndFieldGroupInfo($this->fieldGroup['module'], $this->fieldGroup['key']);
+				// show success message for newly created field group
+				if (!isset($this->state) && count($parameters) > 1 && $parameters[1] === '.success') {
+					$this->state = true;
+					$this->message = 'FIELD_GROUP_CREATED';
+				}
 			}
 		}
 		// parameters invalid
@@ -70,7 +75,7 @@ class AdminEditFieldGroupModule extends BasicModule {
 			<script type="text/javascript">
 				$(document).ready(function() {
 					$('#cancel').click(function() {
-						window.open('<?php /*echo var_dump($config); echo $config->getPublicRoot();*/ ?>/admin/module/<?php 
+						window.open('<?php echo $config->getPublicRoot(); ?>/admin/module/<?php 
 							echo $this->module['mid']; ?>', '_self');
 					});
 				});
@@ -79,7 +84,11 @@ class AdminEditFieldGroupModule extends BasicModule {
 		<?php if (isset($this->state)) : ?>
 			<?php if ($this->state === true) : ?>
 				<div class="dialog-success-message">
-					<?php $this->text($this->message); ?>
+					<?php $this->text($this->message,
+						Utils::escapeString(
+							$this->moduleDefinition->textString(
+								$this->fieldGroupInfo->getName())
+						)); ?>
 				</div>
 			<?php else: ?>
 				<div class="dialog-error-message">
@@ -91,7 +100,11 @@ class AdminEditFieldGroupModule extends BasicModule {
 			<?php endif; ?>
 		<?php endif; ?>
 		<?php if (isset($this->moduleDefinition)) : ?>
-			<form method="post">
+			<form method="post"
+				<?php if (isset($this->fieldGroup)) : ?>
+					action="<?php echo $config->getPublicRoot(); ?>/admin/field-group/<?php 
+						echo $this->fieldGroup['fgid']; ?>"
+				<?php endif; ?>>
 				<input type="hidden" name="operationSpace" value="fields" />
 				<section>
 					<h1>
@@ -145,11 +158,10 @@ class AdminEditFieldGroupModule extends BasicModule {
 	// --------------------------------------------------------------------------------------------
 
 	private function handleEditFieldGroup() {
-		echo var_dump($this->fieldGroup); // TODO CREATE FIELD GROUP!!!! FIX CONFIG PROBLEM!!!!
+		// validate fields
 		foreach ($this->fieldGroupInfo->getFieldInfos() as $field) {
 			// check input
 			$result = $field->isValidTypeAndContentInput();
-
 			// validation was not successful
 			if ($result !== true) {
 				$this->state = false;
@@ -157,10 +169,31 @@ class AdminEditFieldGroupModule extends BasicModule {
 				$this->field = $field->getName();
 				return;
 			}
+		}
 
+		// create new fieldgroup
+		$newFieldGroupId = null;
+		if (!isset($this->fieldGroup)) {
+			$fieldGroupId = $this->fieldGroupOperations->addFieldGroup($this->module['mid'],
+				$this->fieldGroupInfo->getKey());
+			if ($fieldGroupId === false) {
+				$this->state = false;
+				$this->message = 'UNKNOWN_ERROR';
+				return;
+			}
+			$this->loadFieldGroup($fieldGroupId);
+			if (!isset($this->fieldGroup)) {
+				$this->state = false;
+				$this->message = 'UNKNOWN_ERROR';
+				return;
+			}
+			$newFieldGroupId = $fieldGroupId;
+		}
+
+		foreach ($this->fieldGroupInfo->getFieldInfos() as $field) {
 			// save fields if not equal
 			$content = $field->getValidTypeAndContentInput();
-			$currentContent = $this->getContent($field->getKey());
+			$currentContent = $this->getFieldContent($field->getKey());
 
 			if (!Utils::arrayEqual($content, $currentContent, 'type', 'content')) {
 				// field not in database yet
@@ -198,8 +231,15 @@ class AdminEditFieldGroupModule extends BasicModule {
 				}
 			}
 		}
-		$this->state = true;
-		$this->message = 'MODULE_CONFIG_CHANGED';
+
+		if (isset($newFieldGroupId)) {
+			Utils::redirect($this->config->getPublicRoot() . '/admin/field-group/' .
+				$newFieldGroupId . '/.success');
+		}
+		else {
+			$this->state = true;
+			$this->message = 'FIELD_GROUP_CHANGED';
+		}
 	}
 
 	// --------------------------------------------------------------------------------------------

@@ -83,6 +83,15 @@ class DebugModule extends RichModule {
 
 		// mixed small type with default
 		$fields[] = new FieldInfo(
+			'title', // key
+			FieldInfo::TYPE_PLAIN, // allowedTypes
+			'TITLE', // name
+			null,
+			true
+			);
+
+		// mixed small type with default
+		$fields[] = new FieldInfo(
 			'field2', // key
 			FieldInfo::TYPE_PLAIN | FieldInfo::TYPE_HTML | FieldInfo::TYPE_MARKDOWN, // allowedTypes
 			'FIELD_2', // name

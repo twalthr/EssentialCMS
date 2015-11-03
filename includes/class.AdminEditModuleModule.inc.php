@@ -344,7 +344,7 @@ class AdminEditModuleModule extends BasicModule {
 						return;
 					}
 
-					if ($operation === 'move') {
+					if ($operation === 'move' && $fieldGroupInfo->hasOrder()) {
 						// perform move
 						$result = $result
 							&& $this->fieldGroupOperations->moveFieldGroupWithinModule(

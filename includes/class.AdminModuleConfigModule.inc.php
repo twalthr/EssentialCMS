@@ -1,5 +1,7 @@
 <?php
 
+// v1: FEATURE COMPLETE
+
 class AdminModuleConfigModule extends BasicModule {
 
 	// database operations
@@ -27,9 +29,13 @@ class AdminModuleConfigModule extends BasicModule {
 		$this->fieldOperations = $fieldOperations;
 
 		// module id is present
-		if (isset($parameters)
-			&& count($parameters) > 0) {
+		if (isset($parameters) && count($parameters) > 0) {
 			$this->loadModule($parameters[0]);
+		}
+		// parameters invalid
+		else {
+			$this->state = false;
+			$this->message = 'PARAMETERS_INVALID';
 		}
 		// if module is present, load module info
 		if (!isset($this->module)) {
@@ -108,7 +114,7 @@ class AdminModuleConfigModule extends BasicModule {
 	private function printFields() {
 		$fields = $this->moduleDefinition->getConfigFieldInfo();
 		echo '<div class="fields">';
-		foreach ($fields as &$field) {
+		foreach ($fields as $field) {
 			$field->printFieldWithLabel(
 				$this->moduleDefinition,
 				$this->getConfigContent($field->getKey()));
@@ -133,7 +139,9 @@ class AdminModuleConfigModule extends BasicModule {
 				$this->field = $field->getName();
 				return;
 			}
+		}
 
+		foreach ($fields as $field) {
 			// save fields if not equal
 			$content = $field->getValidTypeAndContentInput();
 			$currentContent = $this->getConfigContent($field->getKey());

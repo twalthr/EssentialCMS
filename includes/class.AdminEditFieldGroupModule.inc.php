@@ -1,5 +1,7 @@
 <?php
 
+// v1: FEATURE COMPLETE
+
 class AdminEditFieldGroupModule extends BasicModule {
 
 	// database operations
@@ -13,7 +15,7 @@ class AdminEditFieldGroupModule extends BasicModule {
 	private $field;
 
 	// member variables
-	private $config;
+	private $config; // config for page redirect after field group creation
 	private $fieldGroup; // field group stored in database
 	private $module; // module stored in database
 	private $moduleDefinition; // instance of RichModule
@@ -71,7 +73,7 @@ class AdminEditFieldGroupModule extends BasicModule {
 
 	public function printContent($config) {
 		?>
-		<?php if (isset($this->moduleDefinition)) : ?>
+		<?php if (isset($this->fieldGroupInfo)) : ?>
 			<script type="text/javascript">
 				$(document).ready(function() {
 					$('#cancel').click(function() {
@@ -99,7 +101,7 @@ class AdminEditFieldGroupModule extends BasicModule {
 				</div>
 			<?php endif; ?>
 		<?php endif; ?>
-		<?php if (isset($this->moduleDefinition)) : ?>
+		<?php if (isset($this->fieldGroupInfo)) : ?>
 			<form method="post"
 				<?php if (isset($this->fieldGroup)) : ?>
 					action="<?php echo $config->getPublicRoot(); ?>/admin/field-group/<?php 
@@ -123,16 +125,14 @@ class AdminEditFieldGroupModule extends BasicModule {
 						<?php endif; ?>
 					</h1>
 					<div class="buttonSet general">
-						<button id="cancel"><?php $this->text('CANCEL'); ?></button>
-					</div>
-					<?php $this->printFields(); ?>
-					<div class="buttonSet">
 						<?php if (isset($this->fieldGroup)) : ?>
 							<input type="submit" value="<?php $this->text('SAVE'); ?>" />
 						<?php else: ?>
 							<input type="submit" value="<?php $this->text('CREATE'); ?>" />
 						<?php endif; ?>
+						<button id="cancel"><?php $this->text('CANCEL'); ?></button>
 					</div>
+					<?php $this->printFields(); ?>
 				</section>
 			</form>
 		<?php endif; ?>

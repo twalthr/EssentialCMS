@@ -43,6 +43,9 @@ class FieldGroupInfo {
 		}
 		if (isset($this->onePagePerGroup) && !is_bool($this->onePagePerGroup)) {
 			throw new Exception("OnePagePerGroup can only be boolean or null.");
+		}		
+		if ($this->onePagePerGroup === true && $this->minNumberOfGroups !== 0) {
+			throw new Exception("MinNumberOfGroups must be 0 if OnePagePerGroup is true.");
 		}
 		if (isset($this->hasOrder) && !is_bool($this->hasOrder)) {
 			throw new Exception("HasOrder can only be boolean or null.");

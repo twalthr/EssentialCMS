@@ -94,7 +94,8 @@ class AdminModuleConfigModule extends BasicModule {
 				<input type="hidden" name="operationSpace" value="fields" />
 				<section>
 					<h1>
-						<?php $this->text('MODULE_CONFIG'); ?>
+						<?php $this->text('MODULE_CONFIG'); ?>: 
+							<?php echo Utils::escapeString($this->moduleInfo['name']); ?>
 					</h1>
 					<div class="buttonSet general">
 						<input type="submit" value="<?php $this->text('SAVE'); ?>" />

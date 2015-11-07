@@ -57,9 +57,16 @@ class AdminEditModuleModule extends BasicModule {
 						window.open('<?php echo $config->getPublicRoot(); ?>/admin/page/<?php
 							echo $this->module['page']; ?>', '_self');
 					});
-					$('.addFieldGroup').click(function() {
+					$('.addFieldGroup.onePager').click(function() {
 						window.open('<?php echo $config->getPublicRoot(); ?>/admin/new-field-group/<?php
 							echo $this->module['mid']; ?>/' + $(this).val(), '_self');
+					});
+					$('.addFieldGroup.noOnePager').click(function() {
+						var form = $(this).parents('form');
+						form.submit();
+					});
+					$('.saveFieldGroup').click(function() {
+
 					});
 					$('.moveFieldGroup').click(function() {
 						var form = $(this).parents('form');
@@ -174,12 +181,59 @@ class AdminEditModuleModule extends BasicModule {
 			if ($fieldGroupContent === false) {
 				continue;
 			}
-			$this->printFieldGroupSection($fieldGroupInfo, $fieldGroupContent, $config);
+
+			// print one pager list
+			if ($fieldGroupInfo->isOnePagePerGroup()) {
+				$this->printFieldGroupSection($fieldGroupInfo, $fieldGroupContent, null, $config);
+			}
+			else {
+				$count = 0;
+				// print available field groups
+				foreach ($fieldGroupContent as $fieldGroup) {
+					$count++;
+					// load content of fields
+					$fieldsContent = $this->fieldOperations->getFields($fieldGroupContent['fgid']);
+					if ($fieldsContent === false) {
+						continue;
+					}
+					$this->printFieldGroupSection($fieldGroupInfo, $fieldGroupContent,
+						$fieldsContent, $config);
+				}
+
+				// print remaining required field groups
+				for (;$count < $fieldGroupInfo->getMinNumberOfGroups(); $count++) {
+					$this->printFieldGroupSection($fieldGroupInfo, null, null, $config);
+				}
+
+				// print add button
+				if ($fieldGroupInfo->getMaxNumberOfGroups() === null
+						|| $count < $fieldGroupInfo->getMaxNumberOfGroups()) {
+					?>
+					<form method="post">
+						<input type="hidden" name="operationSpace" value="fieldGroup" />
+						<input type="hidden" name="fieldGroupInfo"
+							value="<?php echo $fieldGroupInfo->getKey(); ?>" />
+						<input type="hidden" name="operation" value="new" />
+						<section>
+							<h1><?php $this->moduleDefinition->text($fieldGroupInfo->getNamePlural()); ?></h1>
+							<div class="buttonSet general">
+								<button class="addFieldGroup noOnePager"
+											value="<?php echo $fieldGroupInfo->getKey(); ?>">
+									<?php $this->text('ADD_FIELD_GROUP',
+										Utils::escapeString(
+											$this->moduleDefinition->textString($fieldGroupInfo->getName())
+										)); ?>
+								</button>
+							</div>
+						</section>
+					<?php
+				}
+			}
 		}
 		echo '</div>';
 	}
 
-	private function printFieldGroupSection($fieldGroupInfo, $fieldGroupContent, $config) {
+	private function printFieldGroupSection($fieldGroupInfo, $fieldGroupContent, $fieldsContent, $config) {
 		?>
 		<form method="post">
 			<input type="hidden" name="operationSpace" value="fieldGroup" />
@@ -188,32 +242,35 @@ class AdminEditModuleModule extends BasicModule {
 			<input type="hidden" name="operationParameter" />
 			<section>
 				<h1>
-					<?php if ($fieldGroupInfo->getMaxNumberOfGroups() === 1) : ?>
+					<?php if ($fieldGroupInfo->getMaxNumberOfGroups() === 1 
+							|| !$fieldGroupInfo->isOnePagePerGroup()) : ?>
 						<?php $this->moduleDefinition->text($fieldGroupInfo->getName()); ?>
 					<?php else : ?>
 						<?php $this->moduleDefinition->text($fieldGroupInfo->getNamePlural()); ?>
 					<?php endif; ?>
 				</h1>
-				<?php if ($fieldGroupInfo->getMaxNumberOfGroups() === null
-						|| count($fieldGroupContent) < $fieldGroupInfo->getMaxNumberOfGroups()) : ?>
-					<div class="buttonSet general">
-						<button class="addFieldGroup" value="<?php echo $fieldGroupInfo->getKey(); ?>">
-							<?php $this->text('ADD_FIELD_GROUP',
-								Utils::escapeString(
-									$this->moduleDefinition->textString($fieldGroupInfo->getName())
-								)); ?>
-						</button>
-					</div>
-				<?php endif; ?>
-				<?php if (count($fieldGroupContent) === 0) : ?>
-					<p class="empty">
-						<?php $this->text('NO_FIELD_GROUP',
-							Utils::escapeString(
-								$this->moduleDefinition->textString($fieldGroupInfo->getNamePlural())
-							)); ?>
-					</p>;
-				<?php endif; ?>
+				
 				<?php if ($fieldGroupInfo->isOnePagePerGroup()) : ?>
+					<?php if ($fieldGroupInfo->getMaxNumberOfGroups() === null
+							|| count($fieldGroupContent) < $fieldGroupInfo->getMaxNumberOfGroups()) : ?>
+						<div class="buttonSet general">
+							<button class="addFieldGroup onePager"
+									value="<?php echo $fieldGroupInfo->getKey(); ?>">
+								<?php $this->text('ADD_FIELD_GROUP',
+									Utils::escapeString(
+										$this->moduleDefinition->textString($fieldGroupInfo->getName())
+									)); ?>
+							</button>
+						</div>
+					<?php endif; ?>
+					<?php if (count($fieldGroupContent) === 0) : ?>
+						<p class="empty">
+							<?php $this->text('NO_FIELD_GROUP',
+								Utils::escapeString(
+									$this->moduleDefinition->textString($fieldGroupInfo->getNamePlural())
+								)); ?>
+						</p>;
+					<?php endif; ?>
 					<ul class="tableLike enableButtonsIfChecked">
 						<?php foreach ($fieldGroupContent as $content) : ?>
 							<li class="rowLike">
@@ -240,22 +297,19 @@ class AdminEditModuleModule extends BasicModule {
 					</ul>
 					<div class="buttonSet">
 						<?php if ($fieldGroupInfo->hasOrder()) : ?>
-							<button class="moveFieldGroup disableListIfClicked"
-								value="<?php echo $fieldGroupInfo->getKey(); ?>" disabled>
+							<button class="moveFieldGroup disableListIfClicked" disabled>
 								<?php $this->text('MOVE'); ?>
 							</button>
 						<?php endif; ?>
-						<button class="copyFieldGroup disableListIfClicked"
-							value="<?php echo $fieldGroupInfo->getKey(); ?>" disabled>
+						<button class="copyFieldGroup disableListIfClicked" disabled>
 							<?php $this->text('COPY'); ?>
 						</button>
 						<button class="exportFieldGroup"
-							value="<?php echo $this->moduleDefinition->getName() . '/'
+								value="<?php echo $this->moduleDefinition->getName() . '/'
 								 . $fieldGroupInfo->getKey(); ?>" disabled>
 							<?php $this->text('EXPORT'); ?>
 						</button>
-						<button class="deleteFieldGroup disableListIfClicked"
-							value="<?php echo $fieldGroupInfo->getKey(); ?>" disabled>
+						<button class="deleteFieldGroup disableListIfClicked" disabled>
 							<?php $this->text('DELETE'); ?>
 						</button>
 					</div>
@@ -272,7 +326,59 @@ class AdminEditModuleModule extends BasicModule {
 						</div>
 					</div>
 				<?php else : ?>
-					<?php $fieldGroupInfo->printFieldsWithLabel(); ?>
+					<?php if (isset($fieldGroupContent)) : ?>
+						<input type="hidden" name="fieldGroup"
+								value="<?php echo $fieldGroupContent['fgid']; ?>" />
+					<?php endif; ?>
+					<div class="fields">
+						<?php
+						foreach ($fieldGroupInfo->getFieldInfos() as $field) {
+							// extract field content
+							$typeAndContent = null;
+							if ($fieldsContent !== null) {
+								$typeAndContent = Utils::getColumnWithValues($fieldsContent, 'key', $key);
+								if ($typeAndContent === false) {
+									$typeAndContent = null;
+								}
+							}
+							$field->printFieldWithLabel(
+								$this->moduleDefinition,
+								$typeAndContent);
+						}
+						?>
+					</div>
+					<div class="buttonSet">
+						<button class="saveFieldGroup">
+							<?php $this->text('SAVE'); ?>
+						</button>
+						<?php if ($fieldGroupInfo->hasOrder()) : ?>
+							<button class="upFieldGroup">
+								<?php $this->text('UP'); ?>
+							</button>
+							<button class="downFieldGroup">
+								<?php $this->text('DOWN'); ?>
+							</button>
+						<?php endif; ?>
+						<button class="copyFieldGroup">
+							<?php $this->text('COPY'); ?>
+						</button>
+						<button class="exportFieldGroup">
+							<?php $this->text('EXPORT'); ?>
+						</button>
+						<button class="deleteFieldGroup">
+							<?php $this->text('DELETE'); ?>
+						</button>
+					</div>
+					<div class="dialog-box hidden">
+						<div class="dialog-message"></div>
+						<div class="fields">
+							
+						</div>
+						<div class="options">
+							<button class="hidden deleteConfirm"><?php $this->text('DELETE'); ?></button>
+							<button class="hidden cancel"><?php $this->text('CANCEL'); ?></button>
+						</div>
+					</div>
 				<?php endif; ?>
 			</section>
 		</form>
@@ -315,6 +421,10 @@ class AdminEditModuleModule extends BasicModule {
 
 		// do operation
 		switch ($operation) {
+			// show a new mask for adding a new field group
+			case 'new':
+				// TODO HIER WEITER MACHEN!!!!
+				break;
 			case 'add':
 
 				break;

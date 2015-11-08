@@ -10,7 +10,8 @@ class AdminEditModuleModule extends BasicModule {
 	// UI state
 	private $state;
 	private $message;
-	private $fieldGroupNamePlural;
+	private $field;
+	private $fieldGroupName;
 	private $newFieldGroup;
 
 	// member variables
@@ -68,6 +69,19 @@ class AdminEditModuleModule extends BasicModule {
 					});
 					$('.editFieldGroup').click(function() {
 						var form = $(this).parents('form');
+						form.find('[name="operation"]').val('edit');
+						form.submit();
+					});
+					$('.upFieldGroup').click(function() {
+						var form = $(this).parents('form');
+						form.find('[name="operation"]').val('move');
+						form.find('[name="operationTarget"]').val($(this).val());
+						form.submit();
+					});
+					$('.downFieldGroup').click(function() {
+						var form = $(this).parents('form');
+						form.find('[name="operation"]').val('move');
+						form.find('[name="operationTarget"]').val($(this).val());
 						form.submit();
 					});
 					$('.moveFieldGroup').click(function() {
@@ -126,22 +140,26 @@ class AdminEditModuleModule extends BasicModule {
 			</script>
 		<?php endif; ?>
 		<?php if (isset($this->state)) : ?>
-			<?php if ($this->state === true && !isset($this->fieldGroupNamePlural)) : ?>
+			<?php if ($this->state === true && !isset($this->fieldGroupName)) : ?>
 				<div class="dialog-success-message">
 					<?php $this->text($this->message); ?>
 				</div>
 			<?php elseif ($this->state === false) : ?>
 				<div class="dialog-error-message">
+					<?php if (isset($this->field)) : ?>
+						<?php $this->moduleDefinition->text($this->field); ?>:
+					<?php endif; ?>
 					<?php $this->text($this->message,
 						Utils::escapeString(
-							$this->moduleDefinition->textString($this->fieldGroupNamePlural)
+							$this->moduleDefinition->textString(
+								$this->fieldGroupName)
 						)); ?>
 				</div>
-			<?php elseif ($this->state === true && isset($this->fieldGroupNamePlural)) : ?>
+			<?php elseif ($this->state === true && isset($this->fieldGroupName)) : ?>
 				<div class="dialog-success-message">
 					<?php $this->text($this->message,
 						Utils::escapeString(
-							$this->moduleDefinition->textString($this->fieldGroupNamePlural)
+							$this->moduleDefinition->textString($this->fieldGroupName)
 						)); ?>
 				</div>
 			<?php endif; ?>
@@ -174,34 +192,34 @@ class AdminEditModuleModule extends BasicModule {
 		$fieldGroupInfos = $this->moduleDefinition->getFieldGroupInfo();
 		echo '<div class="fieldGroups">';
 		foreach ($fieldGroupInfos as $fieldGroupInfo) {
-			$fieldGroupContent = false;
+			$fieldGroups = false;
 			if ($fieldGroupInfo->isOnePagePerGroup()) {
-				$fieldGroupContent = $this->fieldGroupOperations->getFieldGroupsWithTitle(
+				$fieldGroups = $this->fieldGroupOperations->getFieldGroupsWithTitle(
 					$this->module['mid'], $fieldGroupInfo->getKey());
 			}
 			else {
-				$fieldGroupContent = $this->fieldGroupOperations->getFieldGroups(
+				$fieldGroups = $this->fieldGroupOperations->getFieldGroups(
 					$this->module['mid'], $fieldGroupInfo->getKey());
 			}
-			if ($fieldGroupContent === false) {
+			if ($fieldGroups === false) {
 				continue;
 			}
 
 			// print one pager list
 			if ($fieldGroupInfo->isOnePagePerGroup()) {
-				$this->printFieldGroupSection($fieldGroupInfo, $fieldGroupContent, null, $config);
+				$this->printFieldGroupSection($fieldGroupInfo, $fieldGroups, null, $config);
 			}
 			else {
 				$count = 0;
 				// print available field groups
-				foreach ($fieldGroupContent as $fieldGroup) {
+				foreach ($fieldGroups as $fieldGroup) {
 					$count++;
-					// load content of fields
-					$fieldsContent = $this->fieldOperations->getFields($fieldGroupContent['fgid']);
+					// load fields content
+					$fieldsContent = $this->fieldOperations->getFields($fieldGroup['fgid']);
 					if ($fieldsContent === false) {
 						continue;
 					}
-					$this->printFieldGroupSection($fieldGroupInfo, $fieldGroupContent,
+					$this->printFieldGroupSection($fieldGroupInfo, $fieldGroup,
 						$fieldsContent, $config);
 				}
 
@@ -244,13 +262,13 @@ class AdminEditModuleModule extends BasicModule {
 		echo '</div>';
 	}
 
-	private function printFieldGroupSection($fieldGroupInfo, $fieldGroupContent, $fieldsContent, $config) {
+	// $fieldGroups contains either a list of one pagers or field group for non-one pages
+	private function printFieldGroupSection($fieldGroupInfo, $fieldGroups, $fieldsContent, $config) {
 		?>
 		<form method="post">
 			<input type="hidden" name="operationSpace" value="fieldGroup" />
 			<input type="hidden" name="fieldGroupInfo" value="<?php echo $fieldGroupInfo->getKey(); ?>" />
-			<input type="hidden" name="operation"
-				<?php if (!isset($fieldGroupContent)) : ; ?>value="edit"<?php endif; ?> />
+			<input type="hidden" name="operation" />
 			<input type="hidden" name="operationParameter" />
 			<section>
 				<h1>
@@ -264,7 +282,7 @@ class AdminEditModuleModule extends BasicModule {
 				
 				<?php if ($fieldGroupInfo->isOnePagePerGroup()) : ?>
 					<?php if ($fieldGroupInfo->getMaxNumberOfGroups() === null
-							|| count($fieldGroupContent) < $fieldGroupInfo->getMaxNumberOfGroups()) : ?>
+							|| count($fieldGroups) < $fieldGroupInfo->getMaxNumberOfGroups()) : ?>
 						<div class="buttonSet general">
 							<button class="addFieldGroup onePager"
 									value="<?php echo $fieldGroupInfo->getKey(); ?>">
@@ -275,7 +293,7 @@ class AdminEditModuleModule extends BasicModule {
 							</button>
 						</div>
 					<?php endif; ?>
-					<?php if (count($fieldGroupContent) === 0) : ?>
+					<?php if (count($fieldGroups) === 0) : ?>
 						<p class="empty">
 							<?php $this->text('NO_FIELD_GROUP',
 								Utils::escapeString(
@@ -284,25 +302,25 @@ class AdminEditModuleModule extends BasicModule {
 						</p>;
 					<?php endif; ?>
 					<ul class="tableLike enableButtonsIfChecked">
-						<?php foreach ($fieldGroupContent as $content) : ?>
+						<?php foreach ($fieldGroups as $fieldGroup) : ?>
 							<li class="rowLike">
-								<input type="checkbox" id="fieldGroup<?php echo $content['fgid']; ?>"
+								<input type="checkbox" id="fieldGroup<?php echo $fieldGroup['fgid']; ?>"
 										name="fieldGroups[]"
-										value="<?php echo $content['fgid']; ?>" />
-								<label for="fieldGroup<?php echo $content['fgid']; ?>"
+										value="<?php echo $fieldGroup['fgid']; ?>" />
+								<label for="fieldGroup<?php echo $fieldGroup['fgid']; ?>"
 										class="checkbox">
-									<?php echo Utils::escapeString($content['title']); ?>
+									<?php echo Utils::escapeString($fieldGroup['title']); ?>
 								</label>
 								<a href="<?php echo $config->getPublicRoot(); ?>/admin/field-group/<?php 
-										echo $content['fgid']; ?>"
-										<?php if (isset($content['private']) 
-												&& $content['private'] === '1') : ?>
+										echo $fieldGroup['fgid']; ?>"
+										<?php if (isset($fieldGroup['private']) 
+												&& $fieldGroup['private'] === '1') : ?>
 											class="private componentLink"
 										<?php else : ?>
 											class="componentLink"
 										<?php endif; ?>
 										>
-									<?php echo Utils::escapeString($content['title']); ?>
+									<?php echo Utils::escapeString($fieldGroup['title']); ?>
 								</a>
 							</li>
 						<?php endforeach; ?>
@@ -314,7 +332,7 @@ class AdminEditModuleModule extends BasicModule {
 							</button>
 						<?php endif; ?>
 						<?php if ($fieldGroupInfo->getMaxNumberOfGroups() === null
-								|| count($fieldGroupContent) < $fieldGroupInfo->getMaxNumberOfGroups()) : ?>
+								|| count($fieldGroups) < $fieldGroupInfo->getMaxNumberOfGroups()) : ?>
 							<button class="copyFieldGroup disableListIfClicked" disabled>
 								<?php $this->text('COPY'); ?>
 							</button>
@@ -331,7 +349,7 @@ class AdminEditModuleModule extends BasicModule {
 					<div class="dialog-box hidden">
 						<div class="dialog-message"></div>
 						<div class="fields">
-							<?php $this->printFieldGroupsAsSelect($fieldGroupContent); ?>
+							<?php $this->printFieldGroupsAsSelect($fieldGroups); ?>
 						</div>
 						<div class="options">
 							<button class="hidden copyConfirm"><?php $this->text('COPY'); ?></button>
@@ -341,46 +359,35 @@ class AdminEditModuleModule extends BasicModule {
 						</div>
 					</div>
 				<?php else : ?>
-					<?php if (isset($fieldGroupContent)) : ?>
-						<input type="hidden" name="fieldGroup"
-								value="<?php echo $fieldGroupContent['fgid']; ?>" />
+					<?php if (isset($fieldGroups)) : ?>
+						<input type="hidden" name="fieldGroup" value="<?php echo $fieldGroups['fgid']; ?>" />
+						<input type="hidden" name="operationTarget"
+							value="<?php echo $fieldGroups['order']; ?>" />
 					<?php endif; ?>
 					<div class="fields">
-						<?php
-						foreach ($fieldGroupInfo->getFieldInfos() as $field) {
-							// extract field content
-							$typeAndContent = null;
-							if ($fieldsContent !== null) {
-								$typeAndContent = Utils::getColumnWithValues($fieldsContent, 'key', $key);
-								if ($typeAndContent === false) {
-									$typeAndContent = null;
-								}
-							}
-							$field->printFieldWithLabel(
-								$this->moduleDefinition,
-								$typeAndContent);
-						}
-						?>
+						<?php $fieldGroupInfo->printFields($this->moduleDefinition, $fieldsContent); ?>
 					</div>
 					<div class="buttonSet">
 						<button class="editFieldGroup">
-						<?php if (isset($fieldGroupContent)) : ?>
+						<?php if (isset($fieldGroups)) : ?>
 							<?php $this->text('SAVE'); ?>
 						<?php else: ?>
 							<?php $this->text('CREATE'); ?>
 						<?php endif; ?>
 						</button>
-						<?php if (isset($fieldGroupContent)) : ?>
+						<?php if (isset($fieldGroups)) : ?>
 							<?php if ($fieldGroupInfo->hasOrder()) : ?>
-								<button class="upFieldGroup">
+								<button class="upFieldGroup"
+										value="<?php echo $fieldGroups['order'] - 1; ?>">
 									<?php $this->text('UP'); ?>
 								</button>
-								<button class="downFieldGroup">
+								<button class="downFieldGroup"
+										value="<?php echo $fieldGroups['order'] + 1; ?>">
 									<?php $this->text('DOWN'); ?>
 								</button>
 							<?php endif; ?>
 							<?php if ($fieldGroupInfo->getMaxNumberOfGroups() === null
-									|| count($fieldGroupContent) < 
+									|| count($fieldGroups) < 
 										$fieldGroupInfo->getMaxNumberOfGroups()) : ?>
 								<button class="copyFieldGroup">
 									<?php $this->text('COPY'); ?>
@@ -435,6 +442,8 @@ class AdminEditModuleModule extends BasicModule {
 		if ($fieldGroupInfo === false) {
 			return;
 		}
+		// default field group name for success and error messages
+		$this->fieldGroupName = $fieldGroupInfo->getNamePlural();
 		// load corresponding content
 		$fieldGroupContent = $this->fieldGroupOperations->getFieldGroups(
 			$this->module['mid'], $fieldGroupInfo->getKey());
@@ -460,16 +469,78 @@ class AdminEditModuleModule extends BasicModule {
 				}
 				break;
 			case 'edit':
-				// check if maximimum is reached
-				if ($fieldGroupInfo->getMaxNumberOfGroups() !== null
-						&& count($fieldGroupContent) >= $fieldGroupInfo->getMaxNumberOfGroups()) {
-					echo $fieldGroupInfo->getMaxNumberOfGroups();
+				// validate fields
+				foreach ($fieldGroupInfo->getFieldInfos() as $field) {
+					// check input
+					$result = $field->isValidTypeAndContentInput();
+					// validation was not successful
+					if ($result !== true) {
+						$this->state = false;
+						$this->message = $result;
+						$this->field = $field->getName();
+						$this->fieldGroupName = $fieldGroupInfo->getName();
+						return;
+					}
+				}
+
+				// load field group
+				$fieldGroupId = null;
+				if (Utils::isValidFieldInt('fieldGroup')) {
+					$fieldGroupIdString = Utils::getUnmodifiedStringOrEmpty('fieldGroup');
+					// check if field group exists
+					$fieldGroup = Utils::getColumnWithValue($fieldGroupContent, 'fgid',
+						(int) $fieldGroupIdString);
+					if ($fieldGroup === false) {
+						$this->state = false;
+						$this->message = 'FIELD_GROUP_NOT_FOUND';
+						$this->fieldGroupName = $fieldGroupInfo->getName();
+						return;
+					}
+					$fieldGroupId = $fieldGroup['fgid'];
+				}
+
+				// create field group
+				$created = false;
+				if (!isset($fieldGroupId)) {
+					// check if maximimum is reached
+					if ($fieldGroupInfo->getMaxNumberOfGroups() !== null
+							&& count($fieldGroupContent) >= $fieldGroupInfo->getMaxNumberOfGroups()) {
+						$this->state = false;
+						$this->message = 'FIELD_GROUP_MAXIMUM_REACHED';
+						return;
+					}
+					// create new field group
+					$newFieldGroupId = $this->fieldGroupOperations->addFieldGroup($this->module['mid'],
+						$fieldGroupInfo->getKey());
+					if ($newFieldGroupId === false) {
+						$this->state = false;
+						$this->message = 'UNKNOWN_ERROR';
+						return;
+					}
+					$fieldGroupId = $newFieldGroupId;
+					$created = true;
+				}
+
+				// load fields content
+				$fieldsContent = $this->fieldOperations->getFields($fieldGroupId);
+				if ($fieldsContent === false) {
 					$this->state = false;
-					$this->message = 'FIELD_GROUP_MAXIMUM_REACHED';
+					$this->message = 'UNKNOWN_ERROR';
 					return;
 				}
-				// TODO ADD
 
+				// handle edit
+				$result = $fieldGroupInfo->handleEditFieldGroup($fieldGroupId, $fieldsContent,
+					$this->fieldOperations);
+				if ($result === true) {
+					$this->state = true;
+					$this->message = 'FIELD_GROUP_CREATED';
+					$this->fieldGroupName = $fieldGroupInfo->getName();
+				}
+				else {
+					$this->state = false;
+					$this->message = $result;
+				}
 				break;
 			case 'copy':
 				// check if maximimum is reached
@@ -531,17 +602,14 @@ class AdminEditModuleModule extends BasicModule {
 				else if ($operation === 'move') {
 					$this->state = true;
 					$this->message = 'FIELD_GROUP_MOVE_SUCCESSFUL';
-					$this->fieldGroupNamePlural = $fieldGroupInfo->getNamePlural();
 				}
 				else if ($operation === 'copy') {
 					$this->state = true;
 					$this->message = 'FIELD_GROUP_COPY_SUCCESSFUL';
-					$this->fieldGroupNamePlural = $fieldGroupInfo->getNamePlural();
 				}
 				else if ($operation === 'delete') {
 					$this->state = true;
 					$this->message = 'FIELD_GROUP_DELETE_SUCCESSFUL';
-					$this->fieldGroupNamePlural = $fieldGroupInfo->getNamePlural();
 				}
 				break;
 			case 'export':
@@ -584,7 +652,7 @@ class AdminEditModuleModule extends BasicModule {
 				}
 				else {
 					$this->state = true;
-					$this->message = 'MODULE_EXPORT_SUCCESSFUL';
+					$this->message = 'FIELD_GROUP_EXPORT_SUCCESSFUL';
 				}
 				break;
 		}

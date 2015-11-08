@@ -20,7 +20,7 @@ class AdminEditFieldGroupModule extends BasicModule {
 	private $module; // module stored in database
 	private $moduleDefinition; // instance of RichModule
 	private $fieldGroupInfo; // field group defined by module definition
-	private $fieldContent; // field content stored in database
+	private $fieldsContent; // fields content stored in database
 
 	public function __construct($config, $moduleOperations, $fieldGroupOperations,
 			$fieldOperations, $parameters = null) {
@@ -57,7 +57,7 @@ class AdminEditFieldGroupModule extends BasicModule {
 
 		// load field content
 		if (isset($this->fieldGroupInfo)) {
-			$this->loadFieldContent();
+			$this->loadFieldsContent();
 		}
 		else {
 			return;
@@ -67,7 +67,7 @@ class AdminEditFieldGroupModule extends BasicModule {
 		if (Utils::getUnmodifiedStringOrEmpty('operationSpace') === 'fields') {
 			$this->handleEditFieldGroup();
 			// refresh
-			$this->loadFieldContent();
+			$this->loadFieldsContent();
 		}
 	}
 
@@ -136,25 +136,14 @@ class AdminEditFieldGroupModule extends BasicModule {
 						<?php endif; ?>
 						<button id="cancel"><?php $this->text('CANCEL'); ?></button>
 					</div>
-					<?php $this->printFields(); ?>
+					<div class="fields">
+						<?php $this->fieldGroupInfo->printFields($this->moduleDefinition,
+							$this->fieldsContent); ?>
+					</div>
 				</section>
 			</form>
 		<?php endif; ?>
 		<?php
-	}
-
-	// --------------------------------------------------------------------------------------------
-	// Printing methods
-	// --------------------------------------------------------------------------------------------
-
-	private function printFields() {
-		echo '<div class="fields">';
-		foreach ($this->fieldGroupInfo->getFieldInfos() as $field) {
-			$field->printFieldWithLabel(
-				$this->moduleDefinition,
-				$this->getFieldContent($field->getKey()));
-		}
-		echo '</div>';
 	}
 
 	// --------------------------------------------------------------------------------------------
@@ -209,71 +198,23 @@ class AdminEditFieldGroupModule extends BasicModule {
 			$newFieldGroupId = $fieldGroupId;
 		}
 
-		foreach ($this->fieldGroupInfo->getFieldInfos() as $field) {
-			// save fields if not equal
-			$content = $field->getValidTypeAndContentInput();
-			$currentContent = $this->getFieldContent($field->getKey());
-
-			if (!Utils::arrayEqual($content, $currentContent, 'type', 'content')) {
-				// field not in database yet
-				if ($currentContent === null) {
-					// check if not default value
-					$currentContent = $field->getDefaultContent();
-					if (!Utils::arrayEqual($content, $currentContent, 'type', 'content')) {
-						foreach ($content as $value) {
-							$result = $result && $this->fieldOperations->addField(
-								$this->fieldGroup['fgid'],
-								$field->getKey(),
-								$value['type'],
-								$value['content']);
-						}
-					}
-				}
-				// field already in database
-				else {
-					$result = $this->fieldOperations->deleteField(
-						$this->fieldGroup['fgid'],
-						$field->getKey());
-					foreach ($content as $value) {
-						$result = $result && $this->fieldOperations->addField(
-							$this->fieldGroup['fgid'],
-							$field->getKey(),
-							$value['type'],
-							$value['content']);
-					}
-				}
-
-				if ($result !== true) {
-					$this->state = false;
-					$this->message = 'UNKNOWN_ERROR';
-					return;
-				}
-			}
-		}
-
-		if (isset($newFieldGroupId)) {
-			Utils::redirect($this->config->getPublicRoot() . '/admin/field-group/' .
-				$newFieldGroupId . '/.success');
-		}
-		else {
+		// handle edit
+		$result = $this->fieldGroupInfo->handleEditFieldGroup($this->fieldGroup['fgid'], $this->fieldsContent,
+			$this->fieldOperations);
+		if ($result === true) {
 			$this->state = true;
 			$this->message = 'FIELD_GROUP_CHANGED';
-		}
-	}
 
-	// --------------------------------------------------------------------------------------------
-	// Helper methods
-	// --------------------------------------------------------------------------------------------
-
-	private function getFieldContent($key) {
-		if (!isset($this->fieldContent)) {
-			return null;
+			// redirect
+			if (isset($newFieldGroupId)) {
+				Utils::redirect($this->config->getPublicRoot() . '/admin/field-group/' .
+					$newFieldGroupId . '/.success');
+			}
 		}
-		$value = Utils::getColumnWithValues($this->fieldContent, 'key', $key);
-		if ($value === false) {
-			return null;
+		else {
+			$this->state = false;
+			$this->message = $result;
 		}
-		return $value;
 	}
 
 	// --------------------------------------------------------------------------------------------
@@ -329,12 +270,12 @@ class AdminEditFieldGroupModule extends BasicModule {
 		$this->fieldGroupInfo = $fieldGroupInfo;
 	}
 
-	private function loadFieldContent() {
-		$fieldContent = $this->fieldOperations->getFields($this->fieldGroup['fgid']);
-		if ($fieldContent === false) {
+	private function loadFieldsContent() {
+		$fieldsContent = $this->fieldOperations->getFields($this->fieldGroup['fgid']);
+		if ($fieldsContent === false) {
 			return;
 		}
-		$this->fieldContent = $fieldContent;
+		$this->fieldsContent = $fieldsContent;
 	}
 }
 

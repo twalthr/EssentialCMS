@@ -88,6 +88,33 @@ class AdminController {
 		$hashedAndSalted = password_hash($_POST['password'], PASSWORD_DEFAULT);
 
 		$result = $DB->successQuery('
+				CREATE TABLE IF NOT EXISTS `Images` (
+					`iid` INT(10) NOT NULL AUTO_INCREMENT,
+					`file` INT(10) NOT NULL,
+					`externalId` VARCHAR(256) NULL,
+					`hoverTitle` VARCHAR(256) NULL,
+					`altTitle` VARCHAR(256) NULL,
+					`topCornerX` INT(10) NOT NULL,
+					`topCornerY` INT(10) NOT NULL,
+					`bottomCornerX` INT(10) NOT NULL,
+					`bottomCornerY` INT(10) NOT NULL,
+					`width` INT(10) NOT NULL,
+					`height` INT(10) NOT NULL,
+					`format` INT(10) NOT NULL,
+					PRIMARY KEY (`iid`)
+				)
+			') && $DB->successQuery('
+				CREATE TABLE IF NOT EXISTS `MediaFiles` (
+					`mfid` INT(10) NOT NULL AUTO_INCREMENT,
+					`originalName` VARCHAR(512) NOT NULL,
+					`internalName` VARCHAR(512) NULL,
+					`externalId` VARCHAR(256) NULL,
+					`options` INT(10) NOT NULL,
+					`lastChanged` TIMESTAMP NOT NULL,
+					`externalLastChanged` TIMESTAMP NULL,
+					PRIMARY KEY (`mfid`)
+				)
+			') && $DB->successQuery('
 				CREATE TABLE IF NOT EXISTS `Pages` (
 					`pid` INT(10) NOT NULL AUTO_INCREMENT,
 					`title` VARCHAR(256) NOT NULL,

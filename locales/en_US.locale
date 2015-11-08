@@ -142,6 +142,7 @@ NO_FIELD_GROUP=No %1$s are created yet.
 FIELD_GROUP_MOVE_SUCCESSFUL=%1$s moved successfully.
 FIELD_GROUP_COPY_SUCCESSFUL=%1$s copied successfully.
 FIELD_GROUP_DELETE_SUCCESSFUL=%1$s deleted successfully.
+FIELD_GROUP_EXPORT_SUCCESSFUL=%1$s exported successfully.
 FIELD_GROUP_EXPORT=%1$s Export
 EXPORT_FIELD_GROUP=Please select the target module in a section of a page where the %1$s should be moved to. The %1$s will be inserted at the end.
 TARGET_MODULE=Target module:

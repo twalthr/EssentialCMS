@@ -142,6 +142,7 @@ NO_FIELD_GROUP=Keine %1$s vorhanden.
 FIELD_GROUP_MOVE_SUCCESSFUL=%1$s erfolgreich verschoben.
 FIELD_GROUP_COPY_SUCCESSFUL=%1$s erfolgreich kopiert.
 FIELD_GROUP_DELETE_SUCCESSFUL=%1$s erfolgreich gelöscht.
+FIELD_GROUP_EXPORT_SUCCESSFUL=%1$s erfolgreich exportiert.
 FIELD_GROUP_EXPORT=%1$s-Export
 EXPORT_FIELD_GROUP=Bitte wählen Sie das Zielmodul in einem Abschnitt einer Seite aus in die %1$s verschoben werden sollen. %1$s werden am Ende eingefügt.
 TARGET_MODULE=Zielmodul:

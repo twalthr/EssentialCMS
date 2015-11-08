@@ -98,6 +98,74 @@ class FieldGroupInfo {
 		return $this->hasOrder === true;
 	}
 
+	// --------------------------------------------------------------------------------------------
+	// Handle field group for administration
+	// --------------------------------------------------------------------------------------------
+
+	public function handleEditFieldGroup($fieldGroupId, $fieldsContent, $fieldOperations) {
+		// handle fields
+		$result = true;
+		foreach ($this->getFieldInfos() as $field) {
+			// save fields if not equal
+			$content = $field->getValidTypeAndContentInput();
+			$currentContent = $this->getFieldContent($fieldsContent, $field->getKey());
+
+			if (!Utils::arrayEqual($content, $currentContent, 'type', 'content')) {
+				// field not in database yet
+				if ($currentContent === null) {
+					// check if not default value
+					$currentContent = $field->getDefaultContent();
+					if (!Utils::arrayEqual($content, $currentContent, 'type', 'content')) {
+						foreach ($content as $value) {
+							$result = $result && $fieldOperations->addField(
+								$fieldGroupId,
+								$field->getKey(),
+								$value['type'],
+								$value['content']);
+						}
+					}
+				}
+				// field already in database
+				else {
+					$result = $fieldOperations->deleteField(
+						$fieldGroupId,
+						$field->getKey());
+					foreach ($content as $value) {
+						$result = $result && $fieldOperations->addField(
+							$fieldGroupId,
+							$field->getKey(),
+							$value['type'],
+							$value['content']);
+					}
+				}
+
+				if ($result !== true) {
+					return 'UNKNOWN_ERROR';
+				}
+			}
+		}
+		return true;
+	}
+
+	private function getFieldContent($fieldsContent, $key) {
+		if (!isset($fieldsContent)) {
+			return null;
+		}
+		$value = Utils::getColumnWithValues($fieldsContent, 'key', $key);
+		if ($value === false) {
+			return null;
+		}
+		return $value;
+	}
+
+	public function printFields($moduleDefinition, $fieldsContent) {
+		foreach ($this->getFieldInfos() as $field) {
+			$field->printFieldWithLabel(
+				$moduleDefinition,
+				$this->getFieldContent($fieldsContent, $field->getKey()));
+		}
+	}
+
 }
 
 ?>

@@ -98,14 +98,6 @@ class FieldGroupInfo {
 		return $this->hasOrder === true;
 	}
 
-	// --------------------------------------------------------------------------------------------
-	// Visualize field group for administration
-	// --------------------------------------------------------------------------------------------
-
-	public function printFieldsWithLabel() {
-		
-		
-	}
 }
 
 ?>

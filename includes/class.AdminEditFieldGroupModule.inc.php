@@ -97,7 +97,11 @@ class AdminEditFieldGroupModule extends BasicModule {
 					<?php if (isset($this->field)) : ?>
 						<?php $this->moduleDefinition->text($this->field); ?>:
 					<?php endif; ?>
-					<?php $this->text($this->message); ?>
+					<?php $this->text($this->message,
+						Utils::escapeString(
+							$this->moduleDefinition->textString(
+								$this->fieldGroupInfo->getNamePlural())
+						)); ?>
 				</div>
 			<?php endif; ?>
 		<?php endif; ?>
@@ -171,9 +175,24 @@ class AdminEditFieldGroupModule extends BasicModule {
 			}
 		}
 
-		// create new fieldgroup
+		// field group does not exist yet, create new fieldgroup
 		$newFieldGroupId = null;
 		if (!isset($this->fieldGroup)) {
+			$numberOfFieldGroups = $this->fieldGroupOperations->getNumberOfFieldGroups($this->module['mid'],
+				$this->fieldGroupInfo->getKey());
+			if ($numberOfFieldGroups === false) {
+				$this->state = false;
+				$this->message = 'UNKNOWN_ERROR';
+				return;
+			}
+			// do not allow new field group if maximum number is reached
+			if ($this->fieldGroupInfo->getMaxNumberOfGroups() !== null
+					&& $numberOfFieldGroups >= $this->fieldGroupInfo->getMaxNumberOfGroups()) {
+				$this->state = false;
+				$this->message = 'FIELD_GROUP_MAXIMUM_REACHED';
+				return;
+			}
+			// create new field group
 			$fieldGroupId = $this->fieldGroupOperations->addFieldGroup($this->module['mid'],
 				$this->fieldGroupInfo->getKey());
 			if ($fieldGroupId === false) {

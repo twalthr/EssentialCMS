@@ -97,7 +97,7 @@ final class FieldGroupOperations {
 		}
 		else {
 			$count = $this->db->valueQuery('
-				SELECT COUNT(*) AS `count`
+				SELECT COUNT(*) AS `value`
 				FROM `FieldGroups`
 				WHERE `module`=? AND `key`=?',
 				'is',

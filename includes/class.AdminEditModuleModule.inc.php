@@ -11,6 +11,7 @@ class AdminEditModuleModule extends BasicModule {
 	private $state;
 	private $message;
 	private $fieldGroupNamePlural;
+	private $newFieldGroup;
 
 	// member variables
 	private $module;
@@ -65,8 +66,9 @@ class AdminEditModuleModule extends BasicModule {
 						var form = $(this).parents('form');
 						form.submit();
 					});
-					$('.saveFieldGroup').click(function() {
-
+					$('.editFieldGroup').click(function() {
+						var form = $(this).parents('form');
+						form.submit();
 					});
 					$('.moveFieldGroup').click(function() {
 						var form = $(this).parents('form');
@@ -130,7 +132,10 @@ class AdminEditModuleModule extends BasicModule {
 				</div>
 			<?php elseif ($this->state === false) : ?>
 				<div class="dialog-error-message">
-					<?php $this->text($this->message); ?>
+					<?php $this->text($this->message,
+						Utils::escapeString(
+							$this->moduleDefinition->textString($this->fieldGroupNamePlural)
+						)); ?>
 				</div>
 			<?php elseif ($this->state === true && isset($this->fieldGroupNamePlural)) : ?>
 				<div class="dialog-success-message">
@@ -205,6 +210,12 @@ class AdminEditModuleModule extends BasicModule {
 					$this->printFieldGroupSection($fieldGroupInfo, null, null, $config);
 				}
 
+				// print new field group
+				if (isset($this->newFieldGroup) && $this->newFieldGroup === $fieldGroupInfo->getKey()) {
+					$count++;
+					$this->printFieldGroupSection($fieldGroupInfo, null, null, $config);
+				}
+
 				// print add button
 				if ($fieldGroupInfo->getMaxNumberOfGroups() === null
 						|| $count < $fieldGroupInfo->getMaxNumberOfGroups()) {
@@ -238,7 +249,8 @@ class AdminEditModuleModule extends BasicModule {
 		<form method="post">
 			<input type="hidden" name="operationSpace" value="fieldGroup" />
 			<input type="hidden" name="fieldGroupInfo" value="<?php echo $fieldGroupInfo->getKey(); ?>" />
-			<input type="hidden" name="operation" />
+			<input type="hidden" name="operation"
+				<?php if (!isset($fieldGroupContent)) : ; ?>value="edit"<?php endif; ?> />
 			<input type="hidden" name="operationParameter" />
 			<section>
 				<h1>
@@ -301,9 +313,12 @@ class AdminEditModuleModule extends BasicModule {
 								<?php $this->text('MOVE'); ?>
 							</button>
 						<?php endif; ?>
-						<button class="copyFieldGroup disableListIfClicked" disabled>
-							<?php $this->text('COPY'); ?>
-						</button>
+						<?php if ($fieldGroupInfo->getMaxNumberOfGroups() === null
+								|| count($fieldGroupContent) < $fieldGroupInfo->getMaxNumberOfGroups()) : ?>
+							<button class="copyFieldGroup disableListIfClicked" disabled>
+								<?php $this->text('COPY'); ?>
+							</button>
+						<?php endif; ?>
 						<button class="exportFieldGroup"
 								value="<?php echo $this->moduleDefinition->getName() . '/'
 								 . $fieldGroupInfo->getKey(); ?>" disabled>
@@ -348,26 +363,36 @@ class AdminEditModuleModule extends BasicModule {
 						?>
 					</div>
 					<div class="buttonSet">
-						<button class="saveFieldGroup">
+						<button class="editFieldGroup">
+						<?php if (isset($fieldGroupContent)) : ?>
 							<?php $this->text('SAVE'); ?>
-						</button>
-						<?php if ($fieldGroupInfo->hasOrder()) : ?>
-							<button class="upFieldGroup">
-								<?php $this->text('UP'); ?>
-							</button>
-							<button class="downFieldGroup">
-								<?php $this->text('DOWN'); ?>
-							</button>
+						<?php else: ?>
+							<?php $this->text('CREATE'); ?>
 						<?php endif; ?>
-						<button class="copyFieldGroup">
-							<?php $this->text('COPY'); ?>
 						</button>
-						<button class="exportFieldGroup">
-							<?php $this->text('EXPORT'); ?>
-						</button>
-						<button class="deleteFieldGroup">
-							<?php $this->text('DELETE'); ?>
-						</button>
+						<?php if (isset($fieldGroupContent)) : ?>
+							<?php if ($fieldGroupInfo->hasOrder()) : ?>
+								<button class="upFieldGroup">
+									<?php $this->text('UP'); ?>
+								</button>
+								<button class="downFieldGroup">
+									<?php $this->text('DOWN'); ?>
+								</button>
+							<?php endif; ?>
+							<?php if ($fieldGroupInfo->getMaxNumberOfGroups() === null
+									|| count($fieldGroupContent) < 
+										$fieldGroupInfo->getMaxNumberOfGroups()) : ?>
+								<button class="copyFieldGroup">
+									<?php $this->text('COPY'); ?>
+								</button>
+							<?php endif; ?>
+							<button class="exportFieldGroup">
+								<?php $this->text('EXPORT'); ?>
+							</button>
+							<button class="deleteFieldGroup">
+								<?php $this->text('DELETE'); ?>
+							</button>
+						<?php endif; ?>	
 					</div>
 					<div class="dialog-box hidden">
 						<div class="dialog-message"></div>
@@ -423,13 +448,38 @@ class AdminEditModuleModule extends BasicModule {
 		switch ($operation) {
 			// show a new mask for adding a new field group
 			case 'new':
-				// TODO HIER WEITER MACHEN!!!!
+				// check if maximimum is reached
+				if ($fieldGroupInfo->getMaxNumberOfGroups() === null
+						|| count($fieldGroupContent) < $fieldGroupInfo->getMaxNumberOfGroups()) {
+					$this->newFieldGroup = $fieldGroupInfo->getKey();
+				}
+				else {
+					$this->state = false;
+					$this->message = 'FIELD_GROUP_MAXIMUM_REACHED';
+					return;
+				}
 				break;
-			case 'add':
+			case 'edit':
+				// check if maximimum is reached
+				if ($fieldGroupInfo->getMaxNumberOfGroups() !== null
+						&& count($fieldGroupContent) >= $fieldGroupInfo->getMaxNumberOfGroups()) {
+					echo $fieldGroupInfo->getMaxNumberOfGroups();
+					$this->state = false;
+					$this->message = 'FIELD_GROUP_MAXIMUM_REACHED';
+					return;
+				}
+				// TODO ADD
 
 				break;
-			case 'move':
 			case 'copy':
+				// check if maximimum is reached
+				if ($fieldGroupInfo->getMaxNumberOfGroups() !== null
+						&& count($fieldGroupContent) >= $fieldGroupInfo->getMaxNumberOfGroups()) {
+					$this->state = false;
+					$this->message = 'FIELD_GROUP_MAXIMUM_REACHED';
+					return;
+				}
+			case 'move':
 			case 'delete':
 				// check selected field groups and target
 				if (!Utils::isValidFieldIntArray('fieldGroups')

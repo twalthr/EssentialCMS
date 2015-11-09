@@ -13,6 +13,7 @@ class AdminEditFieldGroupModule extends BasicModule {
 	private $state;
 	private $message;
 	private $field;
+	private $fieldGroupName;
 
 	// member variables
 	private $config; // config for page redirect after field group creation
@@ -39,14 +40,21 @@ class AdminEditFieldGroupModule extends BasicModule {
 		// for editing existing field group
 		else if (isset($parameters) && count($parameters) > 0) {
 			$this->loadFieldGroup($parameters[0]);
+			if (!isset($this->fieldGroup)) {
+				return;
+			}
+
 			// load module and field group info
-			if (isset($this->fieldGroup)) {
-				$this->loadModuleAndFieldGroupInfo($this->fieldGroup['module'], $this->fieldGroup['key']);
-				// show success message for newly created field group
-				if (!isset($this->state) && count($parameters) > 1 && $parameters[1] === '.success') {
-					$this->state = true;
-					$this->message = 'FIELD_GROUP_CREATED';
-				}
+			$this->loadModuleAndFieldGroupInfo($this->fieldGroup['module'], $this->fieldGroup['key']);
+			if (!isset($this->fieldGroupInfo)) {
+				return;
+			}
+
+			// show success message for newly created field group
+			if (!isset($this->state) && count($parameters) > 1 && $parameters[1] === '.success') {
+				$this->state = true;
+				$this->message = 'FIELD_GROUP_CREATED';
+				$this->fieldGroupName = $this->fieldGroupInfo->getName();
 			}
 		}
 		// parameters invalid
@@ -55,13 +63,12 @@ class AdminEditFieldGroupModule extends BasicModule {
 			$this->message = 'PARAMETERS_INVALID';
 		}
 
-		// load field content
-		if (isset($this->fieldGroupInfo)) {
-			$this->loadFieldsContent();
-		}
-		else {
+		if (!isset($this->fieldGroupInfo)) {
 			return;
 		}
+
+		// load field content
+		$this->loadFieldsContent();
 
 		// handle user input
 		if (Utils::getUnmodifiedStringOrEmpty('operationSpace') === 'fields') {
@@ -89,8 +96,12 @@ class AdminEditFieldGroupModule extends BasicModule {
 					<?php $this->text($this->message,
 						Utils::escapeString(
 							$this->moduleDefinition->textString(
-								$this->fieldGroupInfo->getName())
+								$this->fieldGroupName)
 						)); ?>
+				</div>
+			<?php elseif ($this->state === false && !isset($this->moduleDefinition)) : ?>
+				<div class="dialog-error-message">
+					<?php $this->text($this->message); ?>
 				</div>
 			<?php else: ?>
 				<div class="dialog-error-message">
@@ -100,7 +111,7 @@ class AdminEditFieldGroupModule extends BasicModule {
 					<?php $this->text($this->message,
 						Utils::escapeString(
 							$this->moduleDefinition->textString(
-								$this->fieldGroupInfo->getNamePlural())
+								$this->fieldGroupName)
 						)); ?>
 				</div>
 			<?php endif; ?>
@@ -138,7 +149,7 @@ class AdminEditFieldGroupModule extends BasicModule {
 					</div>
 					<div class="fields">
 						<?php $this->fieldGroupInfo->printFields($this->moduleDefinition,
-							$this->fieldsContent); ?>
+								$this->fieldsContent); ?>
 					</div>
 				</section>
 			</form>
@@ -152,16 +163,14 @@ class AdminEditFieldGroupModule extends BasicModule {
 
 	private function handleEditFieldGroup() {
 		// validate fields
-		foreach ($this->fieldGroupInfo->getFieldInfos() as $field) {
-			// check input
-			$result = $field->isValidTypeAndContentInput();
-			// validation was not successful
-			if ($result !== true) {
-				$this->state = false;
-				$this->message = $result;
-				$this->field = $field->getName();
-				return;
-			}
+		$result = $this->fieldGroupInfo->validateFields();
+		// validation was not successful
+		if ($result !== true) {
+			$this->state = false;
+			$this->message = $result[0];
+			$this->field = $result[1];
+			$this->fieldGroupName = $result[2];
+			return;
 		}
 
 		// field group does not exist yet, create new fieldgroup
@@ -179,6 +188,7 @@ class AdminEditFieldGroupModule extends BasicModule {
 					&& $numberOfFieldGroups >= $this->fieldGroupInfo->getMaxNumberOfGroups()) {
 				$this->state = false;
 				$this->message = 'FIELD_GROUP_MAXIMUM_REACHED';
+				$this->fieldGroupName = $this->fieldGroupInfo->getNamePlural();
 				return;
 			}
 			// create new field group
@@ -204,6 +214,7 @@ class AdminEditFieldGroupModule extends BasicModule {
 		if ($result === true) {
 			$this->state = true;
 			$this->message = 'FIELD_GROUP_CHANGED';
+			$this->fieldGroupName = $this->fieldGroupInfo->getName();
 
 			// redirect
 			if (isset($newFieldGroupId)) {
@@ -273,6 +284,8 @@ class AdminEditFieldGroupModule extends BasicModule {
 	private function loadFieldsContent() {
 		$fieldsContent = $this->fieldOperations->getFields($this->fieldGroup['fgid']);
 		if ($fieldsContent === false) {
+			$this->state = false;
+			$this->message = 'UNKNOWN_ERROR';
 			return;
 		}
 		$this->fieldsContent = $fieldsContent;

@@ -235,12 +235,16 @@ abstract class RichModule extends BasicModule {
 	// --------------------------------------------------------------------------------------------
 
 	final public function getFieldGroupInfoOfKey($key) {
-		foreach ($this->getFieldGroupInfo() as &$fieldGroupInfo) {
+		foreach ($this->getFieldGroupInfo() as $fieldGroupInfo) {
 			if ($fieldGroupInfo->getKey() === $key) {
 				return $fieldGroupInfo;
 			}
 		}
 		return false;
+	}
+
+	final public function getConfigAsFieldGroupInfo() {
+		return new FieldGroupInfo('config', '', '', $this->getConfigFieldInfo());
 	}
 
 	// --------------------------------------------------------------------------------------------

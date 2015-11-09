@@ -86,14 +86,12 @@ class AdminEditModuleModule extends BasicModule {
 					});
 					$('.moveFieldGroup').click(function() {
 						var form = $(this).parents('form');
-						form.find('[name="operation"]').val('move');
 						openButtonSetDialog($(this),
 							'<?php $this->text('SELECT_MOVE_TARGET'); ?>',
 							'.fieldGroupTarget, .moveConfirm');
 					});
 					$('.copyFieldGroup').click(function() {
 						var form = $(this).parents('form');
-						form.find('[name="operation"]').val('copy');
 						openButtonSetDialog($(this),
 							'<?php $this->text('SELECT_COPY_TARGET'); ?>',
 							'.fieldGroupTarget, .copyConfirm');
@@ -116,23 +114,25 @@ class AdminEditModuleModule extends BasicModule {
 					});
 					$('.deleteFieldGroup').click(function() {
 						var form = $(this).parents('form');
-						form.find('[name="operation"]').val('delete');
 						openButtonSetDialog($(this),
 							'<?php $this->text('DELETE_QUESTION'); ?>',
 							'.deleteConfirm');
 					});				
 					$('.moveConfirm').click(function() {
 						var form = $(this).parents('form');
+						form.find('[name="operation"]').val('move');
 						enableList($(this));
 						form.submit();
 					});
 					$('.copyConfirm').click(function() {
 						var form = $(this).parents('form');
+						form.find('[name="operation"]').val('copy');
 						enableList($(this));
 						form.submit();
 					});
 					$('.deleteConfirm').click(function() {
 						var form = $(this).parents('form');
+						form.find('[name="operation"]').val('delete');
 						enableList($(this));
 						form.submit();
 					});
@@ -142,6 +142,10 @@ class AdminEditModuleModule extends BasicModule {
 		<?php if (isset($this->state)) : ?>
 			<?php if ($this->state === true && !isset($this->fieldGroupName)) : ?>
 				<div class="dialog-success-message">
+					<?php $this->text($this->message); ?>
+				</div>
+			<?php elseif ($this->state === false && !isset($this->moduleDefinition)) : ?>
+				<div class="dialog-error-message">
 					<?php $this->text($this->message); ?>
 				</div>
 			<?php elseif ($this->state === false) : ?>
@@ -390,23 +394,22 @@ class AdminEditModuleModule extends BasicModule {
 							<?php if ($fieldGroupInfo->getMaxNumberOfGroups() === null
 									|| count($fieldGroups) < 
 										$fieldGroupInfo->getMaxNumberOfGroups()) : ?>
-								<button class="copyFieldGroup">
+								<button class="copyConfirm">
 									<?php $this->text('COPY'); ?>
 								</button>
 							<?php endif; ?>
-							<button class="exportFieldGroup">
+							<button class="exportFieldGroup"
+									value="<?php echo $this->moduleDefinition->getName() . '/'
+										 . $fieldGroupInfo->getKey(); ?>">
 								<?php $this->text('EXPORT'); ?>
 							</button>
-							<button class="deleteFieldGroup">
+							<button class="deleteFieldGroup disableListIfClicked">
 								<?php $this->text('DELETE'); ?>
 							</button>
 						<?php endif; ?>	
 					</div>
 					<div class="dialog-box hidden">
 						<div class="dialog-message"></div>
-						<div class="fields">
-							
-						</div>
 						<div class="options">
 							<button class="hidden deleteConfirm"><?php $this->text('DELETE'); ?></button>
 							<button class="hidden cancel"><?php $this->text('CANCEL'); ?></button>
@@ -479,7 +482,6 @@ class AdminEditModuleModule extends BasicModule {
 					if ($fieldGroup === false) {
 						$this->state = false;
 						$this->message = 'FIELD_GROUP_NOT_FOUND';
-						$this->fieldGroupName = $fieldGroupInfo->getName();
 						return;
 					}
 					$fieldGroupId = $fieldGroup['fgid'];
@@ -531,10 +533,18 @@ class AdminEditModuleModule extends BasicModule {
 
 				// handle edit
 				$result = $fieldGroupInfo->handleEditFieldGroup($fieldGroupId, $fieldsContent,
-					$this->fieldOperations, $created);
+					$this->fieldOperations, !$created);
 				if ($result === true) {
+					// no new field group anymore, since it is now an official field group
+					$this->newFieldGroup = null;
 					$this->state = true;
-					$this->message = 'FIELD_GROUP_CREATED';
+					if ($created) {
+						$this->message = 'FIELD_GROUP_CREATED';
+
+					}
+					else {
+						$this->message = 'FIELD_GROUP_CHANGED';
+					}
 					$this->fieldGroupName = $fieldGroupInfo->getName();
 				}
 				else {
@@ -552,13 +562,22 @@ class AdminEditModuleModule extends BasicModule {
 				}
 			case 'move':
 			case 'delete':
-				// check selected field groups and target
-				if (!Utils::isValidFieldIntArray('fieldGroups')
-						|| !Utils::isValidFieldInt('operationTarget')) {
+				$fieldGroupIds = [];
+				if (Utils::isValidFieldIntArray('fieldGroups')) {
+					// normalize selected field groups
+					$fieldGroupIds = array_unique(Utils::getValidFieldArray('fieldGroups'));
+				}
+				else if (Utils::isValidFieldInt('fieldGroup')) {
+					$fieldGroupIds = [Utils::getUnmodifiedStringOrEmpty('fieldGroup')];
+				}
+				else {
 					return;
 				}
-				// normalize selected field groups
-				$fieldGroupIds = array_unique(Utils::getValidFieldArray('fieldGroups'));
+				
+				// check target
+				if (!Utils::isValidFieldInt('operationTarget')) {
+					return;
+				}
 				$operationTarget = (int) Utils::getUnmodifiedStringOrEmpty('operationTarget');
 
 				// check target position
@@ -614,11 +633,18 @@ class AdminEditModuleModule extends BasicModule {
 				break;
 			case 'export':
 				// check selected field groups
-				if (!Utils::isValidFieldIntArray('fieldGroups')) {
+				$fieldGroupIds = [];
+				if (Utils::isValidFieldIntArray('fieldGroups')) {
+					// normalize selected field groups
+					$fieldGroupIds = array_unique(Utils::getValidFieldArray('fieldGroups'));
+				}
+				else if (Utils::isValidFieldInt('fieldGroup')) {
+					$fieldGroupIds = [Utils::getUnmodifiedStringOrEmpty('fieldGroup')];
+				}
+				else {
 					return;
 				}
-				// normalize selected field groups
-				$fieldGroupIds = array_unique(Utils::getValidFieldArray('fieldGroups'));
+
 				// check operationParameter1
 				if (!Utils::isValidFieldInt('operationParameter')) {
 					return;

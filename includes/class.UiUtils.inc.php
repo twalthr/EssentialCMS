@@ -3,17 +3,19 @@
 abstract class UiUtils {
 
 	public static function printHiddenTypeInput($postField, $type, $disabled) {
-		echo '<input name="' . $postField . '" type="hidden" value="' . FieldInfo::translateTypeToString($type) . '"';
+		echo '<input name="' . $postField . '" type="hidden" value="' . 
+			FieldInfo::translateTypeToString($type) . '"';
 		if ($disabled === true) {
 			echo ' disabled';
 		}
 		echo ' />';
 	}
 
-	public static function printTextInput($field, $type, $value, $disabled) {
-		$postFieldName = $field->getContentPostFieldName() . ($field->isArray() ? '[]' : '');
+	public static function printTextInput($field, $type, $value, $disabled, $uniqueId) {
+		$postFieldName = $field->generateContentName($uniqueId) . ($field->isArray() ? '[]' : '');
 		if ($field->isLargeContent()) {
-			echo '<textarea name="' . $postFieldName . '" class="' . FieldInfo::translateTypeToString($type) . '"';
+			echo '<textarea name="' . $postFieldName . '" class="' . 
+				FieldInfo::translateTypeToString($type) . '"';
 			if ($field->getMaxContentLength() !== null && $field->getMaxContentLength() > 0) {
 				echo ' maxlength="' . $field->getMaxContentLength() . '"';
 			}
@@ -34,7 +36,8 @@ abstract class UiUtils {
 			echo '</textarea>';
 		}
 		else {
-			echo '<input name="' . $postFieldName . '" type="text" class="large ' . FieldInfo::translateTypeToString($type) . '"';
+			echo '<input name="' . $postFieldName . '" type="text" class="large ' .
+				FieldInfo::translateTypeToString($type) . '"';
 			echo ' value="';
 			echo Utils::escapeString($value);
 			echo '"';

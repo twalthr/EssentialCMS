@@ -102,12 +102,19 @@ class FieldGroupInfo {
 	// Handle field group for administration
 	// --------------------------------------------------------------------------------------------
 
-	public function handleEditFieldGroup($fieldGroupId, $fieldsContent, $fieldOperations) {
+	public function handleEditFieldGroup($fieldGroupId, $fieldsContent, $fieldOperations, $newGroup) {
+		$uniqueId = null;
+		if ($newGroup === true) {
+			$uniqueId = $this->getKey() . '_';
+		}
+		else {
+			$uniqueId = $this->getKey() . '_' . $fieldGroupId;
+		}
 		// handle fields
 		$result = true;
 		foreach ($this->getFieldInfos() as $field) {
 			// save fields if not equal
-			$content = $field->getValidTypeAndContentInput();
+			$content = $field->getValidTypeAndContentInput($uniqueId);
 			$currentContent = $this->getFieldContent($fieldsContent, $field->getKey());
 
 			if (!Utils::arrayEqual($content, $currentContent, 'type', 'content')) {
@@ -158,12 +165,26 @@ class FieldGroupInfo {
 		return $value;
 	}
 
-	public function printFields($moduleDefinition, $fieldsContent) {
+	public function printFields($moduleDefinition, $fieldsContent, $groupFieldId = '') {
 		foreach ($this->getFieldInfos() as $field) {
 			$field->printFieldWithLabel(
 				$moduleDefinition,
-				$this->getFieldContent($fieldsContent, $field->getKey()));
+				$this->getFieldContent($fieldsContent, $field->getKey()),
+				$this->getKey() . '_' . $groupFieldId);
 		}
+	}
+
+	public function validateFields($groupFieldId = '') {
+		// validate fields
+		foreach ($this->getFieldInfos() as $field) {
+			// check input
+			$result = $field->isValidTypeAndContentInput($this->getKey() . '_' . $groupFieldId);
+			// validation was not successful
+			if ($result !== true) {
+				return [$result, $field->getName(), $this->getName()];
+			}
+		}
+		return true;
 	}
 
 }

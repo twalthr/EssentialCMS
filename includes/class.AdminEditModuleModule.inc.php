@@ -365,7 +365,8 @@ class AdminEditModuleModule extends BasicModule {
 							value="<?php echo $fieldGroups['order']; ?>" />
 					<?php endif; ?>
 					<div class="fields">
-						<?php $fieldGroupInfo->printFields($this->moduleDefinition, $fieldsContent); ?>
+						<?php $fieldGroupInfo->printFields($this->moduleDefinition, $fieldsContent,
+							$fieldGroups['fgid']); ?>
 					</div>
 					<div class="buttonSet">
 						<button class="editFieldGroup">
@@ -469,25 +470,10 @@ class AdminEditModuleModule extends BasicModule {
 				}
 				break;
 			case 'edit':
-				// validate fields
-				foreach ($fieldGroupInfo->getFieldInfos() as $field) {
-					// check input
-					$result = $field->isValidTypeAndContentInput();
-					// validation was not successful
-					if ($result !== true) {
-						$this->state = false;
-						$this->message = $result;
-						$this->field = $field->getName();
-						$this->fieldGroupName = $fieldGroupInfo->getName();
-						return;
-					}
-				}
-
-				// load field group
 				$fieldGroupId = null;
+				// check if field group exists
 				if (Utils::isValidFieldInt('fieldGroup')) {
 					$fieldGroupIdString = Utils::getUnmodifiedStringOrEmpty('fieldGroup');
-					// check if field group exists
 					$fieldGroup = Utils::getColumnWithValue($fieldGroupContent, 'fgid',
 						(int) $fieldGroupIdString);
 					if ($fieldGroup === false) {
@@ -498,17 +484,31 @@ class AdminEditModuleModule extends BasicModule {
 					}
 					$fieldGroupId = $fieldGroup['fgid'];
 				}
+				// check if maximimum is reached
+				else if ($fieldGroupInfo->getMaxNumberOfGroups() === null
+						|| count($fieldGroupContent) < $fieldGroupInfo->getMaxNumberOfGroups()) {
+					$this->newFieldGroup = $fieldGroupInfo->getKey();
+				}
+				else {
+					$this->state = false;
+					$this->message = 'FIELD_GROUP_MAXIMUM_REACHED';
+					return;
+				}
+
+				// validate fields
+				$result = $fieldGroupInfo->validateFields($fieldGroupId);
+				// validation was not successful
+				if ($result !== true) {
+					$this->state = false;
+					$this->message = $result[0];
+					$this->field = $result[1];
+					$this->fieldGroupName = $result[2];
+					return;
+				}
 
 				// create field group
 				$created = false;
 				if (!isset($fieldGroupId)) {
-					// check if maximimum is reached
-					if ($fieldGroupInfo->getMaxNumberOfGroups() !== null
-							&& count($fieldGroupContent) >= $fieldGroupInfo->getMaxNumberOfGroups()) {
-						$this->state = false;
-						$this->message = 'FIELD_GROUP_MAXIMUM_REACHED';
-						return;
-					}
 					// create new field group
 					$newFieldGroupId = $this->fieldGroupOperations->addFieldGroup($this->module['mid'],
 						$fieldGroupInfo->getKey());
@@ -531,7 +531,7 @@ class AdminEditModuleModule extends BasicModule {
 
 				// handle edit
 				$result = $fieldGroupInfo->handleEditFieldGroup($fieldGroupId, $fieldsContent,
-					$this->fieldOperations);
+					$this->fieldOperations, $created);
 				if ($result === true) {
 					$this->state = true;
 					$this->message = 'FIELD_GROUP_CREATED';

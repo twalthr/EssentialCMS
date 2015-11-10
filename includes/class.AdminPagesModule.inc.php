@@ -2,44 +2,46 @@
 
 class AdminPagesModule extends BasicModule {
 
+	// database operations
+	private $pageOperations;
+	private $menuItemOperations;
+
+	// UI state
 	private $state;
 	private $message;
+
+	// member variables
 	private $menu;
 	private $pages;
 
-	public function __construct(&$controller) {
-		global $CMS_VERSION, $DB;
-		parent::__construct($CMS_VERSION, 'admin-pages');
+	public function __construct($pageOperations, $menuItemOperations) {
+		parent::__construct(1, 'admin-pages');
+		$this->pageOperations = $pageOperations;
+		$this->menuItemOperations = $menuItemOperations;
+
+		// load menu items
+		$this->loadMenuItems();
+		if (!isset($this->menu)) {
+			return;
+		}
+
+		// load pages
+		$this->loadPages();
+		if (!isset($this->pages)) {
+			return;
+		}
 
 		// handle menu operations
 		if (Utils::getUnmodifiedStringOrEmpty('operationSpace') === 'menu') {
 			$this->handleMenuOperations();
+			// reload menu items
+			$this->loadMenuItems();
 		}
 		// handle page operations
 		else if (Utils::getUnmodifiedStringOrEmpty('operationSpace') === 'page') {
 			$this->handlePageOperations();
-		}
-
-		// get menu from database
-		$this->menu = $DB->valuesQuery('
-			SELECT `mpid`, `title`, `hoverTitle`, `options`
-			FROM `MenuPaths`
-			WHERE `parent` IS NULL
-			ORDER BY `order` ASC');
-		if (empty($this->menu)) {
-			$this->menu = false;
-		}
-		if ($this->menu !== false) {
-			$this->addSubMenuForEachItem($this->menu);
-		}
-
-		// get pages from database
-		$this->pages = $DB->valuesQuery('
-			SELECT `pid`, `title`, `hoverTitle`, `options`, `externalId`
-			FROM `Pages`
-			ORDER BY `pid` ASC');
-		if (empty($this->pages)) {
-			$this->pages = false;
+			// reload pages
+			$this->loadPages();
 		}
 	}
 
@@ -104,7 +106,7 @@ class AdminPagesModule extends BasicModule {
 				$('#pageDeleteConfirm').click(function() {
 				});
 				$('#pageNew').click(function() {
-					window.open('<?php echo $config->getPublicRoot()?>/admin/new-page', '_self');
+					window.open('<?php echo $config->getPublicRoot(); ?>/admin/new-page', '_self');
 				});
 			});
 		</script>
@@ -598,21 +600,55 @@ class AdminPagesModule extends BasicModule {
 		}
 	}
 
-	private function addSubMenuForEachItem(&$menu) {
-		global $DB;
+	// --------------------------------------------------------------------------------------------
+	// Database loading methods
+	// --------------------------------------------------------------------------------------------
+
+	private function loadMenuItems() {
+		$menu = $this->menuItemOperations->getParentMenuItems();
+		if ($menu === false) {
+			$this->state = false;
+			$this->message = 'UNKNOWN_ERROR';
+			return;
+		}
+		$result = $this->loadSubmenuForEachItem($menu);
+		if ($result === false) {
+			$this->state = false;
+			$this->message = 'UNKNOWN_ERROR';
+			return;
+		}
+		$this->menu = $menu;
+	}
+
+	private function loadSubmenuForEachItem(&$menu) {
 		foreach ($menu as &$item) {
-			$item['subMenu'] = $DB->valuesQuery('
-				SELECT *
-				FROM `MenuPaths`
-				WHERE `parent`=?
-				ORDER BY `order` ASC', 'i', $item['mpid']);
-			if ($item['subMenu'] === false || empty($item['subMenu'])) {
-				$item['subMenu'] = false;
+			$submenu = $this->menuItemOperations->getSubmenuItems($menu['mpid']);
+			if ($submenu === false) {
+				$this->state = false;
+				$this->message = 'UNKNOWN_ERROR';
+				return false;
+			}
+			else if (count($submenu) === 0) {
+				$item['submenu'] = [];
 			}
 			else {
-				$this->addSubMenuForEachItem($item['subMenu']);
+				$item['submenu'] = $submenu;
+				$result = $this->addSubMenuForEachItem($item['submenu']);
+				if ($result === false) {
+					return false;
+				}
 			}
 		}
+		return true;
+	}
+
+	private function loadPages() {
+		$pages = $this->pageOperations->getPages();
+		if ($pages === false) {
+			$this->state = false;
+			$this->message = 'UNKNOWN_ERROR';
+		}
+		$this->pages = $pages;
 	}
 }
 

@@ -108,6 +108,7 @@ class AdminController {
 					`mfid` INT(10) NOT NULL AUTO_INCREMENT,
 					`originalName` VARCHAR(512) NOT NULL,
 					`internalName` VARCHAR(512) NULL,
+					`copyrightInfo` VARCHAR(512) NULL,
 					`externalId` VARCHAR(256) NULL,
 					`options` INT(10) NOT NULL,
 					`lastChanged` TIMESTAMP NOT NULL,
@@ -134,8 +135,8 @@ class AdminController {
 					UNIQUE KEY `position` (`key`, `order`)
 				)
 			') && $DB->successQuery('
-				CREATE TABLE IF NOT EXISTS `MenuPaths` (
-					`mpid` INT(10) NOT NULL AUTO_INCREMENT,
+				CREATE TABLE IF NOT EXISTS `MenuItems` (
+					`miid` INT(10) NOT NULL AUTO_INCREMENT,
 					`parent` INT(10) NULL,
 					`order` INT(10) NOT NULL,
 					`title` VARCHAR(256) NOT NULL,
@@ -144,7 +145,7 @@ class AdminController {
 					`destPage` INT(10) NULL,
 					`destLink` VARCHAR(256) NULL,
 					`options` INT(10) NOT NULL,
-					PRIMARY KEY (`mpid`),
+					PRIMARY KEY (`miid`),
 					UNIQUE KEY `position` (`parent`, `order`)
 				)
 			') && $DB->successQuery('

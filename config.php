@@ -63,12 +63,4 @@ if (!$success) {
 	handleError(true, "Could not connect to database: " . $DB->getLastError());
 }
 
-// database table options
-define('MENUPATHS_OPTION_PRIVATE', 1);
-define('MENUPATHS_OPTION_BLANK', 2);
-
-define('PAGES_OPTION_PRIVATE', 1);
-
-
-
 ?>

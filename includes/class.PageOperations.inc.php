@@ -2,12 +2,21 @@
 
 final class PageOperations {
 
+	const PAGES_OPTION_PRIVATE = 1;
+
 	private $db;
 	private $moduleOperations;
 
 	public function __construct($db, $moduleOperations) {
 		$this->db = $db;
 		$this->moduleOperations = $moduleOperations;
+	}
+
+	public function getPages() {
+		return $this->db->valuesQuery('
+			SELECT `pid`, `title`, `hoverTitle`, `options`, `externalId`
+			FROM `Pages`
+			ORDER BY `pid` ASC');
 	}
 
 	public function addPage($title, $hoverTitle, $externalId, $options, $externalLastChanged) {

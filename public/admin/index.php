@@ -58,7 +58,25 @@ switch ($action) {
 		break;
 	case 'pages':
 		$controller->verifyLogin();
-		$controller->layoutLoggedInContent(1, null, null, new AdminPagesModule($controller));
+		$module = new AdminPagesModule(
+			$controller->getPageOperations(),
+			$controller->getMenuItemOperations());
+		$controller->layoutLoggedInContent(1, null, null, $module);
+		break;
+	case 'new-menu-item':
+		$controller->verifyLogin();
+		$module = new AdminEditMenuItemModule(
+			$controller->getPageOperations(),
+			$controller->getMenuItemOperations());
+		$controller->layoutLoggedInContent(1, null, null, $module);
+		break;
+	case 'menu-item':
+		$controller->verifyLogin();
+		$module = new AdminEditMenuItemModule(
+			$controller->getPageOperations(),
+			$controller->getMenuItemOperations(),
+			$parameters);
+		$controller->layoutLoggedInContent(1, null, null, $module);
 		break;
 	case 'new-page':
 		$controller->verifyLogin();
@@ -73,7 +91,8 @@ switch ($action) {
 		$module = new AdminEditPageModule(
 			$controller->getPageOperations(),
 			$controller->getModuleOperations(),
-			$controller->getMenuItemOperations(), $parameters);
+			$controller->getMenuItemOperations(),
+			$parameters);
 		$controller->layoutLoggedInContent(1, null, null, $module);
 		break;
 	case 'select-module-dialog':
@@ -91,7 +110,8 @@ switch ($action) {
 		$module = new AdminEditModuleModule(
 			$controller->getModuleOperations(),
 			$controller->getFieldGroupOperations(),
-			$controller->getFieldOperations(), $parameters);
+			$controller->getFieldOperations(),
+			$parameters);
 		$controller->layoutLoggedInContent(1, null, null, $module);
 		break;
 	case 'module-options':
@@ -99,7 +119,8 @@ switch ($action) {
 		$module = new AdminModuleConfigModule(
 			$controller->getModuleOperations(),
 			$controller->getFieldGroupOperations(),
-			$controller->getFieldOperations(), $parameters);
+			$controller->getFieldOperations(),
+			$parameters);
 		$controller->layoutLoggedInContent(1, null, null, $module);
 		break;
 	case 'field-group':
@@ -108,7 +129,8 @@ switch ($action) {
 			null,
 			$controller->getModuleOperations(),
 			$controller->getFieldGroupOperations(),
-			$controller->getFieldOperations(), $parameters);
+			$controller->getFieldOperations(),
+			$parameters);
 		$controller->layoutLoggedInContent(1, null, null, $module);
 		break;
 	case 'new-field-group':
@@ -117,13 +139,15 @@ switch ($action) {
 			$controller->getConfig(),
 			$controller->getModuleOperations(),
 			$controller->getFieldGroupOperations(),
-			$controller->getFieldOperations(), $parameters);
+			$controller->getFieldOperations(),
+			$parameters);
 		$controller->layoutLoggedInContent(1, null, null, $module);
 		break;
 	case 'export-field-group-dialog':
 		$controller->verifyLogin();
 		$module = new AdminExportFieldGroupModule(
-			$controller->getModuleOperations(), $parameters);
+			$controller->getModuleOperations(),
+			$parameters);
 		$controller->layoutDialog($module);
 		break;
 	default:

@@ -26,8 +26,7 @@ class AdminEditPageModule extends BasicModule {
 		$this->menuItemOperations = $menuItemOperations;
 
 		// page id is present
-		if (isset($parameters)
-			&& count($parameters) > 0) {
+		if (isset($parameters) && count($parameters) > 0) {
 			$this->loadPage($parameters[0]);
 		}
 		// if page is present, load modules
@@ -36,20 +35,17 @@ class AdminEditPageModule extends BasicModule {
 		}
 
 		// handle new page
-		if (!isset($this->page)
-			&& Utils::hasFields()) {
+		if (!isset($this->page) && Utils::hasFields()) {
 			$this->handleNewPage();
 		}
 		// handle edit modules
-		else if (isset($this->page)
-			&& Utils::getUnmodifiedStringOrEmpty('operationSpace') === 'module') {
+		else if (isset($this->page) && Utils::getUnmodifiedStringOrEmpty('operationSpace') === 'module') {
 			$this->handleEditModules();
 			// refresh
 			$this->loadModulesBySection();
 		}
 		// handle edit page
-		else if (isset($this->page)
-			&& Utils::getUnmodifiedStringOrEmpty('operationSpace') === 'page') {
+		else if (isset($this->page) && Utils::getUnmodifiedStringOrEmpty('operationSpace') === 'page') {
 			$this->handleEditPage();
 			// refresh
 			$this->loadPage($this->page['pid']);
@@ -197,12 +193,20 @@ class AdminEditPageModule extends BasicModule {
 							<button id="editPage" class="hiddenInEditMode">
 								<?php $this->text('EDIT_PAGE'); ?>
 							</button>
+							<input type="submit" class="hidden showInEditMode"
+								value="<?php $this->text('SAVE'); ?>" />
 							<button id="editPageCancel">
 								<?php $this->text('CANCEL'); ?>
 							</button>
 						</div>
 					<?php else : ?>
 						<h1><?php $this->text('NEW_PAGE'); ?></h1>
+						<div class="buttonSet general">
+							<input type="submit" value="<?php $this->text('CREATE'); ?>" />
+							<button id="editPageCancel">
+								<?php $this->text('CANCEL'); ?>
+							</button>
+						</div>
 					<?php endif; ?>
 					<div 
 						<?php if (isset($this->page)) : ?>
@@ -217,12 +221,12 @@ class AdminEditPageModule extends BasicModule {
 									required />
 							</div>
 							<div class="field">
-								<label for="hoverTitle"><?php $this->text('PAGE_HOVERTITLE'); ?></label>
+								<label for="hoverTitle"><?php $this->text('HOVER_TITLE'); ?></label>
 								<input type="text" name="hoverTitle" id="hoverTitle"  class="large"
 									value="<?php echo Utils::getEscapedFieldOrVariable('hoverTitle',
 										$this->page['hoverTitle']); ?>"
 									/>
-								<span class="hint"><?php $this->text('PAGE_HOVERTITLE_HINT'); ?></span>
+								<span class="hint"><?php $this->text('HOVER_TITLE_HINT'); ?></span>
 							</div>
 							<div class="field">
 								<label><?php $this->text('PAGE_DIRECT_ACCESS'); ?></label>
@@ -239,11 +243,11 @@ class AdminEditPageModule extends BasicModule {
 								</div>
 							</div>
 							<div class="field">
-								<label for="externalId"><?php $this->text('PAGE_EXTERNALID'); ?></label>
+								<label for="externalId"><?php $this->text('PAGE_EXTERNAL_ID'); ?></label>
 								<input type="text" name="externalId" id="externalId"  class="large" disabled
 									value="<?php echo Utils::getEscapedFieldOrVariable('externalId',
 										$this->page['externalId']); ?>"/>
-								<span class="hint"><?php $this->text('PAGE_EXTERNALID_HINT'); ?></span>
+								<span class="hint"><?php $this->text('PAGE_EXTERNAL_ID_HINT'); ?></span>
 							</div>
 							<div class="field">
 								<label><?php $this->text('CUSTOM_PAGE_LAST_CHANGE'); ?></label>
@@ -272,7 +276,7 @@ class AdminEditPageModule extends BasicModule {
 									<input type="checkbox" id="pageDeactivated" name="pageDeactivated"
 										value="deactivated"
 										<?php echo (Utils::getCheckedFieldOrVariableFlag('pageDeactivated',
-											$this->page['options'], PAGES_OPTION_PRIVATE))?
+											$this->page['options'], PageOperations::PAGES_OPTION_PRIVATE))?
 									 	'checked' : ''; ?> />
 									<label for="pageDeactivated" class="checkbox">
 										<?php $this->text('DEACTIVATE_PAGE'); ?>
@@ -283,13 +287,6 @@ class AdminEditPageModule extends BasicModule {
 						</div>
 						<div class="fieldsRequired">
 							<?php $this->text('REQUIRED'); ?>
-						</div>
-						<div class="buttonSet">
-							<?php if (isset($this->page)) : ?>
-								<input type="submit" value="<?php $this->text('SAVE'); ?>" />
-							<?php else: ?>
-								<input type="submit" value="<?php $this->text('CREATE_PAGE'); ?>" />
-							<?php endif; ?>
 						</div>
 					</div>
 				</section>
@@ -600,7 +597,7 @@ class AdminEditPageModule extends BasicModule {
 		}
 		if (!Utils::isValidFieldNoLinebreak('hoverTitle', 256)) {
 			$this->state = false;
-			$this->message = 'INVALID_PAGE_HOVER_TITLE';
+			$this->message = 'INVALID_HOVER_TITLE';
 			return false;
 		}
 		if (Utils::isChecked('pageDirectAccess')
@@ -631,7 +628,7 @@ class AdminEditPageModule extends BasicModule {
 			if ($this->menuItemOperations->isValidExternalId($externalId)
 				|| $this->pageOperations->isValidExternalId($externalId)) {
 				$this->state = false;
-				$this->message = 'PAGE_EXTERNALID_EXISTS';
+				$this->message = 'PAGE_EXTERNAL_ID_EXISTS';
 				return;
 			}
 		}
@@ -640,7 +637,7 @@ class AdminEditPageModule extends BasicModule {
 			Utils::getValidFieldString('title'),
 			Utils::getValidFieldStringOrNull('hoverTitle'),
 			$externalId,
-			Utils::isChecked('pageDeactivated')? PAGES_OPTION_PRIVATE : 0,
+			Utils::isChecked('pageDeactivated')? PageOperations::PAGES_OPTION_PRIVATE : 0,
 			Utils::isChecked('pageCustomLastChange')? 
 				Utils::getValidFieldString('externalLastChanged') : null);
 
@@ -676,7 +673,7 @@ class AdminEditPageModule extends BasicModule {
 				if ($this->menuItemOperations->isValidExternalId($externalId)
 					|| $this->pageOperations->isValidExternalId($externalId)) {
 					$this->state = false;
-					$this->message = 'PAGE_EXTERNALID_EXISTS';
+					$this->message = 'PAGE_EXTERNAL_ID_EXISTS';
 					return;
 				}
 				$updateColumns['externalId'] = $externalId;
@@ -686,11 +683,13 @@ class AdminEditPageModule extends BasicModule {
 			$updateColumns['externalId'] = null;
 		}
 		// check for updated options
-		if (Utils::isChecked('pageDeactivated') && !($this->page['options'] & PAGES_OPTION_PRIVATE)) {
-			$updateColumns['options'] = $this->page['options'] | PAGES_OPTION_PRIVATE;
+		if (Utils::isChecked('pageDeactivated')
+				&& !($this->page['options'] & PageOperations::PAGES_OPTION_PRIVATE)) {
+			$updateColumns['options'] = $this->page['options'] | PageOperations::PAGES_OPTION_PRIVATE;
 		}
-		else if (!Utils::isChecked('pageDeactivated') && ($this->page['options'] & PAGES_OPTION_PRIVATE)) {
-			$updateColumns['options'] = $this->page['options'] & ~PAGES_OPTION_PRIVATE;
+		else if (!Utils::isChecked('pageDeactivated')
+				&& ($this->page['options'] & PageOperations::PAGES_OPTION_PRIVATE)) {
+			$updateColumns['options'] = $this->page['options'] & ~PageOperations::PAGES_OPTION_PRIVATE;
 		}
 		// check for updated externalLastChanged
 		if (Utils::isChecked('pageCustomLastChange')) {
@@ -725,13 +724,13 @@ class AdminEditPageModule extends BasicModule {
 			$this->message = 'PAGE_NOT_FOUND';
 			return;
 		}
-		$result = $this->pageOperations->getPage($pageId);
-		if ($result === false) {
+		$page = $this->pageOperations->getPage($pageId);
+		if ($page === false) {
 			$this->state = false;
 			$this->message = 'PAGE_NOT_FOUND';
 			return;
 		}
-		$this->page = $result;
+		$this->page = $page;
 	}
 
 	private function loadModulesBySection() {

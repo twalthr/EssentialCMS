@@ -175,11 +175,11 @@ input[type='submit'], button {
 	margin-bottom: 20px;
 }
 
-input[type='checkbox'] {
+input[type='checkbox'], input[type='radio'] {
 	display: none;
 }
 
-input[type='checkbox'] + label.checkbox {
+input[type='checkbox'] + label.checkbox, input[type='radio'] + label.checkbox {
 	display: inline-block;
 	padding: 0;
 	width: 12px;
@@ -194,28 +194,33 @@ input[type='checkbox'] + label.checkbox {
 	margin-right: 20px;
 }
 
-input[type='checkbox'] + label.checkbox:hover {
+input[type='radio'] + label.checkbox {
+	border-radius: 6px;
+}
+
+input[type='checkbox'] + label.checkbox:hover, input[type='radio'] + label.checkbox:hover {
 	background-color: #CCCCCC;
 	border: 1px solid #B5B4B4;
 }
 
-input[type='checkbox']:checked + label.checkbox {
+input[type='checkbox']:checked + label.checkbox, input[type='radio']:checked + label.checkbox {
 	background-color: #999999;
 	border: 1px solid #B5B4B4;
 }
 
-input[type='checkbox']:checked + label.checkbox:hover {
+input[type='checkbox']:checked + label.checkbox:hover, input[type='radio']:checked + label.checkbox:hover {
 	background-color: #777777;
 	border: 1px solid #B5B4B4;
 }
 
-input[type='checkbox']:disabled + label.checkbox:hover {
+input[type='checkbox']:disabled + label.checkbox:hover, input[type='radio']:disabled + label.checkbox:hover {
 	background-color: #EAEAEA;
 	border: 1px solid #DCDCDC;
 	cursor: default;
 }
 
-input[type='checkbox']:checked:disabled + label.checkbox:hover {
+input[type='checkbox']:checked:disabled + label.checkbox:hover,
+input[type='radio']:checked:disabled + label.checkbox:hover {
 	background-color: #999999;
 	border: 1px solid #B5B4B4;
 	cursor: default;
@@ -453,7 +458,8 @@ body>.page>*:nth-last-child(2) {
 	margin-bottom: 20px;
 }
 
-.dialog-box .dialog-message:last-child, .dialog-box .dialog-error-message:last-child, .dialog-box .dialog-success-message:last-child {
+.dialog-box .dialog-message:last-child, .dialog-box .dialog-error-message:last-child,
+.dialog-box .dialog-success-message:last-child {
 	margin-bottom: 0px
 }
 

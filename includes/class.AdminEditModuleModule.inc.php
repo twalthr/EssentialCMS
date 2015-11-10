@@ -1,5 +1,7 @@
 <?php
 
+// v1: FEATURE COMPLETE
+
 class AdminEditModuleModule extends BasicModule {
 
 	// database operations
@@ -15,12 +17,12 @@ class AdminEditModuleModule extends BasicModule {
 	private $newFieldGroup;
 
 	// member variables
-	private $module;
+	private $module; // module information from database
 	private $moduleInfo; // translated name and description
 	private $moduleDefinition; // instance of RichModule
 
-	public function __construct(
-			$moduleOperations, $fieldGroupOperations, $fieldOperations, $parameters = null) {
+	public function __construct($moduleOperations, $fieldGroupOperations, $fieldOperations,
+			$parameters = null) {
 		parent::__construct(1, 'admin-edit-module');
 		$this->moduleOperations = $moduleOperations;
 		$this->fieldGroupOperations = $fieldGroupOperations;
@@ -303,7 +305,7 @@ class AdminEditModuleModule extends BasicModule {
 								Utils::escapeString(
 									$this->moduleDefinition->textString($fieldGroupInfo->getNamePlural())
 								)); ?>
-						</p>;
+						</p>
 					<?php endif; ?>
 					<ul class="tableLike enableButtonsIfChecked">
 						<?php foreach ($fieldGroups as $fieldGroup) : ?>
@@ -337,7 +339,11 @@ class AdminEditModuleModule extends BasicModule {
 						<?php endif; ?>
 						<?php if ($fieldGroupInfo->getMaxNumberOfGroups() === null
 								|| count($fieldGroups) < $fieldGroupInfo->getMaxNumberOfGroups()) : ?>
-							<button class="copyFieldGroup disableListIfClicked" disabled>
+							<?php if ($fieldGroupInfo->hasOrder()) : ?>
+								<button class="copyFieldGroup disableListIfClicked" disabled>
+							<?php else : ?>
+								<button class="copyConfirm" disabled>
+							<?php endif; ?>
 								<?php $this->text('COPY'); ?>
 							</button>
 						<?php endif; ?>
@@ -657,12 +663,32 @@ class AdminEditModuleModule extends BasicModule {
 					return;
 				}
 
+				// check for export to itself
+				if ($targetModule['mid'] === $this->module['mid']) {
+					return;
+				}
+
+				// count field groups in target
+				$count = $this->fieldGroupOperations->getNumberOfFieldGroups($targetModule['mid'],
+					$fieldGroupInfo->getKey());
+				if ($count === false) {
+					return;
+				}
+
 				// foreach field group
 				$result = true;
 				foreach ($fieldGroupIds as $fieldGroupId) {
 					// check if field group exists
 					$fieldGroup = Utils::getColumnWithValue($fieldGroupContent, 'fgid', (int) $fieldGroupId);
 					if ($fieldGroup === false) {
+						return;
+					}
+
+					// check if maximimum is reached
+					if ($fieldGroupInfo->getMaxNumberOfGroups() !== null
+							&& $count++ >= $fieldGroupInfo->getMaxNumberOfGroups()) {
+						$this->state = false;
+						$this->message = 'FIELD_GROUP_MAXIMUM_REACHED';
 						return;
 					}
 

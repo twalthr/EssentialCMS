@@ -85,7 +85,9 @@ function generateIdentifierFromString(str) {
 	return str
 		.toLowerCase()
 		.replace(/\s/g,'-')
-		.replace(/([^.:0-9a-zA-Z+_-]|[^0-9a-zA-Z]$)/g,'');
+		.replace(/([^.:0-9a-zA-Z+_-]|[^0-9a-zA-Z]$)/g,'')
+		.replace(/-+/g, '-')
+		.replace(/-+$/g, '');
 }
 
 function generateDate() {

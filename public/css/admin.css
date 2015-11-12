@@ -310,7 +310,7 @@ label {
 	text-align: left;
 }
 
-.fields .field .hint {
+.fields .field .hint, .fields .field .inputOption {
 	padding-left: 20px;
 }
 

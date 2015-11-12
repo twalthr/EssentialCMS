@@ -38,22 +38,34 @@ class AdminEditMenuItemModule extends BasicModule {
 
 	public function printContent($config) {
 		?>
-		<?php if (isset($this->menuItem)) : ?>
 			<script type="text/javascript">
 				$(document).ready(function() {
 					$('#cancel').click(function() {
 						window.open('<?php echo $config->getPublicRoot(); ?>/admin/pages', '_self');
 					});
-					$('#title').change(function() {
+					$('#externalId').focus(function() {
 						var externalId = $('#externalId');
-						externalId.prop('disabled', !$(this).prop('checked'));
-						if (!externalId.prop('disabled') && externalId.val().length == 0)  {
+						if (externalId.val().length == 0) {
 							externalId.val(generateIdentifierFromString($('#title').val()));
+						}
+					});
+					$('#targets input').change(function() {
+						var input = $(this);
+						if (input.val() == 'no') {
+							$('#targetPage').addClass('hidden');
+							$('#targetWebsite').addClass('hidden');
+						}
+						else if (input.val() == 'page') {
+							$('#targetPage').removeClass('hidden');
+							$('#targetWebsite').addClass('hidden');
+						}
+						else if (input.val() == 'link') {
+							$('#targetPage').addClass('hidden');
+							$('#targetWebsite').removeClass('hidden');
 						}
 					});
 				});
 			</script>
-		<?php endif; ?>
 		<?php if (isset($this->state)) : ?>
 			<?php if ($this->state === true) : ?>
 				<div class="dialog-success-message">
@@ -104,7 +116,7 @@ class AdminEditMenuItemModule extends BasicModule {
 						</div>
 						<div class="field">
 							<label><?php $this->text('TARGET'); ?></label>
-							<div class="checkboxGroup">
+							<div class="checkboxGroup" id="targets">
 								<div class="checkboxWrapper">
 									<input type="radio" id="target1" name="target"
 										value="no" />
@@ -130,6 +142,20 @@ class AdminEditMenuItemModule extends BasicModule {
 									<?php $this->text('MENU_ITEM_TARGET_LINK'); ?>
 								</div>
 							</div>
+						</div>
+						<div class="field hidden" id="targetPage">
+							<label for="pageSelect"><?php $this->text('MENU_ITEM_PAGE'); ?></label>
+							<input type="text" name="pageName" class="large selectedPageName"
+								disabled />
+							<span class="inputOption">
+								<input type="hidden" name="pageId" id="pageId" class="selectedPageId" />
+								<button class="pageSelect"><?php $this->text('SELECT'); ?></button>
+							</span>
+						</div>
+						<div class="field hidden" id="targetWebsite">
+							<label for="website"><?php $this->text('MENU_ITEM_WEBSITE'); ?></label>
+							<input type="text" name="page" id="website" class="large" />
+							<span class="hint"><?php $this->text('WEBSITE_HINT'); ?></span>
 						</div>
 						<div class="field">
 							<label for="hoverTitle"><?php $this->text('HOVER_TITLE'); ?></label>

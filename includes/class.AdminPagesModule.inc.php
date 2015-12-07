@@ -199,23 +199,23 @@ class AdminPagesModule extends BasicModule {
 		}
 		foreach ($menu as &$item) {
 			echo '<li>';
-			echo '<input type="checkbox" id="menuitem' . $item['mpid'] . '" name="menuitem[]"';
-			echo ' value="' . $item['mpid'] . '" class="propagateChecked" />';
-			echo '<label for="menuitem' . $item['mpid'] . '" class="checkbox">';
+			echo '<input type="checkbox" id="menuitem' . $item['miid'] . '" name="menuitem[]"';
+			echo ' value="' . $item['miid'] . '" class="propagateChecked" />';
+			echo '<label for="menuitem' . $item['miid'] . '" class="checkbox">';
 			echo Utils::escapeString($item['title']) .' </label>';
-			echo '<a href="' . $config->getPublicRoot() . '/admin/menu-item/' . $item['mpid'] . '"';
+			echo '<a href="' . $config->getPublicRoot() . '/admin/menu-item/' . $item['miid'] . '"';
 			if (Utils::hasStringContent($item['hoverTitle'])) {
 				echo ' title="' . Utils::escapeString($item['hoverTitle']) . '"';
 			}
-			if ($item['options'] & MENUPATHS_OPTION_PRIVATE) {
+			if ($item['options'] & MenuItemOperations::MENU_ITEMS_OPTION_PRIVATE) {
 				echo ' class="private componentLink"';
 			}
 			else {
 				echo ' class="componentLink"';
 			}
 			echo '>' . Utils::escapeString($item['title']) . '</a>';
-			if ($item['subMenu'] !== false) {
-				$this->printMenu($item['subMenu'], $config, false);
+			if ($item['submenu'] !== false) {
+				$this->printMenu($item['submenu'], $config, false);
 			}
 		}
 		echo '</ul>';
@@ -223,11 +223,11 @@ class AdminPagesModule extends BasicModule {
 
 	private function printSelect(&$menu, $level) {
 		foreach ($menu as &$item) {
-			echo '<option value="' . $item['mpid']. '">';
+			echo '<option value="' . $item['miid']. '">';
 			echo str_repeat('&nbsp;', $level);
 			echo Utils::escapeString($item['title']) . '</option>';
-			if ($item['subMenu'] !== false) {
-				$this->printSelect($item['subMenu'], $level + 1);
+			if ($item['submenu'] !== false) {
+				$this->printSelect($item['submenu'], $level + 1);
 			}
 		}
 	}
@@ -332,7 +332,7 @@ class AdminPagesModule extends BasicModule {
 		$uniqueMenuitems = array_unique(Utils::getValidFieldArray('menuitem'));
 		// check for existence of all menuitems
 		foreach ($uniqueMenuitems as $menuitem) {
-			if(!$DB->resultQuery('SELECT `mpid` FROM `MenuPaths` WHERE `mpid`=?', 'i', $menuitem)) {
+			if(!$DB->resultQuery('SELECT `miid` FROM `MenuPaths` WHERE `miid`=?', 'i', $menuitem)) {
 				return;
 			}
 		}
@@ -346,7 +346,7 @@ class AdminPagesModule extends BasicModule {
 					$result &= $DB->impactQuery('
 						UPDATE `MenuPaths`
 						SET `options` = `options` & ~' . MENUPATHS_OPTION_PRIVATE . '
-						WHERE `mpid`=?', 'i', $menuitem);
+						WHERE `miid`=?', 'i', $menuitem);
 				}
 
 				if ($result) {
@@ -360,7 +360,7 @@ class AdminPagesModule extends BasicModule {
 					$result &= $DB->impactQuery('
 						UPDATE `MenuPaths`
 						SET `options` = `options` | ' . MENUPATHS_OPTION_PRIVATE . '
-						WHERE `mpid`=?', 'i', $menuitem);
+						WHERE `miid`=?', 'i', $menuitem);
 				}
 
 				if ($result) {
@@ -378,9 +378,9 @@ class AdminPagesModule extends BasicModule {
 
 				// normalize target
 				$target = $DB->valueQuery('
-					SELECT `mpid`, `parent`, `order`
+					SELECT `miid`, `parent`, `order`
 					FROM `MenuPaths`
-					WHERE `mpid`=?',
+					WHERE `miid`=?',
 					'i', Utils::getValidFieldString('target'));
 				// check for existence of target
 				if ($target === false) {
@@ -401,7 +401,7 @@ class AdminPagesModule extends BasicModule {
 
 					// check that target is not part of the group
 					if ($operation === 'move') {
-						if (in_array($target['mpid'], $group)) {
+						if (in_array($target['miid'], $group)) {
 							$this->state = false;
 							$this->message = 'MENU_ITEMS_NO_RECURSIVE_MOVE';
 							return;
@@ -465,8 +465,8 @@ class AdminPagesModule extends BasicModule {
 	private function deleteGroup(&$group) {
 		global $DB;
 		$topElement = $DB->valueQuery('
-			SELECT `mpid`, `parent`, `order`
-			FROM `MenuPaths` WHERE `mpid`=?',
+			SELECT `miid`, `parent`, `order`
+			FROM `MenuPaths` WHERE `miid`=?',
 			'i', $group[0]);
 		if ($topElement === false) {
 			return false;
@@ -474,8 +474,8 @@ class AdminPagesModule extends BasicModule {
 		
 		$result = true;
 		// delete the group
-		foreach ($group as $mpid) {
-			$result &= $DB->impactQuery('DELETE FROM `MenuPaths` WHERE `mpid`=?', 'i', $mpid);
+		foreach ($group as $miid) {
+			$result &= $DB->impactQuery('DELETE FROM `MenuPaths` WHERE `miid`=?', 'i', $miid);
 		}
 		// refresh the order of neighbours
 		if ($topElement['parent'] == null) {
@@ -496,7 +496,7 @@ class AdminPagesModule extends BasicModule {
 	private function copyGroup(&$group, &$target, $mode) {
 		global $DB;
 		// load group
-		$topElement = $DB->valueQuery('SELECT * FROM `MenuPaths` WHERE `mpid`=?', 'i', $group[0]);
+		$topElement = $DB->valueQuery('SELECT * FROM `MenuPaths` WHERE `miid`=?', 'i', $group[0]);
 		if ($topElement === false) {
 			return false;
 		}
@@ -532,8 +532,8 @@ class AdminPagesModule extends BasicModule {
 			if ($newId === false) {
 				return false;
 			}
-			if ($topElement['subMenu'] !== false
-				&& $this->insertSubMenu($topElement['subMenu'], $newId) === false) {
+			if ($topElement['submenu'] !== false
+				&& $this->insertSubMenu($topElement['submenu'], $newId) === false) {
 				return false;
 			}
 		}
@@ -542,21 +542,21 @@ class AdminPagesModule extends BasicModule {
 				SELECT COUNT(*) AS count
 				FROM `MenuPaths`
 				WHERE `parent`=?',
-				'i', $target['mpid'])[0]['count'];
+				'i', $target['miid'])[0]['count'];
 
 			$newId = $DB->impactQueryWithId('
 				INSERT INTO `MenuPaths`
 				(`parent`, `order`, `title`, `hoverTitle`, `externalId`, `destPage`, `destLink`, `options`)
 				VALUES (?,?,?,?,?,?,?,?)',
 				'iisssisi',
-				$target['mpid'], $targetMax,
+				$target['miid'], $targetMax,
 				$topElement['title'], $topElement['hoverTitle'], $topElement['externalId'], $topElement['destPage'],
 				$topElement['destLink'], $topElement['options']);
 			if ($newId === false) {
 				return false;
 			}
-			if ($topElement['subMenu'] !== false
-				&& $this->insertSubMenu($topElement['subMenu'], $newId) === false) {
+			if ($topElement['submenu'] !== false
+				&& $this->insertSubMenu($topElement['submenu'], $newId) === false) {
 				return false;
 			}
 		}
@@ -579,8 +579,8 @@ class AdminPagesModule extends BasicModule {
 				return false;
 			}
 			$order++;
-			if ($item['subMenu'] !== false && !empty($item['subMenu'])) {
-				if ($this->insertSubMenu($item['subMenu'], $newId) === false) {
+			if ($item['submenu'] !== false && !empty($item['submenu'])) {
+				if ($this->insertSubMenu($item['submenu'], $newId) === false) {
 					return false;
 				}
 			}
@@ -590,13 +590,13 @@ class AdminPagesModule extends BasicModule {
 
 	private function addIdsOfSubMenuItems(&$array, $parent) {
 		global $DB;
-		$submenuItems = $DB->valuesQuery('SELECT `mpid` FROM `MenuPaths` WHERE `parent`=?', 'i', $parent);
+		$submenuItems = $DB->valuesQuery('SELECT `miid` FROM `MenuItems` WHERE `parent`=?', 'i', $parent);
 		if ($submenuItems === false) {
 			return;
 		}
 		foreach ($submenuItems as $submenuItem) {
-			$array[] = $submenuItem['mpid'];
-			$this->addIdsOfSubMenuItems($array, $submenuItem['mpid']);
+			$array[] = $submenuItem['miid'];
+			$this->addIdsOfSubMenuItems($array, $submenuItem['miid']);
 		}
 	}
 
@@ -622,7 +622,7 @@ class AdminPagesModule extends BasicModule {
 
 	private function loadSubmenuForEachItem(&$menu) {
 		foreach ($menu as &$item) {
-			$submenu = $this->menuItemOperations->getSubmenuItems($menu['mpid']);
+			$submenu = $this->menuItemOperations->getSubmenuItems($item['miid']);
 			if ($submenu === false) {
 				$this->state = false;
 				$this->message = 'UNKNOWN_ERROR';

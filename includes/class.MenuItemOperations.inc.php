@@ -4,6 +4,7 @@ final class MenuItemOperations {
 
 	const MENU_ITEMS_OPTION_PRIVATE = 1;
 	const MENU_ITEMS_OPTION_BLANK = 2;
+	const MENU_ITEMS_OPTION_HIDDEN = 4;
 
 	private $db;
 
@@ -41,6 +42,11 @@ final class MenuItemOperations {
 			SELECT *
 			FROM `MenuItems`
 			WHERE `miid`=?', 'i', $miid);
+	}
+
+	public function addMenuItem($parent, $order, $title, $hoverTitle, $externalId, $destPage, $destLink,
+			$options) {
+
 	}
 }
 

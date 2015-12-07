@@ -1,28 +1,37 @@
 $(document).ready(function(){
-	$('.propagateChecked').change(function() {
+	var rootUrl = $('head script[src$="/js/admin.js"]').prop('src').slice(0,-12);
+	// --------------------------------------------------------------------------------------------
+	// General functionality for administration
+	// --------------------------------------------------------------------------------------------
+
+	$(document).on('change', '.propagateChecked', function() {
 		var el = $(this);
 		el.parent().find('input[type="checkbox"]').prop('checked', el.prop('checked'));
 	});
-	$('.enableButtonsIfChecked').each(function() {
-		var list = $(this);
-		list.find('input[type="checkbox"]')
-			.change(function() {
-				var disabled = list.find('input[type="checkbox"]:checked').length == 0;
-				list.siblings('.buttonSet').find('button').prop('disabled', disabled);
-			});
+	$(document).on('change', '.enableButtonsIfChecked input[type="checkbox"],' + 
+			'.enableButtonsIfChecked input[type="radio"]', function() {
+		var list = $(this).closest('.enableButtonsIfChecked');
+		var disabled = list.find('input[type="checkbox"]:checked, input[type="radio"]:checked')
+			.length == 0;
+		list.siblings('.buttonSet').find('button').prop('disabled', disabled);
 	});
-	$('.disableListIfClicked').click(function() {
+	$(document).on('click', '.disableListIfClicked', function() {
 		var list = $(this).closest('.buttonSet').prev();
-		list.find('input[type="checkbox"]').prop('disabled', true);
+		list.find('input[type="checkbox"], input[type="radio"]').prop('disabled', true);
 		// hide add button
 		list.parent().find('.addButton').addClass('hidden');
 		// hide button of buttonSet
 		list.siblings('.buttonSet').find('button').addClass('hidden');
 	});
-	$('button').click(function(e) {
+	$(document).on('click', 'button', function(e) {
 		e.preventDefault();
 	});
-	$('.tabBox .tabs a').click(function() {
+
+	// --------------------------------------------------------------------------------------------
+	// Visualize fields for administration
+	// --------------------------------------------------------------------------------------------
+
+	$(document).on('click', '.tabBox .tabs a', function() {
 		var tab = $(this).parent();
 		tab.siblings().removeClass('current');
 		tab.addClass('current');
@@ -31,21 +40,39 @@ $(document).ready(function(){
 		tabContent.find(':input').prop('disabled', true);
 		var openedTab = $(tabContent.get(tab.index()));
 		openedTab.removeClass('hidden');
-		openedTab.find(':input').prop('disabled', false);
+		openedTab.find(':input:not(.neverEnable)').prop('disabled', false);
 	});
-	$('.arrayElementOptions .remove').click(function() {
+	$(document).on('click', '.arrayElementOptions .remove', function() {
 		var button = $(this);
 		button.closest('.arrayElement').remove();
 	});
-	$('.arrayOptions .add').click(function() {
+	$(document).on('click', '.arrayOptions .add', function() {
 		var button = $(this);
 		var newArrayElement = button
 				.siblings('.template')
 				.clone(true);
-		newArrayElement.find(':input').prop('disabled', false);
+		newArrayElement.find(':input:not(.neverEnable)').prop('disabled', false);
 		newArrayElement.find('.hidden :input').prop('disabled', true);
 		newArrayElement.removeClass('hidden');
 		button.parent().before(newArrayElement);
+	});
+	$(document).on('click', '.pageSelectionButton', function() {
+		var button = $(this);
+		var idInput = button.siblings('.pageSelectionId');
+		var lightboxOpened = function() {
+			$('input:checked').trigger('change');
+			$('.dialog-window .selectPage').click(function() {
+				var page = $('.dialog-window input[name="page"]:checked');
+				var label = page.siblings('label');
+				idInput.val(page.val());
+				button.siblings('.pageSelectionName').val(
+					label.text().trim() + ' / ' + page.val());
+				closeLightbox();
+			});
+		};
+		openLightboxWithUrl(rootUrl + '/admin/select-page-dialog/' + idInput.val(),
+			true,
+			lightboxOpened);
 	});
 });
 

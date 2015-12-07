@@ -5,8 +5,7 @@ class AdminSelectModuleModule extends BasicModule {
 	private $modules;
 
 	public function __construct(&$controller) {
-		global $CMS_VERSION;
-		parent::__construct($CMS_VERSION, 'admin-select-module');
+		parent::__construct(1, 'admin-select-module');
 
 		$this->loadModules();
 	}

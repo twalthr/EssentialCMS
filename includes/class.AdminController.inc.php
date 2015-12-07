@@ -8,6 +8,7 @@ class AdminController {
 	private $fieldGroupOperations;
 	private $moduleOperations;
 	private $pageOperations;
+	private $globalOperations;
 
 	public function __construct() {	
 		global $DB, $PUBLIC_ROOT, $CMS_FULLNAME, $CMS_URL;
@@ -22,6 +23,8 @@ class AdminController {
 		$this->fieldGroupOperations = new FieldGroupOperations($DB, $this->fieldOperations);
 		$this->moduleOperations = new ModuleOperations($DB, $this->fieldGroupOperations);
 		$this->pageOperations = new PageOperations($DB, $this->moduleOperations);
+		$this->globalOperations = new GlobalOperations($this->menuItemOperations,
+			$this->pageOperations);
 	}
 
 	public function layoutDialog(...$contentModules) {
@@ -143,7 +146,7 @@ class AdminController {
 					`hoverTitle` VARCHAR(256) NULL,
 					`externalId` VARCHAR(256) NOT NULL,
 					`destPage` INT(10) NULL,
-					`destLink` VARCHAR(256) NULL,
+					`destLink` VARCHAR(1024) NULL,
 					`options` INT(10) NOT NULL,
 					PRIMARY KEY (`miid`),
 					UNIQUE KEY `position` (`parent`, `order`)
@@ -255,6 +258,10 @@ class AdminController {
 
 	public function getConfig() {
 		return $this->config;
+	}
+
+	public function getGlobalOperations() {
+		return $this->globalOperations;
 	}
 
 	public function getMenuItemOperations() {

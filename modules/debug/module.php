@@ -75,6 +75,13 @@ class DebugModule extends RichModule {
 			true
 			);
 
+		// page
+		$config[] = new FieldInfo(
+			'field6', // key
+			FieldInfo::TYPE_PAGE, // allowedTypes
+			'FIELD_6' // name
+			);
+
 		return $config;
 	}
 
@@ -103,6 +110,39 @@ class DebugModule extends RichModule {
 			null, // additionalNames
 			FieldInfo::TYPE_HTML, // defaultType
 			'<b>COOL</b>' // defaultContent
+			);
+
+		// page
+		$fields[] = new FieldInfo(
+			'field3', // key
+			FieldInfo::TYPE_PAGE, // allowedTypes
+			'FIELD_3', // name
+			false,
+			true
+			);
+
+		// array of mixed small type required
+		$fields[] = new FieldInfo(
+			'field4', // key
+			FieldInfo::TYPE_PLAIN | FieldInfo::TYPE_HTML | FieldInfo::TYPE_MARKDOWN, // allowedTypes
+			'FIELD_4', // name
+			true
+			);
+
+		// array of one type required
+		$fields[] = new FieldInfo(
+			'field5', // key
+			FieldInfo::TYPE_PLAIN, // allowedTypes
+			'FIELD_5', // name
+			true
+			);
+
+		// array of with page type required
+		$fields[] = new FieldInfo(
+			'field6', // key
+			FieldInfo::TYPE_PLAIN | FieldInfo::TYPE_PAGE, // allowedTypes
+			'FIELD_6', // name
+			true
 			);
 
 
@@ -135,6 +175,13 @@ class DebugModule extends RichModule {
 			null, // additionalNames
 			FieldInfo::TYPE_HTML, // defaultType
 			'<b>COOL</b>' // defaultContent
+			);
+
+		// page
+		$fieldGroup2[] = new FieldInfo(
+			'field3', // key
+			FieldInfo::TYPE_PAGE, // allowedTypes
+			'FIELD_3' // name
 			);
 
 

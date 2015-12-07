@@ -60,6 +60,29 @@ abstract class UiUtils {
 		}
 	}
 
+	public static function printPageSelection($moduleDefinition, $field, $value, $disabled, $uniqueId) {
+		$postFieldName = $field->generateContentName($uniqueId) . ($field->isArray() ? '[]' : '');
+		echo '<div class="inputWithOption">';
+		echo '	<input type="hidden" name="' . $postFieldName . '" class="pageSelectionId"';
+		echo '		value="';
+		echo Utils::escapeString($value);
+		echo '" />';
+
+		echo '<input type="text" class="large pageSelectionName neverEnable" disabled';
+		echo '	value="';
+		echo Utils::escapeString($value);
+		echo '" />';
+		
+		echo '	<button class="pageSelectionButton"';
+		if (!$field->isArray()) {
+			echo ' id="' . $postFieldName . '"';
+		}
+		echo '>';
+		$moduleDefinition->text('SELECT');
+		echo '	</button>';
+		echo '</div>';
+	}
+
 }
 
 ?>

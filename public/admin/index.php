@@ -66,8 +66,8 @@ switch ($action) {
 	case 'new-menu-item':
 		$controller->verifyLogin();
 		$module = new AdminEditMenuItemModule(
-			$controller->getPageOperations(),
-			$controller->getMenuItemOperations());
+			$controller->getMenuItemOperations(),
+			$controller->getGlobalOperations());
 		$controller->layoutLoggedInContent(1, null, null, $module);
 		break;
 	case 'menu-item':
@@ -99,10 +99,18 @@ switch ($action) {
 		$controller->verifyLogin();
 		$controller->layoutDialog(new AdminSelectModuleModule($controller));
 		break;
+	case 'select-page-dialog':
+		$controller->verifyLogin();
+		$module = new AdminSelectPageModule(
+			$controller->getPageOperations(),
+			$parameters);
+		$controller->layoutDialog($module);
+		break;
 	case 'export-module-dialog':
 		$controller->verifyLogin();
 		$module = new AdminExportModuleModule(
-			$controller->getPageOperations(), $parameters);
+			$controller->getPageOperations(),
+			$parameters);
 		$controller->layoutDialog($module);
 		break;
 	case 'module':

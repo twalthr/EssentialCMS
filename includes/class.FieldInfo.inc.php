@@ -325,12 +325,12 @@ class FieldInfo {
 				if (filter_var($trimmedContent, FILTER_VALIDATE_INT) === false) {
 					$validInt = false;
 				}
+				if ($validInt === false && $length > 0) {
+					return 'FIELD_INVALID_TYPE';
+				}
 				// check required
 				if ($this->required === true && $validInt === false) {
 					return 'FIELD_IS_REQUIRED';
-				}
-				else if ($validInt === false && $length > 0) {
-					return 'FIELD_INVALID_TYPE';
 				}
 				// check min length
 				if ($this->minContentLength !== null && ((int) $trimmedContent) < $this->minContentLength) {
@@ -405,6 +405,9 @@ class FieldInfo {
 	}
 
 	private function transformContentForType($type, $trimmedContent) {
+		if ($trimmedContent === '') {
+			return '';
+		}
 		switch ($type) {
 			case FieldInfo::TYPE_PLAIN:
 			case FieldInfo::TYPE_HTML:
@@ -436,7 +439,6 @@ class FieldInfo {
 		}
 		return $trimmedContent;
 	}
-
 
 	// --------------------------------------------------------------------------------------------
 	// Visualize field for administration
@@ -503,7 +505,9 @@ class FieldInfo {
 		// add an 'add' button
 		if ($this->isArray()) {
 			echo '	<div class="arrayOptions">';
-			echo '		<button class="add">ADD</button>';
+			echo '		<button class="add">';
+			$moduleDefinition->text('ADD');
+			echo '</button>';
 			// store a template for a new array element
 			echo '		<div class="template hidden">';
 			$this->printFieldTypeAndContent($types, $this->getDefaultTypeAndContent(),
@@ -529,6 +533,7 @@ class FieldInfo {
 					echo '<div class="arrayElement">';
 				}
 				$this->printPostField(
+					$moduleDefinition,
 					$types[0],
 					$typeAndContent[0]['content'],
 					$template,
@@ -538,7 +543,9 @@ class FieldInfo {
 				echo '</span>';
 				if ($this->isArray()) {
 					echo '	<div class="arrayElementOptions">';
-					echo '		<button class="remove">REMOVE</button>';
+					echo '		<button class="remove">';
+					$moduleDefinition->text('REMOVE');
+					echo '</button>';
 					echo '	</div>'; // class="arrayElementOptions"
 					echo '</div>'; // class="arrayElement"
 				}
@@ -581,6 +588,7 @@ class FieldInfo {
 					if ($type === $element['type']) {
 						echo '			<div class="tab">';
 						$this->printPostField(
+							$moduleDefinition,
 							$type,
 							$element['content'],
 							$template,
@@ -589,6 +597,7 @@ class FieldInfo {
 					else {
 						echo '			<div class="tab hidden">';
 						$this->printPostField(
+							$moduleDefinition,
 							$type,
 							null,
 							true,
@@ -601,7 +610,9 @@ class FieldInfo {
 
 				if ($this->isArray()) {
 					echo '	<div class="arrayElementOptions">';
-					echo '		<button class="remove">REMOVE</button>';
+					echo '		<button class="remove">';
+					$moduleDefinition->text('REMOVE');
+					echo '</button>';
 					echo '	</div>'; // class="arrayElementOptions"
 					echo '</div>'; // class="arrayElement"
 				}
@@ -609,7 +620,7 @@ class FieldInfo {
 		}
 	}
 
-	private function printPostField($type, $value, $disabled, $uniqueId) {
+	private function printPostField($moduleDefinition, $type, $value, $disabled, $uniqueId) {
 		UiUtils::printHiddenTypeInput($this->generateTypeName($uniqueId) . ($this->isArray() ? '[]' : ''),
 			$type, $disabled);
 		switch ($type) {
@@ -642,6 +653,12 @@ class FieldInfo {
 			case FieldInfo::TYPE_LINK:
 				break;
 			case FieldInfo::TYPE_PAGE:
+				UiUtils::printPageSelection(
+					$moduleDefinition,
+					$this,
+					$value,
+					$disabled,
+					$uniqueId);
 				break;
 			case FieldInfo::TYPE_ID:
 				break;

@@ -84,6 +84,16 @@ abstract class Utils {
 		return false;
 	}
 
+	public static function isValidFieldLink($str, $maxlength) {
+		if (isset($_POST[$str]) && is_string($_POST[$str])) {
+			if (preg_match("/^[a-zA-Z]+:/", $_POST[$str])
+					&& strlen($_POST[$str]) <= $maxlength) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	public static function isChecked($str) {
 		if (isset($_POST[$str]) && !empty($_POST[$str])) {
 			return true;
@@ -173,6 +183,16 @@ abstract class Utils {
 			return true;
 		}
 		else if (isset($var)) {
+			return true;
+		}
+		return false;
+	}
+
+	public static function getValueFieldOrVariableFlag($field, $value, $var) {
+		if (Utils::getUnmodifiedStringOrEmpty() === $value) {
+			return true;
+		}
+		else if (isset($var) && $var === $value) {
 			return true;
 		}
 		return false;

@@ -89,6 +89,19 @@ final class PageOperations {
 			$externalId);
 	}
 
+	public function getPageTitle($pid) {
+		$result = $this->db->valueQuery('
+			SELECT `title`
+			FROM `Pages`
+			WHERE `pid`=?',
+			'i',
+			$pid);
+		if ($result === false) {
+			return false;
+		}
+		return $result['title'];
+	}
+
 }
 
 ?>

@@ -149,7 +149,8 @@ class AdminController {
 					`destLink` VARCHAR(1024) NULL,
 					`options` INT(10) NOT NULL,
 					PRIMARY KEY (`miid`),
-					UNIQUE KEY `position` (`parent`, `order`)
+					UNIQUE KEY `position` (`parent`, `order`),
+					UNIQUE `external` (`parent`, `externalId`)
 				)
 			') && $DB->successQuery('
 				CREATE TABLE IF NOT EXISTS `Modules` (

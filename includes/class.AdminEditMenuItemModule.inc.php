@@ -11,11 +11,13 @@ class AdminEditMenuItemModule extends BasicModule {
 	private $message;
 
 	// member variables
+	private $config; // config for page redirect after menu item creation
 	private $menu;
 	private $menuItem;
 
-	public function __construct($menuItemOperations, $globalOperations, $parameters = null) {
+	public function __construct($config, $menuItemOperations, $globalOperations, $parameters = null) {
 		parent::__construct(1, 'admin-edit-menu-item');
+		$this->config = $config;
 		$this->menuItemOperations = $menuItemOperations;
 		$this->globalOperations = $globalOperations;
 
@@ -57,7 +59,7 @@ class AdminEditMenuItemModule extends BasicModule {
 							externalId.val(generateIdentifierFromString($('#title').val()));
 						}
 					});
-					$('#parent').change(function() {
+					$('#position').change(function() {
 						var option = $(this).children(':selected');
 						if (option.hasClass('insertAtEnd')) {
 							$('#insertion').val('end');
@@ -69,7 +71,7 @@ class AdminEditMenuItemModule extends BasicModule {
 							$('#insertion').val('at');
 						}
 					});
-					$('#parent').trigger('change');
+					$('#position').trigger('change');
 					$('#targets input').change(function() {
 						var input = $(this);
 						if (input.val() == 'no') {
@@ -145,7 +147,7 @@ class AdminEditMenuItemModule extends BasicModule {
 						</div>
 						<div class="field">
 							<input type="hidden" id="insertion" name="insertion" value="at" />
-							<label for="parent"><?php $this->text('MENU_ITEM_PARENT'); ?></label>
+							<label for="position"><?php $this->text('MENU_ITEM_POSITION'); ?></label>
 							<?php $this->printMenuItemList(); ?>
 						</div>
 						<div class="field">
@@ -155,8 +157,7 @@ class AdminEditMenuItemModule extends BasicModule {
 									<input type="radio" id="target1" name="target"
 										value="no" 
 										<?php if (Utils::getUnmodifiedStringOrEmpty('target') === 'no'
-											|| (Utils::hasFields()
-												&& !Utils::isValidField('target')
+											|| (!Utils::isValidField('target')
 												&& !isset($this->menuItem['destPage'])
 												&& !isset($this->menuItem['destLink']))) : ?>
 												checked
@@ -170,9 +171,9 @@ class AdminEditMenuItemModule extends BasicModule {
 									<input type="radio" id="target2" name="target"
 										value="page"
 										<?php if (Utils::getUnmodifiedStringOrEmpty('target') === 'page'
-											|| (!Utils::isValidField('target')
-												&& isset($this->menuItem['destPage'])
-												&& !isset($this->menuItem['destLink']))) : ?>
+												|| (!Utils::isValidField('target')
+													&& isset($this->menuItem['destPage'])
+													&& !isset($this->menuItem['destLink']))) : ?>
 												checked
 										<?php endif; ?> />
 									<label for="target2" class="checkbox">
@@ -200,15 +201,35 @@ class AdminEditMenuItemModule extends BasicModule {
 							<label for="pageSelectionId"><?php $this->text('MENU_ITEM_PAGE'); ?></label>
 							<span class="inputWithOption">
 								<input type="hidden" name="pageSelectionId" id="pageSelectionId"
-									class="pageSelectionId" disabled />
-								<input type="text" class="large pageSelectionName" disabled />
+									class="pageSelectionId"
+									disabled
+									value="<?php 
+										echo Utils::getEscapedFieldOrVariable('pageSelectionId',
+											$this->menuItem['destPage']); ?>" />
+								<input type="text" class="large pageSelectionName" disabled
+									value="<?php 
+										$pid = Utils::getEscapedFieldOrVariable('pageSelectionId',
+											$this->menuItem['destPage']);
+										if (Utils::isValidInt($pid)) {
+											$title = $this->globalOperations->getPageTitle((int) $pid);
+											if ($title === false) {
+												$this->text('PAGE_ID_INVALID');
+											}
+											else {
+												echo Utils::escapeString($title);
+											}
+											echo ' / ' . $pid;
+										} ?>" />
 								<button class="pageSelectionButton"><?php $this->text('SELECT'); ?></button>
 							</span>
 						</div>
 						<div class="field hidden" id="targetWebsite">
 							<label for="website"><?php $this->text('MENU_ITEM_WEBSITE'); ?></label>
 							<input type="text" name="website" id="website" class="large"
-								required maxlength="1024" disabled />
+								required maxlength="1024" disabled
+								value="<?php 
+										echo Utils::getEscapedFieldOrVariable('website',
+											$this->menuItem['destLink']); ?>" />
 							<span class="hint"><?php $this->text('WEBSITE_HINT'); ?></span>
 						</div>
 						<div class="field">
@@ -222,7 +243,7 @@ class AdminEditMenuItemModule extends BasicModule {
 						<div class="field">
 							<label><?php $this->text('VISIBILITY'); ?></label>
 							<div class="checkboxWrapper">
-								<input type="checkbox" id="deactivated" name="visibility"
+								<input type="checkbox" id="visibility" name="visibility"
 									value="visible"
 									<?php echo (Utils::getCheckedFieldOrVariableFlag('visibility',
 										$this->menuItem['options'],
@@ -278,11 +299,17 @@ class AdminEditMenuItemModule extends BasicModule {
 	// --------------------------------------------------------------------------------------------
 
 	private function printMenuItemList() {
-		echo '<select name="parent" id="parent">';
+		echo '<select name="position" id="position">';
 		foreach ($this->menu as $menuItem) {
 			$this->printMenuItemWithinList($menuItem, 0);
 		}
-		echo '<option value="' . $menuItem['miid'] . '" class="insertAtEnd" selected>';
+		echo '<option value="-1" class="insertAtEnd"';
+		if (!Utils::isValidField('position')
+				|| (Utils::getUnmodifiedStringOrEmpty('position') == -1
+					&& Utils::getUnmodifiedStringOrEmpty('insertion') === 'end')) {
+			echo ' selected';
+		}
+		echo '>';
 		$this->text('MENU_ITEM_AT_END');
 		echo '</option>';
 		echo '</select>';
@@ -293,22 +320,36 @@ class AdminEditMenuItemModule extends BasicModule {
 		if (Utils::hasStringContent($menuItem['hoverTitle'])) {
 			echo ' title="' . Utils::escapeString($menuItem['hoverTitle']) . '"';
 		}
+		if (Utils::getUnmodifiedStringOrEmpty('position') == $menuItem['miid']
+				&& Utils::getUnmodifiedStringOrEmpty('insertion') === 'at') {
+			echo ' selected';
+		}
 		echo '>';
-		echo str_repeat('&nbsp;&nbsp;', $level);
+		echo str_repeat('&nbsp;&nbsp;&nbsp;&nbsp;', $level);
 		echo Utils::escapeString($menuItem['title']);
 		echo '</option>';
 		if (count($menuItem['submenu']) === 0) {
-			echo '<option value="' . $menuItem['miid'] . '" class="insertAsSubmenu">';
-			echo str_repeat('&nbsp;&nbsp;', $level + 1);
+			echo '<option value="' . $menuItem['miid'] . '" class="insertAsSubmenu"';
+			if (Utils::getUnmodifiedStringOrEmpty('parent') == $menuItem['miid']
+					&& Utils::getUnmodifiedStringOrEmpty('insertion') === 'submenu') {
+				echo ' selected';
+			}
+			echo '>';
+			echo str_repeat('&nbsp;&nbsp;&nbsp;&nbsp;', $level + 1);
 			$this->text('MENU_ITEM_AS_SUBMENU');
 			echo '</option>';
 		}
-		foreach ($menuItem['submenu'] as $menuItem) {
-			$this->printMenuItemWithinList($menuItem, $level + 1);
+		foreach ($menuItem['submenu'] as $item) {
+			$this->printMenuItemWithinList($item, $level + 1);
 		}
 		if (count($menuItem['submenu']) > 0) {
-			echo '<option value="' . $menuItem['miid'] . '" class="insertAtEnd">';
-			echo str_repeat('&nbsp;&nbsp;', $level + 1);
+			echo '<option value="' . $menuItem['miid'] . '" class="insertAtEnd"';
+			if (Utils::getUnmodifiedStringOrEmpty('position') == $menuItem['miid']
+					&& Utils::getUnmodifiedStringOrEmpty('insertion') === 'end') {
+				echo ' selected';
+			}
+			echo '>';
+			echo str_repeat('&nbsp;&nbsp;&nbsp;&nbsp;', $level + 1);
 			$this->text('MENU_ITEM_AT_END');
 			echo '</option>';
 		}
@@ -324,15 +365,20 @@ class AdminEditMenuItemModule extends BasicModule {
 			$this->message = 'INVALID_MENU_ITEM_TITLE';
 			return false;
 		}
-		if (!Utils::isValidFieldWithContentNoLinebreak('externalId', 256)
-				|| !Utils::isValidFieldIdentifier('externalId', 256)) {
+		if (!Utils::isValidFieldIdentifier('externalId', 256)) {
 			$this->state = false;
 			$this->message = 'INVALID_MENU_ITEM_EXTERNAL_ID';
 			return false;
 		}
-		if (!Utils::isValidFieldInt('parent')) {
+		if (!Utils::isValidFieldInt('position')) {
 			$this->state = false;
-			$this->message = 'INVALID_MENU_ITEM_PARENT';
+			$this->message = 'INVALID_MENU_ITEM_POSITION';
+			return false;
+		}
+		$insertion = Utils::getUnmodifiedStringOrEmpty('insertion');
+		if ($insertion !== 'end' && $insertion !== 'submenu' && $insertion !== 'at') {
+			$this->state = false;
+			$this->message = 'INVALID_MENU_ITEM_POSITION';
 			return false;
 		}
 		$target = Utils::getUnmodifiedStringOrEmpty('target');
@@ -342,7 +388,7 @@ class AdminEditMenuItemModule extends BasicModule {
 			return false;
 		}
 		if (($target === 'page' && !Utils::isValidFieldInt('pageSelectionId'))
-				|| ($target === 'link' && !Utils::isValidFieldLink('website'))) {
+				|| ($target === 'link' && !Utils::isValidFieldLink('website', 1024))) {
 			$this->state = false;
 			$this->message = 'INVALID_MENU_ITEM_TARGET';
 			return false;
@@ -350,12 +396,6 @@ class AdminEditMenuItemModule extends BasicModule {
 		if (!Utils::isValidFieldNoLinebreak('hoverTitle', 256)) {
 			$this->state = false;
 			$this->message = 'INVALID_HOVER_TITLE';
-			return false;
-		}
-		if (!Utils::isValidField('deactivated') || !Utils::isValidField('window')
-				|| !Utils::isValidField('visibility')) {
-			$this->state = false;
-			$this->message = 'UNKNOWN_ERROR';
 			return false;
 		}
 		return true;
@@ -366,25 +406,92 @@ class AdminEditMenuItemModule extends BasicModule {
 			return;
 		}
 
-		// determine the parent
-		$parent = $this->getMenuItem($this->menuItem, (int) Utils::getValidFieldString('parent'));
+		// determine the position
+		$position = $this->getMenuItem($this->menu, (int) Utils::getValidFieldString('position'));
 
-		// check if externalId already exists
+		$insertion = Utils::getUnmodifiedStringOrEmpty('insertion');
 		$externalId = Utils::getValidFieldString('externalId');
-		if ($this->globalOperations->isValidPageExternalId($externalId)
-				|| $this->isValidSubmenuExternalId($parent, $externalId)) {
-			$this->state = false;
-			$this->message = 'MENU_ITEM_EXTERNAL_ID_EXISTS';
-			return;
+		// check externalId at same level
+		if ($insertion === 'end' || $insertion === 'at') {
+			// check id of this level
+			// if toplevel -> check also page ids
+			if ((!isset($position) && $this->menuItemOperations->isValidSiblingExternalId(null, $externalId))
+					|| (isset($position) && $this->menuItemOperations->isValidSiblingExternalId(
+						$position['miid'], $externalId))
+					|| (!isset($position) && $this->globalOperations->isValidPageExternalId($externalId))) {
+				$this->state = false;
+				$this->message = 'MENU_ITEM_EXTERNAL_ID_EXISTS';
+				return;
+			}
+		}
+		// $insertion === 'submenu'
+		// check externalId at sublevel
+		// position must not be null
+		else {
+			if (!isset($position) || $this->isValidSubmenuExternalId($position, $externalId)) {
+				$this->state = false;
+				$this->message = 'MENU_ITEM_EXTERNAL_ID_EXISTS';
+				return;
+			}
 		}
 
-		$result = $this->menuItemOperations->addMenuItem(
-			Utils::getValidFieldString('title'),
-			Utils::getValidFieldStringOrNull('hoverTitle'),
-			$externalId,
-			Utils::isChecked('pageDeactivated')? PAGES_OPTION_PRIVATE : 0,
-			Utils::isChecked('pageCustomLastChange')? 
-				Utils::getValidFieldString('externalLastChanged') : null);
+		$options = 0;
+		if (Utils::isChecked('deactivated')) {
+			$options |= MenuItemOperations::MENU_ITEMS_OPTION_PRIVATE;
+		}
+		if (Utils::isChecked('window')) {
+			$options |= MenuItemOperations::MENU_ITEMS_OPTION_BLANK;
+		}
+		if (Utils::isChecked('visibility')) {
+			$options |= MenuItemOperations::MENU_ITEMS_OPTION_HIDDEN;
+		}
+
+		// add menu item
+		$result = false;
+		$newMenuItemId = null;
+		$target = Utils::getUnmodifiedStringOrEmpty('target');
+		// add at the end (position can be null if top-level end)
+		if ($insertion === 'end') {
+			$newMenuItemId = $this->menuItemOperations->addMenuItemAtEnd(
+				$position['miid'],
+				Utils::getValidFieldString('title'),
+				Utils::getValidFieldStringOrNull('hoverTitle'),
+				Utils::getUnmodifiedStringOrEmpty('externalId'),
+				($target === 'page') ? Utils::getUnmodifiedStringOrEmpty('pageSelectionId') : null,
+				($target === 'link') ? Utils::getUnmodifiedStringOrEmpty('website') : null,
+				$options);
+			if ($newMenuItemId !== false) {
+				$result = true;
+			}
+		}
+		// add at position (position must be present)
+		else if ($insertion === 'at' && isset($position)) {
+			$newMenuItemId = $this->menuItemOperations->addMenuItemAt(
+				$position['miid'],
+				Utils::getValidFieldString('title'),
+				Utils::getValidFieldStringOrNull('hoverTitle'),
+				Utils::getUnmodifiedStringOrEmpty('externalId'),
+				($target === 'page') ? Utils::getUnmodifiedStringOrEmpty('pageSelectionId') : null,
+				($target === 'link') ? Utils::getUnmodifiedStringOrEmpty('website') : null,
+				$options);
+			if ($newMenuItemId !== false) {
+				$result = true;
+			}
+		}
+		// add as submenu at parent position (position must be present and submenu empty)
+		else if ($insertion === 'submenu' && isset($position) && count($position['submenu']) === 0) {
+			$newMenuItemId = $this->menuItemOperations->addMenuItemSubmenu(
+				$position['miid'],
+				Utils::getValidFieldString('title'),
+				Utils::getValidFieldStringOrNull('hoverTitle'),
+				Utils::getUnmodifiedStringOrEmpty('externalId'),
+				($target === 'page') ? Utils::getUnmodifiedStringOrEmpty('pageSelectionId') : null,
+				($target === 'link') ? Utils::getUnmodifiedStringOrEmpty('website') : null,
+				$options);
+			if ($newMenuItemId !== false) {
+				$result = true;
+			}
+		}
 
 		if ($result == false) {
 			$this->state = false;
@@ -392,7 +499,12 @@ class AdminEditMenuItemModule extends BasicModule {
 			return;
 		}
 		$this->state = true;
-		$this->createdPageId = $result;
+
+		// redirect
+		if (isset($newMenuItemId)) {
+			Utils::redirect($this->config->getPublicRoot() . '/admin/menu-item/' .
+				$newMenuItemId . '/.success');
+		}
 	}
 
 	private function getMenuItem($menu, $miid) {
@@ -404,7 +516,7 @@ class AdminEditMenuItemModule extends BasicModule {
 			// search in subitems
 			else {
 				$result = $this->getMenuItem($item['submenu'], $miid);
-				if ($result !== null) {
+				if (isset($result)) {
 					return $result;
 				}
 			}
@@ -414,12 +526,7 @@ class AdminEditMenuItemModule extends BasicModule {
 	}
 
 	private function isValidSubmenuExternalId($parent, $externalId) {
-		if ($parent === null) {
-			$siblings = $this->menu;
-		}
-		else {
-			$siblings = $parent['submenu'];
-		}
+		$siblings = $parent['submenu'];
 		foreach ($siblings as $item) {
 			if ($item['externalId'] === $externalId) {
 				return true;
@@ -457,7 +564,7 @@ class AdminEditMenuItemModule extends BasicModule {
 				$updateColumns['externalId'] = $externalId;
 			}
 		}
-		else if (!Utils::isChecked('pageDirectAccess') && $this->page['externalId'] !== null) {
+		else if (!Utils::isChecked('pageDirectAccess') && isset($this->page['externalId'])) {
 			$updateColumns['externalId'] = null;
 		}
 		// check for updated options
@@ -474,7 +581,7 @@ class AdminEditMenuItemModule extends BasicModule {
 				$updateColumns['externalLastChanged'] = $externalLastChanged;
 			}
 		}
-		else if (!Utils::isChecked('pageCustomLastChange')&& $this->page['externalLastChanged'] !== null) {
+		else if (!Utils::isChecked('pageCustomLastChange') && isset($this->page['externalLastChanged'])) {
 			$updateColumns['externalLastChanged'] = null;
 		}
 
@@ -538,7 +645,7 @@ class AdminEditMenuItemModule extends BasicModule {
 			}
 			else {
 				$item['submenu'] = $submenu;
-				$result = $this->addSubMenuForEachItem($item['submenu']);
+				$result = $this->loadSubmenuForEachItem($item['submenu']);
 				if ($result === false) {
 					return false;
 				}

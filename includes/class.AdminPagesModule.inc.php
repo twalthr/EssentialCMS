@@ -633,7 +633,7 @@ class AdminPagesModule extends BasicModule {
 			}
 			else {
 				$item['submenu'] = $submenu;
-				$result = $this->addSubMenuForEachItem($item['submenu']);
+				$result = $this->loadSubmenuForEachItem($item['submenu']);
 				if ($result === false) {
 					return false;
 				}

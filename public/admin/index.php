@@ -66,6 +66,7 @@ switch ($action) {
 	case 'new-menu-item':
 		$controller->verifyLogin();
 		$module = new AdminEditMenuItemModule(
+			$controller->getConfig(),
 			$controller->getMenuItemOperations(),
 			$controller->getGlobalOperations());
 		$controller->layoutLoggedInContent(1, null, null, $module);
@@ -73,6 +74,7 @@ switch ($action) {
 	case 'menu-item':
 		$controller->verifyLogin();
 		$module = new AdminEditMenuItemModule(
+			null,
 			$controller->getPageOperations(),
 			$controller->getMenuItemOperations(),
 			$parameters);

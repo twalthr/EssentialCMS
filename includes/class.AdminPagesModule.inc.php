@@ -32,8 +32,8 @@ class AdminPagesModule extends BasicModule {
 		}
 
 		// handle menu operations
-		if (Utils::getUnmodifiedStringOrEmpty('operationSpace') === 'menu') {
-			$this->handleMenuOperations();
+		if (Utils::getUnmodifiedStringOrEmpty('operationSpace') === 'menuItem') {
+			$this->handleMenuItemOperations();
 			// reload menu items
 			$this->loadMenuItems();
 		}
@@ -123,9 +123,9 @@ class AdminPagesModule extends BasicModule {
 		<?php endif; ?>
 		<section>
 			<h1><?php $this->text('MENU'); ?></h1>
-			<form method="post" action="<?php echo $config->getPublicRoot()?>/admin/pages" id="menuOperations">
+			<form method="post" action="<?php echo $config->getPublicRoot(); ?>/admin/pages" id="menuOperations">
 				<button id="menuItemNew" class="addButton"><?php $this->text('NEW_MENU_ITEM'); ?></button>
-				<input type="hidden" name="operationSpace" value="menu" />
+				<input type="hidden" name="operationSpace" value="menuItem" />
 				<input type="hidden" name="operation" id="menuItemOperation" />
 				<input type="hidden" name="operationTarget" id="menuItemOperationTarget" />
 				<div class="siteMap enableButtonsIfChecked">
@@ -183,8 +183,8 @@ class AdminPagesModule extends BasicModule {
 	// Printing methods
 	// --------------------------------------------------------------------------------------------
 
-	private function printMenu(&$menu, &$config, $topLevel) {
-		if ($topLevel && ($menu === false || empty($menu))) {
+	private function printMenu($menu, $config, $topLevel) {
+		if ($topLevel && ($menu === false || count($menu) === 0)) {
 			echo '<p class="empty">';
 			echo $this->text('NO_MENU_ITEMS');
 			echo '</p>';
@@ -197,7 +197,7 @@ class AdminPagesModule extends BasicModule {
 		else {
 			echo '<ul class="subLevel">';
 		}
-		foreach ($menu as &$item) {
+		foreach ($menu as $item) {
 			echo '<li>';
 			echo '<input type="checkbox" id="menuitem' . $item['miid'] . '" name="menuitem[]"';
 			echo ' value="' . $item['miid'] . '" class="propagateChecked" />';
@@ -207,7 +207,7 @@ class AdminPagesModule extends BasicModule {
 			if (Utils::hasStringContent($item['hoverTitle'])) {
 				echo ' title="' . Utils::escapeString($item['hoverTitle']) . '"';
 			}
-			if ($item['options'] & MenuItemOperations::MENU_ITEMS_OPTION_PRIVATE) {
+			if (Utils::isFlagged($item['options'], MenuItemOperations::MENU_ITEMS_OPTION_PRIVATE)) {
 				echo ' class="private componentLink"';
 			}
 			else {
@@ -221,10 +221,10 @@ class AdminPagesModule extends BasicModule {
 		echo '</ul>';
 	}
 
-	private function printSelect(&$menu, $level) {
-		foreach ($menu as &$item) {
+	private function printSelect($menu, $level) {
+		foreach ($menu as $item) {
 			echo '<option value="' . $item['miid']. '">';
-			echo str_repeat('&nbsp;', $level);
+			echo str_repeat('&nbsp;&nbsp;&nbsp;&nbsp;', $level);
 			echo Utils::escapeString($item['title']) . '</option>';
 			if ($item['submenu'] !== false) {
 				$this->printSelect($item['submenu'], $level + 1);
@@ -232,7 +232,7 @@ class AdminPagesModule extends BasicModule {
 		}
 	}
 
-	private function printPages(&$config) {
+	private function printPages($config) {
 		if ($this->pages === false) {
 			echo '<p class="empty">';
 			echo $this->text('NO_PAGES');
@@ -250,7 +250,7 @@ class AdminPagesModule extends BasicModule {
 			if (Utils::hasStringContent($page['hoverTitle'])) {
 				echo ' title="' . Utils::escapeString($page['hoverTitle']) . '"';
 			}
-			if ($page['options'] & PAGES_OPTION_PRIVATE) {
+			if (Utils::isFlagged($page['options'], PageOperations::PAGES_OPTION_PRIVATE)) {
 				echo ' class="private componentLink"';
 			}
 			else {
@@ -259,7 +259,7 @@ class AdminPagesModule extends BasicModule {
 			echo '>' . Utils::escapeString($page['title']) . '</a>';
 			if (Utils::hasStringContent($page['externalId'])) {
 				echo '<span class="rowAdditionalInfo">';
-				echo Utils::escapeString($page['hoverTitle']);
+				echo Utils::escapeString($page['externalId']);
 				echo '</span>';
 			}
 			echo '</li>';
@@ -272,9 +272,8 @@ class AdminPagesModule extends BasicModule {
 	// --------------------------------------------------------------------------------------------
 
 	private function handlePageOperations() {
-		global $DB;
 		if (!Utils::isValidFieldNotEmpty('operation')
-			|| !Utils::isValidFieldArrayWithContent('page')) {
+				|| !Utils::isValidFieldArrayWithContent('page')) {
 			return;
 		}
 
@@ -321,53 +320,69 @@ class AdminPagesModule extends BasicModule {
 		}
 	}
 
-	private function handleMenuOperations() {
-		global $DB;
-		if (!Utils::isValidFieldNotEmpty('operation')
-			|| !Utils::isValidFieldArrayWithContent('menuitem')) {
+	private function handleMenuItemOperations() {
+		$operation = Utils::getUnmodifiedStringOrEmpty('operation');
+
+		// check for menu items
+		if (!Utils::isValidFieldIntArray('menuitem')) {
 			return;
 		}
 
-		// normalize menuitems
+		// normalize menu items
 		$uniqueMenuitems = array_unique(Utils::getValidFieldArray('menuitem'));
-		// check for existence of all menuitems
-		foreach ($uniqueMenuitems as $menuitem) {
-			if(!$DB->resultQuery('SELECT `miid` FROM `MenuPaths` WHERE `miid`=?', 'i', $menuitem)) {
-				return;
+
+		// foreach menu item
+		$result = true;
+		foreach ($uniqueMenuitems as $menuItem) {
+			$menuItem = (int) $menuItem;
+			// check for existence of menu item
+			$currentMenuItem = $this->getMenuItem($this->menu, $menuItem);
+			if (!isset($currentMenuItem)) {
+				continue;
+			}
+
+			// do operation
+			switch ($operation) {
+				case 'public':
+					$result = $result && $this->menuItemOperations->makeMenuItemPublic($menuItem);
+					break;
+				case 'private':
+					$result = $result && $this->menuItemOperations->makeMenuItemPrivate($menuItem);
+					break;
+				case 'move':
+				case 'copy':
+					break;
+				default:
+					$result = false;
+				break;
 			}
 		}
+
+		// set state
+		$this->state = $result;
+		if ($result === true) {
+			switch ($operation) {
+				case 'public':
+				case 'private':
+					$this->message = 'MENU_ITEMS_VISIBILITY_CHANGED';
+				break;
+			}
+		}
+		else {
+			$this->message = 'UNKNOWN_ERROR';
+		}
+
+
+
+
+
+
+
 
 		// execute operation
 		$operation = Utils::getValidFieldString('operation');
 		switch ($operation) {
-			case 'public':
-				$result = true;
-				foreach ($uniqueMenuitems as $menuitem) {
-					$result &= $DB->impactQuery('
-						UPDATE `MenuPaths`
-						SET `options` = `options` & ~' . MENUPATHS_OPTION_PRIVATE . '
-						WHERE `miid`=?', 'i', $menuitem);
-				}
-
-				if ($result) {
-					$this->state = true;
-					$this->message = 'MENU_ITEMS_VISIBILITY_CHANGED';
-				}
-				break;
-			case 'private':
-				$result = true;
-				foreach ($uniqueMenuitems as $menuitem) {
-					$result &= $DB->impactQuery('
-						UPDATE `MenuPaths`
-						SET `options` = `options` | ' . MENUPATHS_OPTION_PRIVATE . '
-						WHERE `miid`=?', 'i', $menuitem);
-				}
-
-				if ($result) {
-					$this->state = true;
-					$this->message = 'MENU_ITEMS_VISIBILITY_CHANGED';
-				}
-				break;
+			
 			case 'move':
 			case 'copy':
 				if (!Utils::isValidFieldNotEmpty('operationTarget')
@@ -601,10 +616,32 @@ class AdminPagesModule extends BasicModule {
 	}
 
 	// --------------------------------------------------------------------------------------------
+	// Helper methods
+	// --------------------------------------------------------------------------------------------
+
+	private function getMenuItem($menu, $miid) {
+		foreach ($menu as $item) {
+			// search in items
+			if ($item['miid'] === $miid) {
+				return $item;
+			}
+			// search in subitems
+			else {
+				$result = $this->getMenuItem($item['submenu'], $miid);
+				if (isset($result)) {
+					return $result;
+				}
+			}
+		}
+		// not found
+		return null;
+	}
+
+	// --------------------------------------------------------------------------------------------
 	// Database loading methods
 	// --------------------------------------------------------------------------------------------
 
-	private function loadMenuItems() {
+	private function loadMenu() {
 		$menu = $this->menuItemOperations->getParentMenuItems();
 		if ($menu === false) {
 			$this->state = false;

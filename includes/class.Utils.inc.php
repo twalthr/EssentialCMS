@@ -284,6 +284,18 @@ abstract class Utils {
 		Utils::sortArray($projectedArray2, $keys);
 		return $projectedArray1 == $projectedArray2;
 	}
+
+	public static function isFlagged($var, $flag) {
+		return ($var & $flag) === $flag;
+	}
+
+	public static function setFlag($var, $flag) {
+		return $var | $flag;
+	}
+
+	public static function unsetFlag($var, $flag) {
+		return $var & ~$flag;
+	}
 }
 
 ?>

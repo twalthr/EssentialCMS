@@ -75,8 +75,8 @@ switch ($action) {
 		$controller->verifyLogin();
 		$module = new AdminEditMenuItemModule(
 			null,
-			$controller->getPageOperations(),
 			$controller->getMenuItemOperations(),
+			$controller->getGlobalOperations(),
 			$parameters);
 		$controller->layoutLoggedInContent(1, null, null, $module);
 		break;

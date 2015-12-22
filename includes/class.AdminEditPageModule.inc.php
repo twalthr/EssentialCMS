@@ -684,12 +684,14 @@ class AdminEditPageModule extends BasicModule {
 		}
 		// check for updated options
 		if (Utils::isChecked('pageDeactivated')
-				&& !($this->page['options'] & PageOperations::PAGES_OPTION_PRIVATE)) {
-			$updateColumns['options'] = $this->page['options'] | PageOperations::PAGES_OPTION_PRIVATE;
+				&& !Utils::isFlagged($this->page['options'], PageOperations::PAGES_OPTION_PRIVATE)) {
+			$updateColumns['options'] = Utils::setFlag($this->page['options'],
+				PageOperations::PAGES_OPTION_PRIVATE);
 		}
 		else if (!Utils::isChecked('pageDeactivated')
-				&& ($this->page['options'] & PageOperations::PAGES_OPTION_PRIVATE)) {
-			$updateColumns['options'] = $this->page['options'] & ~PageOperations::PAGES_OPTION_PRIVATE;
+				&& Utils::isFlagged($this->page['options'], PageOperations::PAGES_OPTION_PRIVATE)) {
+			$updateColumns['options'] = Utils::unsetFlag($this->page['options'],
+				PageOperations::PAGES_OPTION_PRIVATE);
 		}
 		// check for updated externalLastChanged
 		if (Utils::isChecked('pageCustomLastChange')) {

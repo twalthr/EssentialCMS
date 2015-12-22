@@ -12,13 +12,69 @@ final class MenuItemOperations {
 		$this->db = $db;
 	}
 
-	public function isValidExternalId($externalId) {
-		return $this->db->resultQuery('
-			SELECT `miid`
-			FROM `MenuItems`
-			WHERE `externalId`=?',
-			's',
-			$externalId);
+	public function makeMenuItemPublic($miid) {
+		return $this->db->impactQuery('
+			UPDATE `MenuPaths`
+			SET `options` = `options` & ~' . MenuItemOperations::MENU_ITEMS_OPTION_PRIVATE . '
+			WHERE `miid`=?',
+			'i',
+			$miid);
+	}
+
+	public function makeMenuItemPrivate($miid) {
+		return $this->db->impactQuery('
+			UPDATE `MenuPaths`
+			SET `options` = `options` | ' . MenuItemOperations::MENU_ITEMS_OPTION_PRIVATE . '
+			WHERE `miid`=?',
+			'i',
+			$miid);
+	}
+
+	public function updateMenuItem($miid, $updateColumns) {
+		// no update
+		if (count($updateColumns) === 0) {
+			return true;
+		}
+		$query = '
+			UPDATE `MenuItems`
+			SET ';
+		$types = '';
+		$values = [];
+		foreach ($updateColumns as $key => $value) {
+			$query .= '`' . $key. '`=?, ';
+			if ($key === 'options') {
+				$types .= 'i';
+			}
+			else {
+				$types .= 's';
+			}
+			$values[] = $value;
+		}
+		$query = rtrim($query, ', ');
+		$query .= ' WHERE `miid`=?';
+		$types .= 'i';
+		$values[] = $miid;
+		return $this->db->impactQuery($query, $types, ...$values);
+	}
+
+	public function isValidExternalId($parent, $externalId) {
+		if ($parent === null) {
+			return $this->db->resultQuery('
+				SELECT `miid`
+				FROM `MenuItems`
+				WHERE `parent` IS NULL AND `externalId`=?',
+				's',
+				$externalId);
+		}
+		// existing sibling with common parent
+		else {
+			return $this->db->resultQuery('
+				SELECT `miid`
+				FROM `MenuItems`
+				WHERE `parent`=? AND `externalId`=?',
+				'is',
+				$parent, $externalId);
+		}
 	}
 
 	public function isValidSiblingExternalId($sibling, $externalId) {

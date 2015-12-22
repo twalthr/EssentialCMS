@@ -182,3 +182,5 @@ VISIBILITY=Visibility:
 HIDE_MENU_ITEM=Make menu item public but don't show an item in the menu.
 MENU_ITEM_EXTERNAL_ID_EXISTS=Public item ID is already present. The ID must be unique among its neighbors.
 PAGE_ID_INVALID=-- Invalid page --
+MENU_ITEM_CREATED=Menu item successfully created.
+MENU_ITEM_CHANGED=Menu item successfully changed.

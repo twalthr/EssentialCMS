@@ -612,19 +612,6 @@ div.siteMap .subLevel>li {
 	padding-left: 20px;
 }
 
-div.siteMap .topLevel>li {
-	float: left;
-	margin-left: 20px;
-}
-
-div.siteMap .topLevel>li:first-child {
-	margin-left: 0px;
-}
-
-div.siteMap + * {
-	clear: both;
-}
-
 /* --------------------------------------------------------------------------------------------- */
 /*                                      Lightbox style                                           */
 /* --------------------------------------------------------------------------------------------- */

@@ -183,3 +183,5 @@ HIDE_MENU_ITEM=Menueinträg veröffentlichen aber keinen Eintrag im Menü anzeig
 MENU_ITEM_EXTERNAL_ID_EXISTS=Die öffentliche Eintrags-ID existiert bereits. Eine ID muss eindeutig unter ihren Nachbarn sein.
 MENU_ITEM_INSERT_AS=Insert as:
 PAGE_ID_INVALID=-- Ungültige Seite --
+MENU_ITEM_CREATED=Menu item successfully created.
+MENU_ITEM_CHANGED=Menüeintrag erfolgreich geändert.

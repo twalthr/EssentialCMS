@@ -41,7 +41,6 @@ DELETE=Löschen
 MENU_ITEMS_VISIBILITY_CHANGED=Sichtbarkeit wurde erfolgreich geändert.
 MENU_ITEMS_DELETED=Einträge erfolgreich gelöscht.
 MENU_ITEMS_NO_RECURSIVE_MOVE=Ein Eintrag kann nicht zu sich selbst bzw. in sich selbst oder Unterelemente verschoben werden.
-MENU_ITEMS_NO_MULTILEVEL_MOVE=Einträge aus verschiedenen Menüebenen können nur als ganze Gruppe verschoben werden.
 MENU_ITEMS_COPY_MOVE_SUCCESSFUL=Einträge erfolgreich verschoben/kopiert.
 NO_PAGES=Im Moment sind keine Seiten vorhanden.
 NEW_PAGE=Neue Seite

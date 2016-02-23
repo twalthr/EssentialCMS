@@ -91,6 +91,16 @@ class AdminController {
 		$hashedAndSalted = password_hash($_POST['password'], PASSWORD_DEFAULT);
 
 		$result = $DB->successQuery('
+				CREATE TABLE IF NOT EXISTS `Changelog` (
+					`clid` INT(10) NOT NULL AUTO_INCREMENT,
+					`type` TINYINT NOT NULL,
+					`operation` TINYINT NOT NULL,
+					`recordId` INT(10) NOT NULL,
+					`time` TIMESTAMP NOT NULL,
+					`description` VARCHAR(256) NOT NULL,
+					PRIMARY KEY (`clid`)
+				)
+			') && $DB->successQuery('
 				CREATE TABLE IF NOT EXISTS `Images` (
 					`iid` INT(10) NOT NULL AUTO_INCREMENT,
 					`file` INT(10) NOT NULL,
@@ -170,6 +180,13 @@ class AdminController {
 					`order` INT(10) NULL,
 					PRIMARY KEY (`fgid`),
 					UNIQUE KEY `position` (`module`, `key`, `order`)
+				)
+			') && $DB->successQuery('
+				CREATE TABLE IF NOT EXISTS `MediaReferences` (
+					`mrid` INT(10) NOT NULL AUTO_INCREMENT,
+					`file` INT(10) NOT NULL,
+					`fieldGroup` INT(10) NOT NULL,
+					PRIMARY KEY (`mrid`)
 				)
 			') && $DB->successQuery('
 				CREATE TABLE IF NOT EXISTS `Fields` (

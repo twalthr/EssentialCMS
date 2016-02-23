@@ -20,7 +20,7 @@ class AdminPagesModule extends BasicModule {
 		$this->menuItemOperations = $menuItemOperations;
 
 		// load menu items
-		$this->loadMenuItems();
+		$this->loadMenu();
 		if (!isset($this->menu)) {
 			return;
 		}
@@ -35,7 +35,7 @@ class AdminPagesModule extends BasicModule {
 		if (Utils::getUnmodifiedStringOrEmpty('operationSpace') === 'menuItem') {
 			$this->handleMenuItemOperations();
 			// reload menu items
-			$this->loadMenuItems();
+			$this->loadMenu();
 		}
 		// handle page operations
 		else if (Utils::getUnmodifiedStringOrEmpty('operationSpace') === 'page') {
@@ -330,31 +330,84 @@ class AdminPagesModule extends BasicModule {
 
 		// normalize menu items
 		$uniqueMenuitems = array_unique(Utils::getValidFieldArray('menuitem'));
+		$alreadyProcessed = [];
 
 		// foreach menu item
 		$result = true;
 		foreach ($uniqueMenuitems as $menuItem) {
 			$menuItem = (int) $menuItem;
+			// skip item if already processed
+			if (in_array($menuItem, $alreadyProcessed)) {
+				continue;
+			}
 			// check for existence of menu item
 			$currentMenuItem = $this->getMenuItem($this->menu, $menuItem);
 			if (!isset($currentMenuItem)) {
 				continue;
 			}
 
-			// do operation
-			switch ($operation) {
-				case 'public':
-					$result = $result && $this->menuItemOperations->makeMenuItemPublic($menuItem);
+			// collect submenu items
+			$subitems = [];
+			$this->collectSubmenuItems($currentMenuItem, $subitems);
+			$alreadyProcessed = array_merge($alreadyProcessed, $subitems);
+
+			// check target parameters
+			if ($operation === 'move' || $operation === 'copy') {
+				$operationTarget = Utils::getUnmodifiedStringOrEmpty('operationTarget');
+				if ($operationTarget !== 'at' && $operationTarget !== 'into') {
+					continue;
+				}
+				if (!Utils::isValidFieldInt('target')) {
+					continue;
+				}
+				// check for existence of target menu item
+				$target = $this->getMenuItem($this->menu,
+					(int) Utils::getUnmodifiedStringOrEmpty('target'));
+				if (!isset($target)) {
+					continue;
+				}
+				// check for recursive move operation
+				if ($operation === 'move' && in_array($target['miid'], $alreadyProcessed)) {
+					$this->state = false;
+					$this->message = 'MENU_ITEMS_NO_RECURSIVE_MOVE';
+					return;
+				}
+			}
+
+			foreach ($subitems as $subitem) {
+				// do operation
+				switch ($operation) {
+					case 'delete':
+						$result = $result && $this->menuItemOperations->deleteMenuItem($subitem);
+						break;
+					case 'public':
+						$result = $result && $this->menuItemOperations->makeMenuItemPublic($subitem);
+						break;
+					case 'private':
+						$result = $result && $this->menuItemOperations->makeMenuItemPrivate($subitem);
+						break;
+					case 'move':
+						// copy
+						if ($operationTarget === 'at') {
+							$result = $result && $this->menuItemOperations->copyMenuItemAt($target['miid'], $subitem);
+						}
+						else {
+							$result = $result && $this->menuItemOperations->copyMenuItemSubmenu($target['miid'], $subitem);
+						}
+						// delete
+						$result = $result && $this->menuItemOperations->deleteMenuItem($subitem);
+					case 'copy':
+						if ($operationTarget === 'at') {
+							$result = $result && $this->menuItemOperations->copyMenuItemAt($target['miid'], $subitem);
+						}
+						else {
+							$result = $result && $this->menuItemOperations->copyMenuItemSubmenu($target['miid'], $subitem);
+						}
+						break;
+					default:
+						$result = false;
 					break;
-				case 'private':
-					$result = $result && $this->menuItemOperations->makeMenuItemPrivate($menuItem);
-					break;
-				case 'move':
-				case 'copy':
-					break;
-				default:
-					$result = false;
-				break;
+				}
 			}
 		}
 
@@ -362,256 +415,21 @@ class AdminPagesModule extends BasicModule {
 		$this->state = $result;
 		if ($result === true) {
 			switch ($operation) {
+				case 'delete':
+					$this->message = 'MENU_ITEMS_DELETED';
+					break;
 				case 'public':
 				case 'private':
 					$this->message = 'MENU_ITEMS_VISIBILITY_CHANGED';
-				break;
+					break;
+				case 'move':
+				case 'copy':
+					$this->message = 'MENU_ITEMS_COPY_MOVE_SUCCESSFUL';
+					break;
 			}
 		}
 		else {
 			$this->message = 'UNKNOWN_ERROR';
-		}
-
-
-
-
-
-
-
-
-		// execute operation
-		$operation = Utils::getValidFieldString('operation');
-		switch ($operation) {
-			
-			case 'move':
-			case 'copy':
-				if (!Utils::isValidFieldNotEmpty('operationTarget')
-					|| !Utils::isValidFieldNotEmpty('target')) {
-					return;
-				}
-				$operationTarget = Utils::getValidFieldString('operationTarget');
-
-				// normalize target
-				$target = $DB->valueQuery('
-					SELECT `miid`, `parent`, `order`
-					FROM `MenuPaths`
-					WHERE `miid`=?',
-					'i', Utils::getValidFieldString('target'));
-				// check for existence of target
-				if ($target === false) {
-					return;
-				}
-
-				// process one item after the other
-				$processed = [];
-				foreach ($uniqueMenuitems as $menuitem) {
-					// skip already processed items
-					if (in_array($menuitem, $processed)) {
-						continue;
-					}
-
-					$group = [];
-					$group[] = intval($menuitem);
-					$this->addIdsOfSubMenuItems($group, $menuitem);
-
-					// check that target is not part of the group
-					if ($operation === 'move') {
-						if (in_array($target['miid'], $group)) {
-							$this->state = false;
-							$this->message = 'MENU_ITEMS_NO_RECURSIVE_MOVE';
-							return;
-						}
-					}
-
-					// if single element or entire group (parent with children) is selected
-					$result = true;
-					if (count(array_intersect($group, $uniqueMenuitems)) == count($group)) {
-						// copy
-						if ($operation === 'copy') {
-							$result &= $this->copyGroup($group, $target, $operationTarget);
-						}
-						// move
-						else {
-							$result &= $this->moveGroup($group, $target, $operationTarget);
-						}
-						$processed = array_merge($processed, $group);
-					}
-					// partial group selected
-					else {
-						$this->state = false;
-						$this->message = 'MENU_ITEMS_NO_MULTILEVEL_MOVE';
-						return;
-					}
-				}
-				if ($result) {
-					$this->state = true;
-					$this->message = 'MENU_ITEMS_COPY_MOVE_SUCCESSFUL';
-				}
-				break;
-			case 'delete':
-				$result = true;
-				$processed = [];
-				// process one item after the other
-				foreach ($uniqueMenuitems as $menuitem) {
-					// skip already processed items
-					if (in_array($menuitem, $processed)) {
-						continue;
-					}
-					$group = [];
-					$group[] = intval($menuitem);
-					$this->addIdsOfSubMenuItems($group, $menuitem);
-					$result &= $this->deleteGroup($group);
-				}
-				if ($result) {
-					$this->state = true;
-					$this->message = 'MENU_ITEMS_DELETED';
-				}
-				break;
-		}
-	}
-
-	private function moveGroup(&$group, &$target, $mode) {
-		$result = true;
-		$result &= $this->copyGroup($group, $target, $mode);
-		$result &= $this->deleteGroup($group);
-		return $result;
-	}
-
-	private function deleteGroup(&$group) {
-		global $DB;
-		$topElement = $DB->valueQuery('
-			SELECT `miid`, `parent`, `order`
-			FROM `MenuPaths` WHERE `miid`=?',
-			'i', $group[0]);
-		if ($topElement === false) {
-			return false;
-		}
-		
-		$result = true;
-		// delete the group
-		foreach ($group as $miid) {
-			$result &= $DB->impactQuery('DELETE FROM `MenuPaths` WHERE `miid`=?', 'i', $miid);
-		}
-		// refresh the order of neighbours
-		if ($topElement['parent'] == null) {
-			$DB->impactQuery('
-				UPDATE `MenuPaths`
-				SET `order` = `order` - 1
-				WHERE `parent` IS NULL AND `order`>?', 'i', $topElement['order']);
-		}
-		else {
-			$DB->impactQuery('
-				UPDATE `MenuPaths`
-				SET `order` = `order` - 1
-				WHERE `parent`=? AND `order`>?', 'ii', $topElement['parent'], $topElement['order']);
-		}
-		return $result;
-	}
-
-	private function copyGroup(&$group, &$target, $mode) {
-		global $DB;
-		// load group
-		$topElement = $DB->valueQuery('SELECT * FROM `MenuPaths` WHERE `miid`=?', 'i', $group[0]);
-		if ($topElement === false) {
-			return false;
-		}
-		$menu = [];
-		$menu[] = &$topElement;
-		$this->addSubMenuForEachItem($menu);
-
-		if ($mode === 'at') {
-			// refresh the order of the target neighbours
-			if ($target['parent'] === null) {
-				$DB->impactQuery('
-					UPDATE `MenuPaths`
-					SET `order` = `order` + 1
-					WHERE `parent` IS NULL AND `order`>=?',
-					'i', $target['order']);
-			}
-			else {
-				$DB->impactQuery('
-					UPDATE `MenuPaths`
-					SET `order` = `order` + 1
-					WHERE `parent`=? AND `order`>=?',
-					'ii', $target['parent'], $target['order']);
-			}
-
-			$newId = $DB->impactQueryWithId('
-				INSERT INTO `MenuPaths`
-				(`parent`, `order`, `title`, `hoverTitle`, `externalId`, `destPage`, `destLink`, `options`)
-				VALUES (?,?,?,?,?,?,?,?)',
-				'iisssisi',
-				$target['parent'], $target['order'],
-				$topElement['title'], $topElement['hoverTitle'], $topElement['externalId'], $topElement['destPage'],
-				$topElement['destLink'], $topElement['options']);
-			if ($newId === false) {
-				return false;
-			}
-			if ($topElement['submenu'] !== false
-				&& $this->insertSubMenu($topElement['submenu'], $newId) === false) {
-				return false;
-			}
-		}
-		else if ($mode === 'into') {
-			$targetMax = $DB ->valuesQuery('
-				SELECT COUNT(*) AS count
-				FROM `MenuPaths`
-				WHERE `parent`=?',
-				'i', $target['miid'])[0]['count'];
-
-			$newId = $DB->impactQueryWithId('
-				INSERT INTO `MenuPaths`
-				(`parent`, `order`, `title`, `hoverTitle`, `externalId`, `destPage`, `destLink`, `options`)
-				VALUES (?,?,?,?,?,?,?,?)',
-				'iisssisi',
-				$target['miid'], $targetMax,
-				$topElement['title'], $topElement['hoverTitle'], $topElement['externalId'], $topElement['destPage'],
-				$topElement['destLink'], $topElement['options']);
-			if ($newId === false) {
-				return false;
-			}
-			if ($topElement['submenu'] !== false
-				&& $this->insertSubMenu($topElement['submenu'], $newId) === false) {
-				return false;
-			}
-		}
-		return true;
-	}
-
-	private function insertSubMenu(&$menu, $parent) {
-		global $DB;
-		$order = 0;
-		foreach ($menu as &$item) {
-			$newId = $DB->impactQueryWithId('
-				INSERT INTO `MenuPaths`
-				(`parent`, `order`, `title`, `hoverTitle`, `externalId`, `destPage`, `destLink`, `options`)
-				VALUES (?,?,?,?,?,?,?,?)',
-				'iisssisi',
-				$parent, $order,
-				$item['title'], $item['hoverTitle'], $item['externalId'], $item['destPage'],
-				$item['destLink'], $item['options']);
-			if ($newId === false) {
-				return false;
-			}
-			$order++;
-			if ($item['submenu'] !== false && !empty($item['submenu'])) {
-				if ($this->insertSubMenu($item['submenu'], $newId) === false) {
-					return false;
-				}
-			}
-		}
-		return true;
-	}
-
-	private function addIdsOfSubMenuItems(&$array, $parent) {
-		global $DB;
-		$submenuItems = $DB->valuesQuery('SELECT `miid` FROM `MenuItems` WHERE `parent`=?', 'i', $parent);
-		if ($submenuItems === false) {
-			return;
-		}
-		foreach ($submenuItems as $submenuItem) {
-			$array[] = $submenuItem['miid'];
-			$this->addIdsOfSubMenuItems($array, $submenuItem['miid']);
 		}
 	}
 
@@ -635,6 +453,13 @@ class AdminPagesModule extends BasicModule {
 		}
 		// not found
 		return null;
+	}
+
+	private function collectSubmenuItems($menuItem, &$collection) {
+		$collection[] = $menuItem['miid'];
+		foreach ($menuItem['submenu'] as $submenuItem) {
+			$this->collectSubmenuItems($submenuItem, $collection);
+		}
 	}
 
 	// --------------------------------------------------------------------------------------------

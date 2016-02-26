@@ -411,13 +411,20 @@ body>.page>header li {
 	font-size: 15px;
 }
 
-body>.page>main {
+body>.page>main, body>.page>section.before-content {
 	width: 100%;
 }
 
-body>.page>main section.content {
+body>.page>main section.content, body>.page>section.before-content>* {
 	max-width: 978px;
+}
+
+body>.page>main section.content {
 	margin: 45px auto 45px;
+}
+
+body>.page>section.before-content>* {
+	margin: 0 auto 0;
 }
 
 body>.page>footer {
@@ -463,7 +470,7 @@ body>.page>*:nth-last-child(2) {
 	width: auto;
 }
 
-.dialog-box .dialog-message, .dialog-error-message, .dialog-success-message {
+.dialog-box .dialog-message, .dialog-error-message, .dialog-success-message, .dialog-notice-message {
 	margin-bottom: 20px;
 }
 
@@ -472,7 +479,7 @@ body>.page>*:nth-last-child(2) {
 	margin-bottom: 0px
 }
 
-.dialog-error-message, .dialog-success-message {
+.dialog-error-message, .dialog-success-message, .dialog-notice-message {
 	padding: 7px;
 }
 
@@ -484,6 +491,11 @@ body>.page>*:nth-last-child(2) {
 .dialog-success-message {
 	background-color: #B5E8B9;
 	border: 1px solid #8BD291;
+}
+
+.dialog-notice-message {
+	background-color: #E8E7B5;
+	border: 1px solid #E5CC68;
 }
 
 .dialog-box .fields, .dialog-box input[type='submit'], .dialog-box button {
@@ -521,7 +533,7 @@ section.content .dialog-success-message + section, section.content .dialog-error
 	margin-top: 0;
 }
 
-p.empty {
+p.empty, p.description {
 	text-align: center;
 	margin-bottom: 20px;
 }
@@ -661,6 +673,7 @@ div.siteMap .subLevel>li {
 .dialog-window p + .dialog-window .lightbox-close {
 	display: inline-block;
 }
+
 /* --------------------------------------------------------------------------------------------- */
 /*                                      Rich fields                                              */
 /* --------------------------------------------------------------------------------------------- */
@@ -707,4 +720,105 @@ div.siteMap .subLevel>li {
 	position: relative;
 	top: -47px;
 	margin-bottom: -47px;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/*                                    Admin Changelog                                            */
+/* --------------------------------------------------------------------------------------------- */
+.changelog .changeOperation {
+	padding: 0;
+	width: 12px;
+	height: 12px;
+	margin-right: 20px;
+	margin-bottom: -2px;
+	display: inline-block;
+	text-indent: 100%;
+	white-space: nowrap;
+	overflow: hidden;
+}
+
+.changelog .changeOperation.inserted {
+	background-color: #B5E8B9;
+	border: 1px solid #8BD291;
+}
+
+.changelog .changeOperation.deleted {
+	background-color: #E8B5B5;
+	border: 1px solid #E49494;
+}
+
+.changelog .changeOperation.updated {
+	background-color: #E8E7B5;
+	border: 1px solid #E5CC68;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/*                                    Admin Spinner                                              */
+/* --------------------------------------------------------------------------------------------- */
+
+/*
+Source: https://github.com/tobiasahlin/SpinKit
+
+The MIT License (MIT)
+
+Copyright (c) 2015 Tobias Ahlin
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+*/
+
+.spinner {
+	margin: 0 auto 20px;
+	width: 50px;
+	text-align: center;
+}
+
+.spinner > div {
+	width: 12px;
+	height: 12px;
+	background-color: #333;
+
+	border-radius: 100%;
+	display: inline-block;
+	-webkit-animation: sk-bouncedelay 1.4s infinite ease-in-out both;
+	animation: sk-bouncedelay 1.4s infinite ease-in-out both;
+}
+
+.spinner .bounce1 {
+	-webkit-animation-delay: -0.32s;
+	animation-delay: -0.32s;
+}
+
+.spinner .bounce2 {
+	-webkit-animation-delay: -0.16s;
+	animation-delay: -0.16s;
+}
+
+@-webkit-keyframes sk-bouncedelay {
+	0%, 80%, 100% { -webkit-transform: scale(0) }
+	40% { -webkit-transform: scale(1.0) }
+}
+
+@keyframes sk-bouncedelay {
+	0%, 80%, 100% { 
+		-webkit-transform: scale(0);
+		transform: scale(0);
+	} 40% { 
+		-webkit-transform: scale(1.0);
+		transform: scale(1.0);
+	}
 }

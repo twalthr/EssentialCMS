@@ -16,6 +16,8 @@ $DB_PASSWORD = '';
 
 $PUBLIC_ROOT = 'http://localhost/EssentialCMS/public';
 
+$MAX_RUNTIME = 30;
+
 // set class autoloader
 $ROOT_DIRECTORY = dirname(__FILE__);
 spl_autoload_register(function ($class) {

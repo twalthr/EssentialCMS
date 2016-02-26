@@ -5,6 +5,7 @@ class Configuration {
 	private $cmsUrl;
 	private $root;
 	private $userId;
+	private $maxRuntime;
 
 	public function setCmsFullname($cmsFullname) {
 		$this->cmsFullname = $cmsFullname;
@@ -36,6 +37,14 @@ class Configuration {
 
 	public function getUserId() {
 		return $this->userId;
+	}
+
+	public function setMaxRuntime($maxRuntime) {
+		$this->maxRuntime = $maxRuntime;
+	}
+
+	public function getMaxRuntime() {
+		return $this->maxRuntime;
 	}
 
 }

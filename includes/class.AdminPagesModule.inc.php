@@ -1,5 +1,7 @@
 <?php
 
+// v1: FEATURE COMPLETE
+
 class AdminPagesModule extends BasicModule {
 
 	// database operations
@@ -100,10 +102,19 @@ class AdminPagesModule extends BasicModule {
 					$('#pageOperation').val('private');
 					$('#pageOperations').submit();
 				});
+				$('#pageCopy').click(function() {
+					$('#pageOperation').val('copy');
+					$('#pageOperations').submit();
+				});
 				$('#pageDelete').click(function() {
 					$('#pageOperation').val('delete');
+					openButtonSetDialog($(this),
+						'<?php $this->text('DELETE_QUESTION'); ?>',
+						'#pageDeleteConfirm');
 				});
 				$('#pageDeleteConfirm').click(function() {
+					enableList($(this));
+					$('#pageOperations').submit();
 				});
 				$('#pageNew').click(function() {
 					window.open('<?php echo $config->getPublicRoot(); ?>/admin/new-page', '_self');
@@ -134,9 +145,12 @@ class AdminPagesModule extends BasicModule {
 				<div class="buttonSet">
 					<button id="menuItemPublic" disabled><?php $this->text('MAKE_PUBLIC'); ?></button>
 					<button id="menuItemPrivate" disabled><?php $this->text('MAKE_PRIVATE'); ?></button>
-					<button id="menuItemMove" class="disableListIfClicked" disabled><?php $this->text('MOVE'); ?></button>
-					<button id="menuItemCopy" class="disableListIfClicked" disabled><?php $this->text('COPY'); ?></button>
-					<button id="menuItemDelete" class="disableListIfClicked" disabled><?php $this->text('DELETE'); ?></button>
+					<button id="menuItemMove" class="disableListIfClicked" disabled>
+						<?php $this->text('MOVE'); ?></button>
+					<button id="menuItemCopy" class="disableListIfClicked" disabled>
+						<?php $this->text('COPY'); ?></button>
+					<button id="menuItemDelete" class="disableListIfClicked" disabled>
+						<?php $this->text('DELETE'); ?></button>
 				</div>
 				<div class="dialog-box hidden">
 					<div class="dialog-message"></div>
@@ -146,17 +160,22 @@ class AdminPagesModule extends BasicModule {
 						</select>
 					</div>
 					<div class="options">
-						<button id="menuItemAt" class="hidden"><?php $this->text('MENU_ITEM_AT'); ?></button>
-						<button id="menuItemInto" class="hidden"><?php $this->text('MENU_ITEM_INTO'); ?></button>
-						<button id="menuItemDeleteConfirm" class="hidden"><?php $this->text('DELETE'); ?></button>
-						<button class="hidden cancel"><?php $this->text('CANCEL'); ?></button>
+						<button id="menuItemAt" class="hidden">
+							<?php $this->text('MENU_ITEM_AT'); ?></button>
+						<button id="menuItemInto" class="hidden">
+							<?php $this->text('MENU_ITEM_INTO'); ?></button>
+						<button id="menuItemDeleteConfirm" class="hidden">
+							<?php $this->text('DELETE'); ?></button>
+						<button class="hidden cancel">
+							<?php $this->text('CANCEL'); ?></button>
 					</div>
 				</div>
 			</form>
 		</section>
 		<section>
 			<h1><?php $this->text('PAGES'); ?></h1>
-			<form method="post" action="<?php echo $config->getPublicRoot()?>/admin/pages" id="pageOperations">
+			<form method="post" action="<?php echo $config->getPublicRoot(); ?>/admin/pages"
+					id="pageOperations">
 				<button id="pageNew" class="addButton"><?php $this->text('NEW_PAGE'); ?></button>
 				<input type="hidden" name="operationSpace" value="page" />
 				<input type="hidden" name="operation" id="pageOperation" />
@@ -164,8 +183,10 @@ class AdminPagesModule extends BasicModule {
 				<div class="buttonSet">
 					<button id="pagePublic" disabled><?php $this->text('MAKE_PUBLIC'); ?></button>
 					<button id="pagePrivate" disabled><?php $this->text('MAKE_PRIVATE'); ?></button>
-					<button id="page-copy" class="disableListIfClicked" disabled><?php $this->text('COPY'); ?></button>
-					<button id="pageDelete"  class="disableListIfClicked" disabled><?php $this->text('DELETE'); ?></button>
+					<button id="pageCopy" class="disableListIfClicked" disabled>
+						<?php $this->text('COPY'); ?></button>
+					<button id="pageDelete"  class="disableListIfClicked" disabled>
+						<?php $this->text('DELETE'); ?></button>
 				</div>
 				<div class="dialog-box hidden">
 					<div class="dialog-message"></div>
@@ -270,55 +291,6 @@ class AdminPagesModule extends BasicModule {
 	// --------------------------------------------------------------------------------------------
 	// User input handling methods
 	// --------------------------------------------------------------------------------------------
-
-	private function handlePageOperations() {
-		if (!Utils::isValidFieldNotEmpty('operation')
-				|| !Utils::isValidFieldArrayWithContent('page')) {
-			return;
-		}
-
-		// normalize pages
-		$uniquePages = array_unique(Utils::getValidFieldArray('page'));
-		// check for existence of all pages
-		foreach ($uniquePages as $page) {
-			if(!$DB->resultQuery('SELECT `pid` FROM `Pages` WHERE `pid`=?', 'i', $page)) {
-				return;
-			}
-		}
-
-		// execute operation
-		$operation = Utils::getValidFieldString('operation');
-		switch ($operation) {
-			case 'public':
-				$result = true;
-				foreach ($uniquePages as $page) {
-					$result &= $DB->impactQuery('
-						UPDATE `Pages`
-						SET `options` = `options` & ~' . PAGES_OPTION_PRIVATE . '
-						WHERE `pid`=?', 'i', $page);
-				}
-
-				if ($result) {
-					$this->state = true;
-					$this->message = 'PAGES_VISIBILITY_CHANGED';
-				}
-				break;
-			case 'private':
-				$result = true;
-				foreach ($uniquePages as $page) {
-					$result &= $DB->impactQuery('
-						UPDATE `Pages`
-						SET `options` = `options` | ' . PAGES_OPTION_PRIVATE . '
-						WHERE `pid`=?', 'i', $page);
-				}
-
-				if ($result) {
-					$this->state = true;
-					$this->message = 'PAGES_VISIBILITY_CHANGED';
-				}
-				break;
-		}
-	}
 
 	private function handleMenuItemOperations() {
 		$operation = Utils::getUnmodifiedStringOrEmpty('operation');
@@ -425,6 +397,68 @@ class AdminPagesModule extends BasicModule {
 				case 'move':
 				case 'copy':
 					$this->message = 'MENU_ITEMS_COPY_MOVE_SUCCESSFUL';
+					break;
+			}
+		}
+		else {
+			$this->message = 'UNKNOWN_ERROR';
+		}
+	}
+
+	private function handlePageOperations() {
+		$operation = Utils::getUnmodifiedStringOrEmpty('operation');
+
+		// check for pages
+		if (!Utils::isValidFieldIntArray('page')) {
+			return;
+		}
+
+		// normalize pages
+		$uniquePageIds = array_unique(Utils::getValidFieldArray('page'));
+
+		// foreach page
+		$result = true;
+		foreach ($uniquePageIds as $pageId) {
+			// check if page exists
+			$page = Utils::getColumnWithValue($this->pages, 'pid', (int) $pageId);
+			if ($page === false) {
+				continue;
+			}
+
+			// do operation
+			switch ($operation) {
+				case 'delete':
+					$result = $result && $this->pageOperations->deletePage($page['pid']);
+					break;
+				case 'public':
+					$result = $result && $this->pageOperations->makePagePublic($page['pid']);
+					break;
+				case 'private':
+					$result = $result && $this->pageOperations->makePagePrivate($page['pid']);
+					break;
+				case 'copy':
+					$result = $result && $this->pageOperations->copyPage($page['pid']);
+					break;
+				default:
+					$result = false;
+				break;
+			}
+		}
+
+		// set state
+		$this->state = $result;
+		if ($result === true) {
+			switch ($operation) {
+				case 'delete':
+					$this->message = 'PAGES_DELETED';
+					break;
+				case 'public':
+				case 'private':
+					$this->message = 'PAGES_VISIBILITY_CHANGED';
+					break;
+				case 'move':
+				case 'copy':
+					$this->message = 'PAGES_COPIED';
 					break;
 			}
 		}

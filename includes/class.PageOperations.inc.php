@@ -12,6 +12,24 @@ final class PageOperations {
 		$this->moduleOperations = $moduleOperations;
 	}
 
+	public function makePagePublic($pid) {
+		return $this->db->successQuery('
+			UPDATE `Pages`
+			SET `options` = `options` & ~' . PageOperations::PAGES_OPTION_PRIVATE . '
+			WHERE `pid`=?',
+			'i',
+			$pid);
+	}
+
+	public function makePagePrivate($pid) {
+		return $this->db->successQuery('
+			UPDATE `Pages`
+			SET `options` = `options` | ' . PageOperations::PAGES_OPTION_PRIVATE . '
+			WHERE `pid`=?',
+			'i',
+			$pid);
+	}
+
 	public function getPages() {
 		return $this->db->valuesQuery('
 			SELECT `pid`, `title`, `hoverTitle`, `options`, `externalId`
@@ -100,6 +118,49 @@ final class PageOperations {
 			return false;
 		}
 		return $result['title'];
+	}
+
+	public function copyPage($pid) {
+		$page = $this->getPage($pid);
+		if ($page === false) {
+			return false;
+		}
+
+		// if externalId already exists -> try externalId with suffix
+		$externalId = $page['externalId'];
+		if ($externalId !== null) {
+			$externalId = $externalId . '_' . uniqid();
+			$duplicates = $this->db->valueQuery('
+				SELECT COUNT(*) AS `value`
+				FROM `Pages`
+				WHERE `externalId`=?',
+				's',
+				$externalId);
+			// also not possible -> copy failed
+			if ($duplicates === false || $duplicates['value'] > 0) {
+				return false;
+			}
+		}
+
+		// add page
+		$newPid = $this->addPage($page['title'], $page['hoverTitle'], $externalId, $page['options'],
+			$page['externalLastChanged']);
+		if ($newPid === false) {
+			return false;
+		}
+
+		// copy modules
+		return $this->moduleOperations->copyModules($pid, $newPid);
+	}
+
+	public function deletePage($pid) {
+		// delete modules then page
+		return $this->moduleOperations->deleteModules($pid)
+			&& $this->db->successQuery('
+				DELETE FROM `Pages`
+				WHERE `pid`=?',
+				'i',
+				$pid);
 	}
 
 }

@@ -32,6 +32,10 @@ class AdminEditPageModule extends BasicModule {
 		// if page is present, load modules
 		if (isset($this->page)) {
 			$this->loadModulesBySection();
+			// modules could not be loaded
+			if (!isset($this->modulesBySection)) {
+				return;
+			}
 		}
 
 		// handle new page
@@ -739,12 +743,18 @@ class AdminEditPageModule extends BasicModule {
 		$this->modulesBySection = [];
 		$sections = $this->moduleOperations->getModuleSections($this->page['pid']);
 		if ($sections === false) {
+			$this->modulesBySection = null;
+			$this->state = false;
+			$this->message = 'UNKNOWN_ERROR';
 			return;
 		}
 		foreach ($sections as $section) {
 			$modules = $this->moduleOperations->getModules($this->page['pid'], $section['section']);
 			if ($modules === false) {
-				continue;
+				$this->modulesBySection = null;
+				$this->state = false;
+				$this->message = 'UNKNOWN_ERROR';
+				return;
 			}
 			$this->modulesBySection[$section['section']] = $modules;
 		}

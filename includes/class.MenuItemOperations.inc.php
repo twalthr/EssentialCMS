@@ -13,7 +13,7 @@ final class MenuItemOperations {
 	}
 
 	public function makeMenuItemPublic($miid) {
-		return $this->db->impactQuery('
+		return $this->db->successQuery('
 			UPDATE `MenuItems`
 			SET `options` = `options` & ~' . MenuItemOperations::MENU_ITEMS_OPTION_PRIVATE . '
 			WHERE `miid`=?',
@@ -22,7 +22,7 @@ final class MenuItemOperations {
 	}
 
 	public function makeMenuItemPrivate($miid) {
-		return $this->db->impactQuery('
+		return $this->db->successQuery('
 			UPDATE `MenuItems`
 			SET `options` = `options` | ' . MenuItemOperations::MENU_ITEMS_OPTION_PRIVATE . '
 			WHERE `miid`=?',

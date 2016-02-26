@@ -84,7 +84,7 @@ final class ModuleOperations {
 			GROUP BY `section`',
 			'i',
 			$page);
-		if ($sections === false || empty($sections)) {
+		if ($sections === false) {
 			return false;
 		}
 		return $sections;
@@ -98,7 +98,7 @@ final class ModuleOperations {
 			ORDER BY `order` ASC',
 			'ii',
 			$page, $section);
-		if ($modules === false || empty($modules)) {
+		if ($modules === false) {
 			return false;
 		}
 		return $modules;
@@ -184,6 +184,52 @@ final class ModuleOperations {
 		}
 		$result = $this->moveModuleWithinSection($newMid, $newOrder);
 		return $result && $this->fieldGroupOperations->copyFieldGroups($mid, $newMid);
+	}
+
+	public function copyModules($fromPid, $toPid) {
+		$modules = $this->db->valuesQuery('
+			SELECT `mid`, `section`, `order`, `definitionId`
+			FROM `Modules`
+			WHERE `page`=?
+			ORDER BY `section` ASC, `order` ASC',
+			'i',
+			$fromPid);
+		if ($modules === false) {
+			return false;
+		}
+
+		foreach ($modules as $module) {
+			// add module
+			$newMid = $this->addModule($toPid, $module['section'], $module['definitionId']);
+			if ($newMid === false) {
+				return false;
+			}
+			// copy field groups
+			$result = $this->fieldGroupOperations->copyFieldGroups($module['mid'], $newMid);
+			if ($result === false) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	public function deleteModules($pid) {
+		$mids = $this->db->valuesQuery('
+			SELECT `mid` AS `value`
+			FROM `Modules`
+			WHERE `page`=?',
+			'i',
+			$pid);
+		if ($mids === false) {
+			return false;
+		}
+
+		// delete all modules one by one
+		$result = true;
+		foreach ($mids as $mid) {
+			$result = $result && $this->deleteModule($mid['value']);
+		}
+		return $result;
 	}
 
 	public function deleteModule($mid) {

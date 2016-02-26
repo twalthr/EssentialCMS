@@ -8,14 +8,16 @@ class AdminController {
 	private $fieldGroupOperations;
 	private $moduleOperations;
 	private $pageOperations;
+	private $changelogOperations;
 	private $globalOperations;
 
 	public function __construct() {	
-		global $DB, $PUBLIC_ROOT, $CMS_FULLNAME, $CMS_URL;
+		global $DB, $PUBLIC_ROOT, $CMS_FULLNAME, $CMS_URL, $MAX_RUNTIME;
 		$this->config = new Configuration();
 		$this->config->setPublicRoot($PUBLIC_ROOT);
 		$this->config->setCmsFullname($CMS_FULLNAME);
 		$this->config->setCmsUrl($CMS_URL);
+		$this->config->setMaxRuntime($MAX_RUNTIME);
 
 		// database operations
 		$this->menuItemOperations = new MenuItemOperations($DB);
@@ -23,6 +25,7 @@ class AdminController {
 		$this->fieldGroupOperations = new FieldGroupOperations($DB, $this->fieldOperations);
 		$this->moduleOperations = new ModuleOperations($DB, $this->fieldGroupOperations);
 		$this->pageOperations = new PageOperations($DB, $this->moduleOperations);
+		$this->changelogOperations = new ChangelogOperations($DB);
 		$this->globalOperations = new GlobalOperations($this->menuItemOperations,
 			$this->pageOperations);
 	}
@@ -39,16 +42,34 @@ class AdminController {
 		$this->layout($layoutContext);
 	}
 
-	public function layoutLoggedInContent($currentMenuIndex, $subMenuItems, $asideModules, ...$contentModules) {
+	public function layoutLoggedInContent($currentMenuIndex, $subMenuItems, $asideModules,
+			...$contentModules) {
 		$layoutContext = $this->generateLayoutContext();
+		// add menu
 		$menuItems = $this->generateMenuItems();
-		$menuItems[$currentMenuIndex]->setCurrent(true);
+		if ($currentMenuIndex !== null && $currentMenuIndex >= 0) {
+			$menuItems[$currentMenuIndex]->setCurrent(true);
+		}
 		$layoutContext->setMenuItems($menuItems);
 		if ($subMenuItems !== null) {
 			$layoutContext->setCurrentSubMenuItems($subMenuItems);
 		}
+		// add changelog status
+		$numberOfChanges = $this->changelogOperations->getNumberOfChanges();
+		$changelogShown = false;
+		foreach ($contentModules as $contentModule) {
+			if ($contentModule instanceof AdminChangelogModule) {
+				$changelogShown = true;
+			}
+		}
+		if (!$changelogShown && $numberOfChanges !== false && $numberOfChanges > 0 && $contentModules) {
+			$modules[] = new AdminChangelogStatusModule($numberOfChanges);
+			$layoutContext->setBeforeContentModules($modules);
+		}
+
+		// add content
 		if ($asideModules !== null) {
-			$layoutContext->setAsideHeader($asideModules);
+			$layoutContext->setAsideContentModules($asideModules);
 		}
 		$layoutContext->setContentModules($contentModules);
 		$this->layout($layoutContext);
@@ -97,7 +118,7 @@ class AdminController {
 					`operation` TINYINT NOT NULL,
 					`recordId` INT(10) NOT NULL,
 					`time` TIMESTAMP NOT NULL,
-					`description` VARCHAR(256) NOT NULL,
+					`description` TEXT NOT NULL,
 					PRIMARY KEY (`clid`)
 				)
 			') && $DB->successQuery('
@@ -302,6 +323,10 @@ class AdminController {
 		return $this->pageOperations;
 	}
 
+	public function getChangelogOperations() {
+		return $this->changelogOperations;
+	}
+
 	// --------------------------------------------------------------------------------------------
 
 	private function generateLayoutContext() {
@@ -338,6 +363,12 @@ class AdminController {
 	private function layout($layoutContext) {
 		global $INCLUDE_DIRECTORY;
 		require_once($INCLUDE_DIRECTORY . '/templ.AdminLayout.inc.php');
+	}
+
+	// --------------------------------------------------------------------------------------------
+
+	public function getCompiler() {
+		return new Compiler();
 	}
 }
 

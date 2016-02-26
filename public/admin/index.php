@@ -160,6 +160,13 @@ switch ($action) {
 			$parameters);
 		$controller->layoutDialog($module);
 		break;
+	case 'changes':
+		$controller->verifyLogin();
+		$module = new AdminChangelogModule(
+			$controller->getChangelogOperations(),
+			$controller->getCompiler());
+		$controller->layoutLoggedInContent(1, null, null, $module);
+		break;
 	default:
 		echo "Invalid command.";
 }

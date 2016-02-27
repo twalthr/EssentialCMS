@@ -11,7 +11,7 @@ class AdminController {
 	private $changelogOperations;
 	private $globalOperations;
 
-	public function __construct() {	
+	public function __construct() {
 		global $DB, $PUBLIC_ROOT, $CMS_FULLNAME, $CMS_URL, $MAX_RUNTIME;
 		$this->config = new Configuration();
 		$this->config->setPublicRoot($PUBLIC_ROOT);
@@ -114,11 +114,12 @@ class AdminController {
 		$result = $DB->successQuery('
 				CREATE TABLE IF NOT EXISTS `Changelog` (
 					`clid` INT(10) NOT NULL AUTO_INCREMENT,
+					`internal` TINYINT NOT NULL,
 					`type` TINYINT NOT NULL,
 					`operation` TINYINT NOT NULL,
 					`recordId` INT(10) NOT NULL,
 					`time` TIMESTAMP NOT NULL,
-					`description` TEXT NOT NULL,
+					`description` TEXT NULL,
 					PRIMARY KEY (`clid`)
 				)
 			') && $DB->successQuery('
@@ -361,14 +362,20 @@ class AdminController {
 	}
 
 	private function layout($layoutContext) {
-		global $INCLUDE_DIRECTORY;
-		require_once($INCLUDE_DIRECTORY . '/templ.AdminLayout.inc.php');
+		global $ROOT_DIRECTORY;
+		require_once($ROOT_DIRECTORY . '/layouts/templ.AdminLayout.inc.php');
 	}
 
 	// --------------------------------------------------------------------------------------------
 
 	public function getCompiler() {
-		return new Compiler();
+		global $ROOT_DIRECTORY, $MAX_RUNTIME_STOP_FACTOR;
+		return new Compiler(
+			$this->config,
+			$MAX_RUNTIME_STOP_FACTOR,
+			$ROOT_DIRECTORY . '/compiled',
+			$this->changelogOperations,
+			$this->moduleOperations);
 	}
 }
 

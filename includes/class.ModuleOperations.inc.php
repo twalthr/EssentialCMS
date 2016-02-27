@@ -90,18 +90,27 @@ final class ModuleOperations {
 		return $sections;
 	}
 
-	public function getModules($page, $section) {
-		$modules = $this->db->valuesQuery('
-			SELECT *
-			FROM `Modules`
-			WHERE `page`=? AND `section`=?
-			ORDER BY `order` ASC',
-			'ii',
-			$page, $section);
-		if ($modules === false) {
-			return false;
+	public function getModules($pid, $section) {
+		// global modules
+		if (!isset($pid)) {
+			return $this->db->valuesQuery('
+				SELECT *
+				FROM `Modules`
+				WHERE `page` IS NULL AND `section`=?
+				ORDER BY `order` ASC',
+				'i',
+				$section);
 		}
-		return $modules;
+		// page modules
+		else {
+			return $this->db->valuesQuery('
+				SELECT *
+				FROM `Modules`
+				WHERE `page`=? AND `section`=?
+				ORDER BY `order` ASC',
+				'ii',
+				$pid, $section);
+		}
 	}
 
 	public function moveModuleWithinSection($mid, $newOrder) {

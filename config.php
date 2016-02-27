@@ -17,6 +17,7 @@ $DB_PASSWORD = '';
 $PUBLIC_ROOT = 'http://localhost/EssentialCMS/public';
 
 $MAX_RUNTIME = 30;
+$MAX_RUNTIME_STOP_FACTOR = 0.1;
 
 // set class autoloader
 $ROOT_DIRECTORY = dirname(__FILE__);

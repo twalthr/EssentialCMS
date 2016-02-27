@@ -2,6 +2,9 @@
 
 final class ChangelogOperations {
 
+	const CHANGELOG_INTERNAL_FALSE = 0;
+	const CHANGELOG_INTERNAL_TRUE = 1;
+
 	const CHANGELOG_TYPE_GLOBAL = 0;
 	const CHANGELOG_TYPE_PAGE = 1;
 	const CHANGELOG_TYPE_MODULE = 2;
@@ -21,7 +24,8 @@ final class ChangelogOperations {
 	public function getNumberOfChanges() {
 		$number = $this->db->valueQuery('
 			SELECT COUNT(*) AS `value`
-			FROM `Changelog`');
+			FROM `Changelog`
+			WHERE `internal` = ' . ChangelogOperations::CHANGELOG_INTERNAL_FALSE);
 		if ($number === false) {
 			return false;
 		}
@@ -32,7 +36,26 @@ final class ChangelogOperations {
 		return $this->db->valuesQuery('
 			SELECT *
 			FROM `Changelog`
+			WHERE `internal` = ' . ChangelogOperations::CHANGELOG_INTERNAL_FALSE . '
 			ORDER BY `time` ASC');
+	}
+
+	public function getInternalChanges() {
+		return $this->db->valuesQuery('
+			SELECT *
+			FROM `Changelog`
+			WHERE `internal` = ' . ChangelogOperations::CHANGELOG_INTERNAL_TRUE . '
+			ORDER BY `time` ASC');
+	}
+
+	public function addInternalChange($type, $operation, $recordId) {
+		return $this->db->impactQuery('
+			INSERT INTO `Changelog`
+			(`internal`, `type`, `operation`, `recordId`, `time`)
+			VALUES
+			(?,?,?,?,NOW())',
+			'iiii',
+			ChangelogOperations::CHANGELOG_INTERNAL_TRUE, $type, $operation, $recordId);
 	}
 
 }

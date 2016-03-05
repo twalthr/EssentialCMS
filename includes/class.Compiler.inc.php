@@ -3,6 +3,7 @@
 class Compiler {
 
 	// database operations
+	private $configurationOperations;
 	private $changelogOperations;
 	private $moduleOperations;
 
@@ -10,6 +11,7 @@ class Compiler {
 	private $config;
 	private $maxRuntimeStopFactor;
 	private $compilationPath;
+	private $layoutPath;
 
 	// results
 	private $finished;
@@ -22,18 +24,24 @@ class Compiler {
 			$config,
 			$maxRuntimeStopFactor,
 			$compilationPath,
+			$layoutPath,
+			$configurationOperations,
 			$changelogOperations,
+			$pageOperations,
 			$moduleOperations) {
 		$this->config = $config;
 		$this->maxRuntimeStopFactor = $maxRuntimeStopFactor;
 		$this->compilationPath = $compilationPath;
+		$this->layoutPath = $layoutPath;
+		$this->configurationOperations = $configurationOperations;
 		$this->changelogOperations = $changelogOperations;
+		$this->pageOperations = $pageOperations;
 		$this->moduleOperations = $moduleOperations;
 	}
 
 	public function compile($changelog) {
 		$startRuntime = time();
-		$stopRuntime = time() + ($this->config->getMaxRuntime() * $maxRuntimeStopFactor);
+		$stopRuntime = time() + ($this->config->getMaxRuntime() * $this->maxRuntimeStopFactor);
 
 		$this->finished = false;
 		$this->success = false;
@@ -48,7 +56,7 @@ class Compiler {
 				return;
 			}
 			// no internal tasks -> extract tasks from change
-			if (empty($tasks)) {
+			else if (empty($tasks)) {
 				$tasks = $this->splitIntoInternalTasks($change);
 				// tasks could not be loaded
 				if ($tasks === false) {
@@ -121,7 +129,7 @@ class Compiler {
 					return $this->splitPageUpdate($recordId);
 				}
 				else {
-					return $this->splitPageUpdate($recordId);
+					return $this->splitPageDelete($recordId);
 				}
 			case ChangelogOperations::CHANGELOG_TYPE_MODULE:
 				return $this->splitModuleChange($change['operation'], $change['recordId']);
@@ -134,7 +142,7 @@ class Compiler {
 	}
 
 	private function splitGlobalChange() {
-
+		return [];
 	}
 
 	private function splitPageInsert($pid) {
@@ -313,9 +321,10 @@ class Compiler {
 		}
 		$tasks = [];
 		foreach ($modules as $module) {
-			// check if module file exists
+			// check if first module file exists
+			// we can however assume that a module has at least a page 0
 			if (!file_exists($this->compilationPath . '/module_' .
-					$module['page'] . '_' . $module['mid'])) {
+					$module['page'] . '_' . $module['mid'] . '_0')) {
 				// add module insertion task
 				$result = $this->addTask(
 					ChangelogOperations::CHANGELOG_TYPE_MODULE,
@@ -327,6 +336,8 @@ class Compiler {
 				else {
 					$tasks[] = $result;
 				}
+
+				// TODO load definition and add field group tasks
 			}
 		}
 		return $tasks;
@@ -335,7 +346,7 @@ class Compiler {
 	private function addPageCompilationTask($pid) {
 		return $this->addTask(
 			ChangelogOperations::CHANGELOG_TYPE_PAGE,
-			ChangelogOperations::CHANGELOG_OPERATION_INSERTED,
+			ChangelogOperations::CHANGELOG_OPERATION_UPDATED,
 			$pid);
 	}
 
@@ -348,17 +359,267 @@ class Compiler {
 	}
 
 	// --------------------------------------------------------------------------------------------
+	// Compilation of tasks
+	// --------------------------------------------------------------------------------------------
 
 	private function compileTask($task) {
+		switch ($task['type']) {
+			case ChangelogOperations::CHANGELOG_TYPE_GLOBAL:
+			case ChangelogOperations::CHANGELOG_TYPE_PAGE:
+				if ($task['operation'] === ChangelogOperations::CHANGELOG_OPERATION_UPDATED) {
+					return $this->compilePageUpdate($task['recordId']);
+				}
+				else {
+					return $this->compilePageDelete($task['recordId']);
+				}
+			case ChangelogOperations::CHANGELOG_TYPE_MODULE:
+			case ChangelogOperations::CHANGELOG_TYPE_FIELD_GROUP:
+			case ChangelogOperations::CHANGELOG_TYPE_MEDIA_REFERENCE:
+		}
+	}
+
+	private function compilePageUpdate($pid) {
+		$layoutContext = new LayoutContext($this->config);
+
+		// load page properties
+		$page = $this->pageOperations->getPage($pid);
+		if ($page === false) {
+			return false;
+		}
+
+		// load global properties
+		$title = $this->configurationOperations->getSingleValue(
+			ConfigurationOperations::CONFIGURATION_TITLE);
+		if ($title === false || !Utils::hasStringContent($title)) {
+			$layoutContext->setTitle(Utils::escapeString($page['title']));
+		}
+		else {
+			$layoutContext->setTitle(Utils::escapeString($page['title']) . ' - ' .
+				Utils::escapeString($title));
+		}
+		$description = $this->configurationOperations->getSingleValue(
+			ConfigurationOperations::CONFIGURATION_DESCRIPTION);
+		if ($description !== false) {
+			$layoutContext->setDescription(Utils::escapeString($description));
+		}
+		$customHeader = $this->configurationOperations->getSingleValue(
+			ConfigurationOperations::CONFIGURATION_CUSTOM_HEADER);
+		if ($customHeader !== false) {
+			$layoutContext->setCustomHeader($customHeader);
+		}
+
+		// load global modules (with one/first subpage)
+		$globalPreContentModules = $this->readSubpageOfModules(
+			null,
+			ModuleOperations::MODULES_SECTION_GLOBAL_PRE_CONTENT,
+			0);
+
+		$globalContentModules = $this->readSubpageOfModules(
+			null,
+			ModuleOperations::MODULES_SECTION_GLOBAL_CONTENT,
+			0);
+
+		$globalAsideContentModules = $this->readSubpageOfModules(
+			null,
+			ModuleOperations::MODULES_SECTION_GLOBAL_ASIDE_CONTENT,
+			0);
+
+		$globalPostContentModules = $this->readSubpageOfModules(
+			null,
+			ModuleOperations::MODULES_SECTION_GLOBAL_POST_CONTENT);
+
+		$globalLogoModules = $this->readSubpageOfModules(
+			null,
+			ModuleOperations::MODULES_SECTION_GLOBAL_LOGO,
+			0);
+
+		$globalAsideHeaderModules = $this->readSubpageOfModules(
+			null,
+			ModuleOperations::MODULES_SECTION_GLOBAL_ASIDE_HEADER,
+			0);
+
+		$globalFooterModules = $this->readSubpageOfModules(
+			null,
+			ModuleOperations::MODULES_SECTION_GLOBAL_FOOTER,
+			0);
+
+		if ($globalPreContentModules === false
+				|| $globalContentModules === false
+				|| $globalAsideContentModules === false
+				|| $globalPostContentModules === false
+				|| $globalLogoModules === false
+				|| $globalAsideHeaderModules === false
+				|| $globalFooterModules === false) {
+			return false;
+		}
+
+		// add logo, aside header and footer to context
+		$layoutContext->setLogoModules($globalLogoModules);
+		$layoutContext->setAsideHeaderModules($globalAsideHeaderModules);
+		$layoutContext->setFooterModules($globalFooterModules);
+
+		// determine maximum number of subpages
+		$numberOfSubpages = $this->readSubpageMaximumOfPage($pid);
+		if ($numberOfSubpages === false) {
+			return false;
+		}
+
+		// compile subpages
+		for ($i = 0; $i < $numberOfSubpages; $i++) { 
+			// pre content
+			$preContentModules = $this->readSubpageOfModules(
+				$pid,
+				ModuleOperations::MODULES_SECTION_PRE_CONTENT,
+				$i);
+
+			// content
+			$contentModules = $this->readSubpageOfModules(
+				$pid,
+				ModuleOperations::MODULES_SECTION_CONTENT,
+				$i);
+
+			// aside content
+			$asideContentModules = $this->readSubpageOfModules(
+				$pid,
+				ModuleOperations::MODULES_SECTION_ASIDE_CONTENT,
+				$i);
+
+			// post content
+			$postContentModules = $this->readSubpageOfModules(
+				$pid,
+				ModuleOperations::MODULES_SECTION_POST_CONTENT,
+				$i);
+
+			if ($preContentModules === false
+					|| $contentModules === false
+					|| $asideContentModules === false
+					|| $postContentModules === false) {
+				return false;
+			}
+
+			// add to context
+			$allPreContentModules = array_merge($globalPreContentModules, $preContentModules);
+			$layoutContext->setPreContentModules($allPreContentModules);
+			$allContentModules = array_merge($globalContentModules, $contentModules);
+			$layoutContext->setContentModules($allContentModules);
+			$allAsideContentModules = array_merge($globalAsideContentModules, $asideContentModules);
+			$layoutContext->setAsideContentModules($allAsideContentModules);
+			$allPostContentModules = array_merge($globalPostContentModules, $postContentModules);
+			$layoutContext->setPostContentModules($allPostContentModules);
+
+			// compile and save to file
+			$layout = $this->configurationOperations->getSingleValue(
+				ConfigurationOperations::CONFIGURATION_LAYOUT);
+			if ($layout === false) {
+				$layout = 'DefaultLayout';
+			}
+			$path = $this->layoutPath . '/templ.' . $layout . '.inc.php';
+			if (file_exists($path) === false) {
+				$this->saveErrorWithId('COMPILATION_LAYOUT_NOT_FOUND');
+				return false;
+			}
+			ob_start();
+			require($path);
+			$pageContent = ob_get_contents();
+			ob_end_clean();
+			$fileWrite = file_put_contents($this->compilationPath . '/' . $pid . '.page', $pageContent);
+			if ($fileWrite === false) {
+				$this->saveErrorWithId('COMPILATION_PAGE_SAVING_FAILED');
+				return false;
+			}
+			else {
+				return true;
+			}
+		}
+	}
+
+	private function compilePageDelete($pid) {
 
 	}
+
+	private function readSubpageMaximumOfPage($pid) {
+		$preContentMax = $this->readSubpageMaximumOfPageSection(
+			$pid, ModuleOperations::MODULES_SECTION_PRE_CONTENT);
+		$contentMax = $this->readSubpageMaximumOfPageSection(
+			$pid, ModuleOperations::MODULES_SECTION_CONTENT);
+		$asideContentMax = $this->readSubpageMaximumOfPageSection(
+			$pid, ModuleOperations::MODULES_SECTION_ASIDE_CONTENT);
+		$postContentMax = $this->readSubpageMaximumOfPageSection(
+			$pid, ModuleOperations::MODULES_SECTION_POST_CONTENT);
+		if ($preContentMax === false
+				|| $contentMax === false
+				|| $asideContentMax === false
+				|| $postContentMax === false) {
+			return false;
+		}
+		return max(1, $preContentMax, $contentMax, $asideContentMax, $postContentMax);
+	}
+
+	private function readSubpageMaximumOfPageSection($pid, $section) {
+		$modules = $this->moduleOperations->getModules($pid, $section);
+		if ($modules === false) {
+			return false;
+		}
+
+		$moduleFileList = Utils::getFileList($this->compilationPath, '.module');
+
+		$maximum = 0;
+		// for each module in section
+		foreach ($modules as $module) {
+			// collect number of subpages
+			$numberOfSubpages = 0;
+			foreach ($moduleFileList as $moduleFile) {
+				$prefix = $module['page'] . '_' . $module['mid'] . '_';
+				if (Utils::stringStartsWith($moduleFile, $prefix)) {
+					$numberOfSubpages++;
+				}
+			}
+			// error if no subpage exists
+			// a module must have at least 1 subpage.
+			if ($numberOfSubpages === 0) {
+				$this->saveErrorWithId('COMPILATION_MODULE_NOT_FOUND');
+				return false;
+			}
+			$maximum = max($maximum, $numberOfSubpages);
+		}
+		return $maximum;
+	}
+
+	private function readSubpageOfModules($pid, $section, $subpage) {
+		$modules = $this->moduleOperations->getModules($pid, $section);
+		if ($modules === false) {
+			return false;
+		}
+		$modulesWithSubpage = [];
+		// for each module in section
+		foreach ($modules as $module) {
+			// collect subpage of module
+			$path = $this->compilationPath . '/' . $module['page'] . '_' . $module['mid'] . '_' .
+				$subpage . '.module';
+			$fileContent = file_get_contents($path);
+			// subpage does not exist, fallback to subpage 0
+			if ($fileContent === false && $subpage !== 0) {
+				$path = $this->compilationPath . '/' . $module['page'] . '_' . $module['mid'] . '_0' .
+					'.module';
+				$fileContent = file_get_contents($path);
+			}
+			if ($fileContent === false) {
+				$this->saveErrorWithId('COMPILATION_MODULE_NOT_FOUND');
+				return false;
+			}
+			$modulesWithSubpage[] = ['name' => $module['definitionId'], 'content' => $fileContent];
+		}
+		return $modulesWithSubpage;
+	}
+
+	// --------------------------------------------------------------------------------------------
 
 	private function removeChange($change) {
 
 	}
 
 	private function saveErrorWithId($message) {
-
+		file_put_contents($this->compilationPath . '/error', $message);
 	}
 }
 

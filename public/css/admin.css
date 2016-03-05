@@ -411,11 +411,11 @@ body>.page>header li {
 	font-size: 15px;
 }
 
-body>.page>main, body>.page>section.before-content {
+body>.page>main, body>.page>section.pre-content {
 	width: 100%;
 }
 
-body>.page>main section.content, body>.page>section.before-content>* {
+body>.page>main section.content, body>.page>section.pre-content>* {
 	max-width: 978px;
 }
 
@@ -423,7 +423,7 @@ body>.page>main section.content {
 	margin: 45px auto 45px;
 }
 
-body>.page>section.before-content>* {
+body>.page>section.pre-content>* {
 	margin: 0 auto 0;
 }
 

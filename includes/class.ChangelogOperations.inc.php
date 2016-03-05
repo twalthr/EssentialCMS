@@ -58,6 +58,16 @@ final class ChangelogOperations {
 			ChangelogOperations::CHANGELOG_INTERNAL_TRUE, $type, $operation, $recordId);
 	}
 
+	public function addChange($type, $operation, $recordId, $description) {
+		return $this->db->impactQuery('
+			INSERT INTO `Changelog`
+			(`internal`, `type`, `operation`, `recordId`, `time`, `description`)
+			VALUES
+			(?,?,?,?,NOW(),?)',
+			'iiiis',
+			ChangelogOperations::CHANGELOG_INTERNAL_FALSE, $type, $operation, $recordId, $description);
+	}
+
 }
 
 ?>

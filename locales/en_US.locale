@@ -201,3 +201,6 @@ COMPILE_CHANGES=Publish Changes
 PLEASE_WAIT=Please wait while your changes are being published...
 CHANGES_PUBLISHED=All changes have been published successfully.
 CHANGES_ERROR=An error occured during publication. Please solve the following issue: %1$s
+COMPILATION_MODULE_NOT_FOUND=?
+COMPILATION_LAYOUT_NOT_FOUND=?
+COMPILATION_PAGE_SAVING_FAILED=?

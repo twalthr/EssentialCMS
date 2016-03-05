@@ -6,10 +6,12 @@ final class PageOperations {
 
 	private $db;
 	private $moduleOperations;
+	private $changelogOperations;
 
-	public function __construct($db, $moduleOperations) {
+	public function __construct($db, $moduleOperations, $changelogOperations) {
 		$this->db = $db;
 		$this->moduleOperations = $moduleOperations;
+		$this->changelogOperations = $changelogOperations;
 	}
 
 	public function makePagePublic($pid) {
@@ -38,13 +40,30 @@ final class PageOperations {
 	}
 
 	public function addPage($title, $hoverTitle, $externalId, $options, $externalLastChanged) {
-		return $this->db->impactQueryWithId('
+		$pid = $this->db->impactQueryWithId('
 			INSERT INTO `Pages`
 			(`title`, `hoverTitle`, `externalId`, `options`, `lastChanged`, `externalLastChanged`)
 			VALUES
 			(?,?,?,?,NOW(),?)',
 			'sssis',
 			$title, $hoverTitle, $externalId, $options, $externalLastChanged);
+		if ($pid === false) {
+			return false;
+		}
+
+		// publish page if externalId is present and page is visible
+		if (Utils::hasStringContent($externalId)
+				&& !Utils::isFlagged($options, PageOperations::PAGES_OPTION_PRIVATE)) {
+			$result = $this->changelogOperations->addChange(
+				ChangelogOperations::CHANGELOG_TYPE_PAGE,
+				ChangelogOperations::CHANGELOG_OPERATION_INSERTED,
+				$pid,
+				$title);
+			if ($result === false) {
+				return false;
+			}
+		}
+		return $pid;
 	}
 
 	public function updatePage($pid, $updateColumns) {

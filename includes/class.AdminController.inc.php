@@ -3,12 +3,13 @@
 class AdminController {
 
 	private $config;
+	private $configurationOperations;
+	private $changelogOperations;
 	private $menuItemOperations;
 	private $fieldOperations;
 	private $fieldGroupOperations;
 	private $moduleOperations;
 	private $pageOperations;
-	private $changelogOperations;
 	private $globalOperations;
 
 	public function __construct() {
@@ -20,33 +21,34 @@ class AdminController {
 		$this->config->setMaxRuntime($MAX_RUNTIME);
 
 		// database operations
+		$this->configurationOperations = new ConfigurationOperations($DB);
+		$this->changelogOperations = new ChangelogOperations($DB);
 		$this->menuItemOperations = new MenuItemOperations($DB);
 		$this->fieldOperations = new FieldOperations($DB);
 		$this->fieldGroupOperations = new FieldGroupOperations($DB, $this->fieldOperations);
 		$this->moduleOperations = new ModuleOperations($DB, $this->fieldGroupOperations);
-		$this->pageOperations = new PageOperations($DB, $this->moduleOperations);
-		$this->changelogOperations = new ChangelogOperations($DB);
+		$this->pageOperations = new PageOperations($DB, $this->moduleOperations, $this->changelogOperations);
 		$this->globalOperations = new GlobalOperations($this->menuItemOperations,
 			$this->pageOperations);
 	}
 
-	public function layoutDialog(...$contentModules) {
-		foreach ($contentModules as $contentModule) {
-			$contentModule->printContent($this->config);
+	public function layoutDialog(...$modules) {
+		foreach ($modules as $module) {
+			$module->printContent($this->config);
 		}
 	}
 
-	public function layoutContent(...$contentModules) {
-		$layoutContext = $this->generateLayoutContext();
-		$layoutContext->setContentModules($contentModules);
+	public function layoutContent(...$modules) {
+		$layoutContext = $this->createLayoutContext();
+		$layoutContext->setContentModules($this->createContentFromModules($modules));
 		$this->layout($layoutContext);
 	}
 
 	public function layoutLoggedInContent($currentMenuIndex, $subMenuItems, $asideModules,
 			...$contentModules) {
-		$layoutContext = $this->generateLayoutContext();
+		$layoutContext = $this->createLayoutContext();
 		// add menu
-		$menuItems = $this->generateMenuItems();
+		$menuItems = $this->createMenuItems();
 		if ($currentMenuIndex !== null && $currentMenuIndex >= 0) {
 			$menuItems[$currentMenuIndex]->setCurrent(true);
 		}
@@ -63,15 +65,15 @@ class AdminController {
 			}
 		}
 		if (!$changelogShown && $numberOfChanges !== false && $numberOfChanges > 0 && $contentModules) {
-			$modules[] = new AdminChangelogStatusModule($numberOfChanges);
-			$layoutContext->setBeforeContentModules($modules);
+			$module = new AdminChangelogStatusModule($numberOfChanges);
+			$layoutContext->setPreContentModules([$this->createContentFromModule($module)]);
 		}
 
 		// add content
-		if ($asideModules !== null) {
-			$layoutContext->setAsideContentModules($asideModules);
+		if (isset($asideModules)) {
+			$layoutContext->setAsideContentModules($this->createContentFromModules($asideModules));
 		}
-		$layoutContext->setContentModules($contentModules);
+		$layoutContext->setContentModules($this->createContentFromModules($contentModules));
 		$this->layout($layoutContext);
 	}
 
@@ -330,20 +332,29 @@ class AdminController {
 
 	// --------------------------------------------------------------------------------------------
 
-	private function generateLayoutContext() {
-		global $CMS_FULLNAME, $TR;
+	private function createContentFromModule($module) {
+		$content = [];
+		$content['name'] = $module->getName();
+		$content['content'] = $module->getContent($this->config);
+		return $content;
+	}
+
+	private function createContentFromModules($modules) {
+		$content = [];
+		foreach ($modules as $module) {
+			$content[] = $this->createContentFromModule($module);
+		}
+		return $content;
+	}
+
+	private function createLayoutContext() {
 		$layoutContext = new LayoutContext($this->config);
-		$layoutContext->setTitle($CMS_FULLNAME);
-		$layoutContext->setLogo('
-			<hgroup>
-				<h1>' . $CMS_FULLNAME . '</h1>
-				<h2>' . $TR->translate('WEBSITE_ADMINISTRATION') . '</h2>
-			</hgroup>
-			');
+		$layoutContext->setTitle($this->config->getCmsFullname());
+		$layoutContext->setLogoModules([$this->createContentFromModule(new AdminLogoModule())]);
 		return $layoutContext;
 	}
 
-	private function generateMenuItems() {
+	private function createMenuItems() {
 		global $PUBLIC_ROOT, $TR;
 		$menuItems = array();
 		$menuItems[] = new MenuItem($PUBLIC_ROOT . '/admin/overview', null, false, 
@@ -374,7 +385,10 @@ class AdminController {
 			$this->config,
 			$MAX_RUNTIME_STOP_FACTOR,
 			$ROOT_DIRECTORY . '/compiled',
+			$ROOT_DIRECTORY . '/layouts',
+			$this->configurationOperations,
 			$this->changelogOperations,
+			$this->pageOperations,
 			$this->moduleOperations);
 	}
 }

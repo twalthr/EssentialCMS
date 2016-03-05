@@ -1,24 +1,27 @@
 <?php
 
 class LayoutContext {
+	// general properties
 	private $title;
 	private $description;
 	private $config;
-	private $root;
-	private $customHeader; // html
-	private $logo; // html
+	private $customHeader;
+
+	// modules
+	private $preContentModules;
+	private $contentModules;
+	private $asideContentModules;
+	private $postContentModules;
+	private $logoModules;
+	private $asideHeaderModules;
+	private $footerModules;
+
+	// menu items
 	private $menuItems;
 	private $currentSubMenuItems;
-	private $asideHeader; // html
-	private $beforeContentModules;
-	private $contentModules;
-	private $afterContentModules;
-	private $asideContentModules;
-	private $footer;
 
 	public function __construct($config) {
 		$this->config = $config;
-		$this->root = $config->getPublicRoot();
 	}
 
 	public function hasTitle() {
@@ -45,16 +48,16 @@ class LayoutContext {
 		return $this->description;
 	}
 
-	public function getConfig() {
-		return $this->config;
+	public function getCmsUrl() {
+		return $this->config->getCmsUrl();
 	}
 
-	public function setRoot($root) {
-		$this->root = $root;
+	public function getCmsFullname() {
+		return $this->config->getCmsFullname();
 	}
 
 	public function getRoot() {
-		return $this->root;
+		return $this->config->getPublicRoot();
 	}
 
 	public function hasCustomHeader() {
@@ -69,17 +72,93 @@ class LayoutContext {
 		return $this->customHeader;
 	}
 
-	public function hasLogo() {
-		return Utils::hasStringContent($this->logo);
+	// --------------------------------------------------------------------------------------------
+
+	public function hasPreContentModules() {
+		return isset($this->preContentModules);
 	}
 
-	public function setLogo($logo) {
-		$this->logo = $logo;
+	public function setPreContentModules($preContentModules) {
+		$this->preContentModules = $preContentModules;
 	}
 
-	public function getLogo() {
-		return $this->logo;
+	public function getPreContentModules() {
+		return $this->preContentModules;
 	}
+
+	public function hasContentModules() {
+		return isset($this->contentModules);
+	}
+
+	public function setContentModules($contentModules) {
+		$this->contentModules = $contentModules;
+	}
+
+	public function getContentModules() {
+		return $this->contentModules;
+	}
+
+	public function hasAsideContentModules() {
+		return isset($this->asideContentModules);
+	}
+
+	public function setAsideContentModules($asideContentModules) {
+		$this->asideContentModules = $asideContentModules;
+	}
+
+	public function getAsideContentModules() {
+		return $this->asideContentModules;
+	}
+
+	public function hasPostContentModules() {
+		return isset($this->postContentModules);
+	}
+
+	public function setPostContentModules($postContentModules) {
+		$this->postContentModules = $postContentModules;
+	}
+
+	public function getPostContentModules() {
+		return $this->postContentModules;
+	}
+
+	public function hasLogoModules() {
+		return isset($this->logoModules);
+	}
+
+	public function setLogoModules($logoModules) {
+		$this->logoModules = $logoModules;
+	}
+
+	public function getLogoModules() {
+		return $this->logoModules;
+	}
+
+	public function hasAsideHeaderModules() {
+		return isset($this->asideHeaderModules);
+	}
+
+	public function setAsideHeaderModules($asideHeaderModules) {
+		$this->asideHeaderModules = $asideHeaderModules;
+	}
+
+	public function getAsideHeaderModules() {
+		return $this->asideHeaderModules;
+	}
+
+	public function hasFooterModules() {
+		return isset($this->footerModules);
+	}
+
+	public function setFooterModules($footerModules) {
+		$this->footerModules = $footerModules;
+	}
+
+	public function getFooterModules() {
+		return $this->footerModules;
+	}
+
+	// --------------------------------------------------------------------------------------------
 
 	public function hasMenuItems() {
 		return is_array($this->menuItems) && !empty($this->menuItems);
@@ -103,74 +182,6 @@ class LayoutContext {
 
 	public function getCurrentSubMenuItems() {
 		return $this->currentSubMenuItems;
-	}
-
-	public function hasBeforeContentModules() {
-		return is_array($this->beforeContentModules) && !empty($this->beforeContentModules);
-	}
-
-	public function setBeforeContentModules($beforeContentModules) {
-		$this->beforeContentModules = $beforeContentModules;
-	}
-
-	public function getBeforeContentModules() {
-		return $this->beforeContentModules;
-	}
-
-	public function hasContentModules() {
-		return is_array($this->contentModules) && !empty($this->contentModules);
-	}
-
-	public function setContentModules($contentModules) {
-		$this->contentModules = $contentModules;
-	}
-
-	public function getContentModules() {
-		return $this->contentModules;
-	}
-
-	public function hasAsideHeader() {
-		return Utils::hasStringContent($this->asideHeader);
-	}
-
-	public function setAsideHeader($asideHeader) {
-		$this->asideHeader = $asideHeader;
-	}
-
-	public function getAsideHeader() {
-		return $this->asideHeader;
-	}
-
-	public function hasAfterContentModules() {
-		return is_array($this->afterContentModules) && !empty($this->afterContentModules);
-	}
-
-	public function setAfterContentModules($afterContentModules) {
-		$this->afterContentModules = $afterContentModules;
-	}
-
-	public function getAfterContentModules() {
-		return $this->afterContentModules;
-	}
-
-	public function hasAsideContentModules() {
-		return is_array($this->asideContentModules) && !empty($this->asideContentModules);
-	}
-
-	public function setAsideContentModules($asideContentModules) {
-		$this->asideContentModules = $asideContentModules;
-	}
-
-	public function getAsideContentModules() {
-		return $this->asideContentModules;
-	}
-
-	public function hasFooter() {
-		return Utils::hasStringContent($this->footer);
-	}
-
-	public function getFooter() {
-		return $this->footer;
 	}
 }
 

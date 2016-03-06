@@ -75,7 +75,7 @@ class LayoutContext {
 	// --------------------------------------------------------------------------------------------
 
 	public function hasPreContentModules() {
-		return isset($this->preContentModules);
+		return isset($this->preContentModules) && !empty($this->preContentModules);
 	}
 
 	public function setPreContentModules($preContentModules) {
@@ -87,7 +87,7 @@ class LayoutContext {
 	}
 
 	public function hasContentModules() {
-		return isset($this->contentModules);
+		return isset($this->contentModules) && !empty($this->contentModules);
 	}
 
 	public function setContentModules($contentModules) {
@@ -99,7 +99,7 @@ class LayoutContext {
 	}
 
 	public function hasAsideContentModules() {
-		return isset($this->asideContentModules);
+		return isset($this->asideContentModules) && !empty($this->asideContentModules);
 	}
 
 	public function setAsideContentModules($asideContentModules) {
@@ -111,7 +111,7 @@ class LayoutContext {
 	}
 
 	public function hasPostContentModules() {
-		return isset($this->postContentModules);
+		return isset($this->postContentModules) && !empty($this->postContentModules);
 	}
 
 	public function setPostContentModules($postContentModules) {
@@ -123,7 +123,7 @@ class LayoutContext {
 	}
 
 	public function hasLogoModules() {
-		return isset($this->logoModules);
+		return isset($this->logoModules) && !empty($this->logoModules);
 	}
 
 	public function setLogoModules($logoModules) {
@@ -135,7 +135,7 @@ class LayoutContext {
 	}
 
 	public function hasAsideHeaderModules() {
-		return isset($this->asideHeaderModules);
+		return isset($this->asideHeaderModules) && !empty($this->asideHeaderModules);
 	}
 
 	public function setAsideHeaderModules($asideHeaderModules) {
@@ -147,7 +147,7 @@ class LayoutContext {
 	}
 
 	public function hasFooterModules() {
-		return isset($this->footerModules);
+		return isset($this->footerModules) && !empty($this->footerModules);
 	}
 
 	public function setFooterModules($footerModules) {

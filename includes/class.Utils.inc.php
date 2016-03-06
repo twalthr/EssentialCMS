@@ -2,6 +2,14 @@
 
 abstract class Utils {
 
+	public static function readFirstLine($str) {
+		return strtok($str, "\n");
+	}
+
+	public static function deleteFirstLine($str) {
+		return substr($str, strpos($str, "\n") + 1);
+	}
+
 	public static function redirect($url, $statusCode = 303) {
 		header('Location: ' . $url, true, $statusCode);
 		die();

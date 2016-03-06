@@ -12,6 +12,7 @@ class Compiler {
 	private $maxRuntimeStopFactor;
 	private $compilationPath;
 	private $layoutPath;
+	private $publicPath;
 
 	// results
 	private $finished;
@@ -25,6 +26,7 @@ class Compiler {
 			$maxRuntimeStopFactor,
 			$compilationPath,
 			$layoutPath,
+			$publicPath,
 			$configurationOperations,
 			$changelogOperations,
 			$pageOperations,
@@ -33,6 +35,7 @@ class Compiler {
 		$this->maxRuntimeStopFactor = $maxRuntimeStopFactor;
 		$this->compilationPath = $compilationPath;
 		$this->layoutPath = $layoutPath;
+		$this->publicPath = $publicPath;
 		$this->configurationOperations = $configurationOperations;
 		$this->changelogOperations = $changelogOperations;
 		$this->pageOperations = $pageOperations;
@@ -81,7 +84,13 @@ class Compiler {
 					return;
 				}
 			}
-			$this->removeChange($change);
+			$result = $this->removeChange($change);
+			// error occurred
+			if ($result === false) {
+				$this->saveErrorWithId('UNKNOWN_ERROR');
+				$this->finished = true;
+				$this->success = false;
+			}
 			$this->processedChanges++;
 		}
 		$this->finished = true;
@@ -507,7 +516,24 @@ class Compiler {
 			$allPostContentModules = array_merge($globalPostContentModules, $postContentModules);
 			$layoutContext->setPostContentModules($allPostContentModules);
 
-			// compile and save to file
+			// determine subpage targets
+			$targetPaths = [ $this->compilationPath . '/' . $pid . '_' . $i . '.page' ];
+			if (isset($page['externalId'])) {
+				if ($i == 0) {
+					$targetPaths[] = $this->publicPath . '/' . $page['externalId'];
+				}
+				else if ($i > 0) {
+					$allSubpageModules = array_merge(
+						$allPreContentModules,
+						$allContentModules,
+						$allAsideContentModules,
+						$allPostContentModules);
+					$subPageTitle = $this->determinePageTitle($i, $allSubpageModules);
+					$targetPaths[] = $this->publicPath . '/' . $page['externalId'] . '/' . $subPageTitle;
+				}
+			}
+
+			// compile
 			$layout = $this->configurationOperations->getSingleValue(
 				ConfigurationOperations::CONFIGURATION_LAYOUT);
 			if ($layout === false) {
@@ -522,19 +548,30 @@ class Compiler {
 			require($path);
 			$pageContent = ob_get_contents();
 			ob_end_clean();
-			$fileWrite = file_put_contents($this->compilationPath . '/' . $pid . '.page', $pageContent);
-			if ($fileWrite === false) {
-				$this->saveErrorWithId('COMPILATION_PAGE_SAVING_FAILED');
-				return false;
-			}
-			else {
-				return true;
+
+			// save to file
+			foreach ($targetPaths as $path) {
+				$fileWrite = file_put_contents($path, $pageContent);
+				if ($fileWrite === false) {
+					$this->saveErrorWithId('COMPILATION_PAGE_SAVING_FAILED');
+					return false;
+				}
 			}
 		}
+		return true;
 	}
 
 	private function compilePageDelete($pid) {
 
+	}
+
+	private function determinePageTitle($defaultTitle, $modules) {
+		foreach ($modules as $module) {
+			if (Utils::hasStringContent($module['title'])) {
+				return $module['title'];
+			}
+		}
+		return $defaultTitle;
 	}
 
 	private function readSubpageMaximumOfPage($pid) {
@@ -607,7 +644,12 @@ class Compiler {
 				$this->saveErrorWithId('COMPILATION_MODULE_NOT_FOUND');
 				return false;
 			}
-			$modulesWithSubpage[] = ['name' => $module['definitionId'], 'content' => $fileContent];
+			$fileTitle = Utils::readFirstLine($fileContent);
+			$fileContent = Utils::deleteFirstLine($fileContent);
+			$modulesWithSubpage[] = [
+				'name' => $module['definitionId'],
+				'title' => $fileTitle,
+				'content' => $fileContent];
 		}
 		return $modulesWithSubpage;
 	}
@@ -615,7 +657,7 @@ class Compiler {
 	// --------------------------------------------------------------------------------------------
 
 	private function removeChange($change) {
-
+		return $this->changelogOperations->removeChange($change['clid']);
 	}
 
 	private function saveErrorWithId($message) {

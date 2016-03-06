@@ -68,6 +68,14 @@ final class ChangelogOperations {
 			ChangelogOperations::CHANGELOG_INTERNAL_FALSE, $type, $operation, $recordId, $description);
 	}
 
+	public function removeChange($clid) {
+		return $this->db->impactQuery('
+			DELETE FROM `Changelog`
+			WHERE `clid`=?',
+			'i',
+			$clid);
+	}
+
 }
 
 ?>

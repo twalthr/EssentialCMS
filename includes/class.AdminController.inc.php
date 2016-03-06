@@ -386,6 +386,7 @@ class AdminController {
 			$MAX_RUNTIME_STOP_FACTOR,
 			$ROOT_DIRECTORY . '/compiled',
 			$ROOT_DIRECTORY . '/layouts',
+			$ROOT_DIRECTORY . '/public',
 			$this->configurationOperations,
 			$this->changelogOperations,
 			$this->pageOperations,

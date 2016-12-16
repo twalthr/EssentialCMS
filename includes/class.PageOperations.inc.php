@@ -15,21 +15,39 @@ final class PageOperations {
 	}
 
 	public function makePagePublic($pid) {
-		return $this->db->successQuery('
+		$result = $this->db->successQuery('
 			UPDATE `Pages`
 			SET `options` = `options` & ~' . PageOperations::PAGES_OPTION_PRIVATE . '
 			WHERE `pid`=?',
 			'i',
 			$pid);
+
+		// publish page update
+		$result = $result && $this->changelogOperations->addChange(
+			ChangelogOperations::CHANGELOG_TYPE_PAGE,
+			ChangelogOperations::CHANGELOG_OPERATION_UPDATED,
+			$pid,
+			null);
+
+		return $result;
 	}
 
 	public function makePagePrivate($pid) {
-		return $this->db->successQuery('
+		$result = $this->db->successQuery('
 			UPDATE `Pages`
 			SET `options` = `options` | ' . PageOperations::PAGES_OPTION_PRIVATE . '
 			WHERE `pid`=?',
 			'i',
 			$pid);
+
+		// publish page update
+		$result = $result && $this->changelogOperations->addChange(
+			ChangelogOperations::CHANGELOG_TYPE_PAGE,
+			ChangelogOperations::CHANGELOG_OPERATION_UPDATED,
+			$pid,
+			null);
+
+		return $result;
 	}
 
 	public function getPages() {
@@ -51,18 +69,16 @@ final class PageOperations {
 			return false;
 		}
 
-		// publish page if externalId is present and page is visible
-		if (Utils::hasStringContent($externalId)
-				&& !Utils::isFlagged($options, PageOperations::PAGES_OPTION_PRIVATE)) {
-			$result = $this->changelogOperations->addChange(
-				ChangelogOperations::CHANGELOG_TYPE_PAGE,
-				ChangelogOperations::CHANGELOG_OPERATION_INSERTED,
-				$pid,
-				$title);
-			if ($result === false) {
-				return false;
-			}
+		// publish page
+		$result = $this->changelogOperations->addChange(
+			ChangelogOperations::CHANGELOG_TYPE_PAGE,
+			ChangelogOperations::CHANGELOG_OPERATION_UPDATED,
+			$pid,
+			$title);
+		if ($result === false) {
+			return false;
 		}
+
 		return $pid;
 	}
 
@@ -84,13 +100,23 @@ final class PageOperations {
 			else {
 				$types .= 's';
 			}
-			$values[] = &$value;
+			$values[] = $value;
 		}
 		$query = rtrim($query, ', ');
 		$query .= ' WHERE `pid`=?';
 		$types .= 'i';
-		$values[] = &$pid;
-		return $this->db->impactQuery($query, $types, ...$values);
+		$values[] = $pid;
+
+		$result = $this->db->impactQuery($query, $types, ...$values);
+
+		// publish page update
+		$result = $result && $this->changelogOperations->addChange(
+			ChangelogOperations::CHANGELOG_TYPE_PAGE,
+			ChangelogOperations::CHANGELOG_OPERATION_UPDATED,
+			$pid,
+			$title);
+
+		return $result;
 	}
 
 	public function getPage($pid) {
@@ -168,18 +194,37 @@ final class PageOperations {
 			return false;
 		}
 
+		// publish page
+		$result = $this->changelogOperations->addChange(
+			ChangelogOperations::CHANGELOG_TYPE_PAGE,
+			ChangelogOperations::CHANGELOG_OPERATION_UPDATED,
+			$newPid,
+			$page['title']);
+		if ($result === false) {
+			return false;
+		}
+
 		// copy modules
 		return $this->moduleOperations->copyModules($pid, $newPid);
 	}
 
 	public function deletePage($pid) {
 		// delete modules then page
-		return $this->moduleOperations->deleteModules($pid)
+		$result = $this->moduleOperations->deleteModules($pid)
 			&& $this->db->successQuery('
 				DELETE FROM `Pages`
 				WHERE `pid`=?',
 				'i',
 				$pid);
+
+		// publish page delete
+		$result = $result && $this->changelogOperations->addChange(
+			ChangelogOperations::CHANGELOG_TYPE_PAGE,
+			ChangelogOperations::CHANGELOG_OPERATION_DELETED,
+			$pid,
+			null);
+
+		return $result;
 	}
 
 }

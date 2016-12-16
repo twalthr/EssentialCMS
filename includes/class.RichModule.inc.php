@@ -6,25 +6,15 @@ abstract class RichModule extends BasicModule {
 	const MODULE_PRIORITY_MEDIUM = 1;
 	const MODULE_PRIORITY_HIGH = 2;
 
-	private $controller;
-
-	private $inPageModuleId;
-	private $inPagePageId;
-	private $inPageSection;
-	private $inPageOrder;
-
+	private $module;
 	private $currentCompilationPage;
-	private $interModuleProperties;
+	private $intermoduleProperties;
 
 	public function __construct($cmsVersion, $name) {
 		parent::__construct($cmsVersion, $name);
 	}
 
-	final public function setController($controller) {
-		$this->$controller = $controller;
-	}
-
-	// the priority determines which module can define page properties
+	// the priority determines which module can define intermodule properties
 	public function getPriority() {
 		return MODULE_PRIORITY_LOW;
 	}
@@ -44,25 +34,19 @@ abstract class RichModule extends BasicModule {
 	}
 
 	// --------------------------------------------------------------------------------------------
-	// In page module properties
+	// Module
 	// --------------------------------------------------------------------------------------------
 
-	final public function setInPageProperties($moduleDefId, $pageId, $pageSection, $pageOrder) {
-		if (isset($this->inPageModuleId)) {
-			throw new Exception('In page properties are already set.');
+	final public function setModule($module) {
+		if (isset($this->module)) {
+			throw new Exception('Module is already set.');
 		}
-		$this->inPageModuleId = $moduleDefId;
-		$this->inPagePageId = $pageId;
-		$this->inPageSection = $pageSection;
-		$this->inPageOrder = $pageOrder;
+		$this->module = $module;
 	}
 
-	final public function verifyInPageProperties() {
-		if (!isset($this->inPageModuleId)
-			|| !isset($this->inPagePageId)
-			|| !isset($this->inPageSection)
-			|| !isset($this->inPageOrder)) {
-			throw new Exception('In page properties missing.');
+	final public function verifyModule() {
+		if (!isset($this->module)) {
+			throw new Exception('Module is missing.');
 		}
 	}
 
@@ -70,28 +54,25 @@ abstract class RichModule extends BasicModule {
 	// Compilation methods
 	// --------------------------------------------------------------------------------------------
 
-	// 1 = module does only provide content for one page
-	// 2 = module provides content for two pages thus it
-	//     must define properties such as externalId and title
-	//     for the second page
-	public function getNumberOfPages() {
+	// 1 = module does only provide content for one subpage
+	// 2 = module provides content for two subpages, etc.
+	public function getNumberOfSubpages() {
 		return 1;
 	}
 
-	public function setCurrentCompilationPage($number) {
+	// number can be higher than number of subpages
+	// e.g. for comment module of blog posts number of subpages is 1 but current compilation page
+	// depends on number of blog posts
+	final public function setCurrentCompilationPage($number) {
 		$this->currentCompilationPage = $number;
 	}
 
-	public function getCurrentCompilationPage() {
+	final public function getCurrentCompilationPage() {
 		return $this->currentCompilationPage;
 	}
 
 	public function getContent($config) {
 		return parent::getContent($config);
-	}
-
-	public function getTitle($currentTitle) {
-		return null;
 	}
 
 	public function getExternalId() {
@@ -101,30 +82,26 @@ abstract class RichModule extends BasicModule {
 		return null;
 	}
 
-	public function definesInterModuleProperties() {
+	public function usesIntermoduleProperties() {
 		return false;
 	}
 
-	// function with higher priority can set inter module properties
+	public function definesIntermoduleProperties() {
+		return false;
+	}
+
+	// function with higher priority can set intermodule properties
 	// e.g. overview -> no rating on an overview page
-	public function defineInterModuleProperties() {
-		throw new Exception('Module does not define inter module properties.');
-	}
-
-	public function getProperties() {
-		return $this->interModuleProperties;
-	}
-
-	public function setProperties($properties) {
-		$this->interModuleProperties = $properties;
-	}
-
-	public function getStyleFiles() {
+	public function defineIntermoduleProperties() {
 		return [];
 	}
 
-	public function getScriptFiles() {
-		return [];
+	final public function getIntermoduleProperties() {
+		return $this->intermoduleProperties;
+	}
+
+	final public function setIntermoduleProperties($intermoduleProperties) {
+		$this->intermoduleProperties = $intermoduleProperties;
 	}
 
 	// --------------------------------------------------------------------------------------------
@@ -132,13 +109,13 @@ abstract class RichModule extends BasicModule {
 	// --------------------------------------------------------------------------------------------
 
 	final public function getNumberOfFieldGroups($key) {
-		$this->verifyInPageProperties();
+		$this->verifyModule();
 		$fieldGroupOperations = $this->controller->getFieldGroupOperations();
 		return $fieldGroupOperations->getNumberOfFieldGroups($this->inPageModuleId, $key);
 	}
 
 	final public function getFieldGroups($key) {
-		$this->verifyInPageProperties();
+		$this->verifyModule();
 		$db = $this->controller->getDB();
 		$fieldGroupIds = $db->valuesQuery('
 			SELECT `fgid`
@@ -157,7 +134,7 @@ abstract class RichModule extends BasicModule {
 	}
 
 	final public function getConfigGroup() {
-		$this->verifyInPageProperties();
+		$this->verifyModule();
 		$fieldGroupOperations = $this->controller->getFieldGroupOperations();
 		$fieldGroupId = $fieldGroupOperations->getConfigFieldGroupId($this->inPageModuleId);
 		if ($fieldGroupId === false) {
@@ -170,7 +147,7 @@ abstract class RichModule extends BasicModule {
 	}
 
 	final public function getFieldGroup($key, $order) {
-		$this->verifyInPageProperties();
+		$this->verifyModule();
 		$db = $this->controller->getDB();
 		$fieldGroupId = $db->valueQuery('
 			SELECT `fgid`
@@ -185,7 +162,7 @@ abstract class RichModule extends BasicModule {
 	}
 
 	final public function newFieldGroup($key) {
-		$this->verifyInPageProperties();
+		$this->verifyModule();
 		$db = $this->controller->getDB();
 		$fieldGroupId = $db->impactQueryWithId('
 			INSERT INTO `FieldGroups`
@@ -200,7 +177,7 @@ abstract class RichModule extends BasicModule {
 	}
 
 	final public function newFieldGroupAt($key, $order) {
-		$this->verifyInPageProperties();
+		$this->verifyModule();
 		$db = $this->controller->getDB();
 		$result = $db->valueQuery('
 			SELECT COUNT(*) AS `count`
@@ -316,16 +293,24 @@ abstract class RichModule extends BasicModule {
 		return $localizedList;
 	}
 
+	private static $loadedModuleDefs = [];
+
 	public static function loadModuleDefinition($moduleDefId) {
-		global $ROOT_DIRECTORY;
-		if (!file_exists($ROOT_DIRECTORY . '/modules/' . $moduleDefId . '/module.php')) {
-			return false;
+		if (array_key_exists($moduleDefId, RichModule::$loadedModuleDefs)) {
+			return RichModule::$loadedModuleDefs[$moduleDefId];
 		}
-		$module = include $ROOT_DIRECTORY . '/modules/' . $moduleDefId . '/module.php';
-		if (!is_object($module) || !($module instanceof RichModule)) {
-			return false;
+		else {
+			global $ROOT_DIRECTORY;
+			if (!file_exists($ROOT_DIRECTORY . '/modules/' . $moduleDefId . '/module.php')) {
+				return false;
+			}
+			$module = include $ROOT_DIRECTORY . '/modules/' . $moduleDefId . '/module.php';
+			if (!is_object($module) || !($module instanceof RichModule)) {
+				return false;
+			}
+			RichModule::$loadedModuleDefs[$moduleDefId] = $module;
+			return $module;
 		}
-		return $module;
 	}
 }
 

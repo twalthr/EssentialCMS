@@ -131,17 +131,19 @@ class Compiler {
 			case ChangelogOperations::CHANGELOG_TYPE_GLOBAL:
 				return $this->splitGlobalChange();
 			case ChangelogOperations::CHANGELOG_TYPE_PAGE:
-				if ($change['operation'] === ChangelogOperations::CHANGELOG_OPERATION_INSERTED) {
-					return $this->splitPageInsert($recordId);
-				}
-				else if ($change['operation'] === ChangelogOperations::CHANGELOG_OPERATION_UPDATED) {
+				if ($change['operation'] === ChangelogOperations::CHANGELOG_OPERATION_UPDATED) {
 					return $this->splitPageUpdate($recordId);
 				}
 				else {
 					return $this->splitPageDelete($recordId);
 				}
 			case ChangelogOperations::CHANGELOG_TYPE_MODULE:
-				return $this->splitModuleChange($change['operation'], $change['recordId']);
+				if ($change['operation'] === ChangelogOperations::CHANGELOG_OPERATION_UPDATED) {
+					return $this->splitModuleUpdate($recordId);
+				}
+				else {
+					return $this->splitModuleDelete($recordId);
+				}
 			case ChangelogOperations::CHANGELOG_TYPE_FIELD_GROUP:
 				return $this->splitFieldGroupChange($change['operation'], $change['recordId']);
 			case ChangelogOperations::CHANGELOG_TYPE_MEDIA_REFERENCE:
@@ -152,30 +154,6 @@ class Compiler {
 
 	private function splitGlobalChange() {
 		return [];
-	}
-
-	private function splitPageInsert($pid) {
-		$tasks = [];
-
-		// add global modules if not yet compiled
-		$result = $this->ensureGlobalModulesTasks();
-		if ($result === false) {
-			return false;
-		}
-		else {
-			$tasks += $result;
-		}
-
-		// compile page
-		$result = $this->addPageCompilationTask($pid);
-		if ($result === false) {
-			return false;
-		}
-		else {
-			$tasks += $result;
-		}
-
-		return $tasks;
 	}
 
 	private function splitPageUpdate($pid) {
@@ -242,8 +220,94 @@ class Compiler {
 		return false; // TODO !!!!!!!!!!!!!!!
 	}
 
-	private function splitModuleChange($operation, $mid) {
+	private function splitModuleUpdate($mid) {
+		// load module
+		$module = $this->moduleOperations->getModule($mid);
+		if ($module === false) {
+			return false;
+		}
+		$moduleDef = RichModule::loadModuleDefinition($module['definitionId']);
+		if ($moduleDef === false) {
+			$this->saveErrorWithId('COMPILATION_MODULE_DEFINITION_NOT_FOUND');
+			return false;
+		}
 
+		// determine page module neighbors
+		$globalModules = $this->moduleOperations->getModulesOfPage(null);
+		$pageModules = $this->moduleOperations->getModulesOfPage($module['page']);
+		if ($globalModules === false || $pageModules === false) {
+			return false;
+		}
+		$modulesOnPage = array_merge($globalModules, $pageModules);
+		$neighborModules = [];
+		foreach ($modulesOnPage as $moduleOnPage) {
+			// do not include module itself
+			if ($moduleOnPage['mid'] !== $module['mid']) {
+				$neighborModules[] = $moduleOnPage;
+			}
+		}
+		$neighborDefs = [];
+		foreach ($neighborModules as $neighborModule) {
+			$neighborDefs[] = RichModule::loadModuleDefinition($neighborModule['definitionId']);
+		}
+		// sort by priority
+		usort($neighborDefs, function ($a, $b) {
+			return $a->getPriority() - $b->getPriority();
+		});
+
+		// determine neighbors that depend on intermodule properties
+		$dependentNeighborModules = [];
+		if ($moduleDef->definesIntermoduleProperties()) {
+			for ($i = 0; $i < count($neighborModules); $i++) {
+				if ($neighborDefs[$i]->usesIntermoduleProperties()) {
+					$dependentNeighborModules[] = $neighborModules[$i];
+				}
+			}
+		}
+
+		// determine number of subpages
+		$numberOfSubpages = $moduleDef->getNumberOfSubpages();
+		foreach ($neighborDefs as $neighborDef) {
+			$numberOfSubpages = max($numberOfSubpages, $neighborDef->getNumberOfSubpages());
+		}
+
+		// foreach subpage
+		$tasks = [];
+		for ($i = 0; $i < $numberOfSubpages; $i++) {
+			// collect intermodule properties of all module neighbors
+			$intermoduleProperties = [];
+			for ($j = 0; $j < count($neighborDefs); $j++) {
+				$neighborDef = $neighborDefs[$j];
+				if ($neighborDef->definesIntermoduleProperties()) {
+					$neighborDef->setModule($neighborModules[$j]);
+					$neighborDef->setCurrentCompilationPage($i);
+					$props = $neighborDef->defineIntermoduleProperties();
+					$intermoduleProperties = array_merge($intermoduleProperties, $props);
+				}
+			}
+
+			// add task to compile module subpages
+			$tasks[] = $this->addTask(
+				ChangelogOperations::CHANGELOG_TYPE_MODULE,
+				ChangelogOperations::CHANGELOG_OPERATION_UPDATED,
+				$module['mid'],
+				$i ."\n" . serialize($intermoduleProperties));
+
+			// add task to compile dependent neighbors subpages
+			$moduleDef->setModule($module);
+			$moduleDef->setCurrentCompilationPage($i);
+			$intermoduleProperties = array_merge(
+				$intermoduleProperties,
+				$moduleDef->defineIntermoduleProperties());
+			foreach ($dependentNeighborModules as $neighborModule) {
+				$tasks[] = $this->addTask(
+					ChangelogOperations::CHANGELOG_TYPE_MODULE,
+					ChangelogOperations::CHANGELOG_OPERATION_UPDATED,
+					$neighborModule['mid'],
+					$i . "\n" . serialize($intermoduleProperties));
+			}
+		}
+		return $tasks;
 	}
 
 	private function splitFieldGroupChange($operation, $fgid) {
@@ -334,10 +398,10 @@ class Compiler {
 			// we can however assume that a module has at least a page 0
 			if (!file_exists($this->compilationPath . '/module_' .
 					$module['page'] . '_' . $module['mid'] . '_0')) {
-				// add module insertion task
+				// add module update task
 				$result = $this->addTask(
 					ChangelogOperations::CHANGELOG_TYPE_MODULE,
-					ChangelogOperations::CHANGELOG_OPERATION_INSERTED,
+					ChangelogOperations::CHANGELOG_OPERATION_UPDATED,
 					$module['mid']);
 				if ($result === false) {
 					return false;
@@ -359,12 +423,12 @@ class Compiler {
 			$pid);
 	}
 
-	private function addTask($type, $operation, $recordId) {
-		$result = $this->changelogOperations->addInternalChange($type, $operation, $recordId);
+	private function addTask($type, $operation, $recordId, $data = null) {
+		$result = $this->changelogOperations->addInternalChange($type, $operation, $recordId, $data);
 		if ($result === false) {
 			return false;
 		}
-		return array('type' => $type, 'operation' => $operation, 'recordId' => $recordId);
+		return array('type' => $type, 'operation' => $operation, 'recordId' => $recordId, 'data' => $data);
 	}
 
 	// --------------------------------------------------------------------------------------------
@@ -382,6 +446,12 @@ class Compiler {
 					return $this->compilePageDelete($task['recordId']);
 				}
 			case ChangelogOperations::CHANGELOG_TYPE_MODULE:
+				if ($task['operation'] === ChangelogOperations::CHANGELOG_OPERATION_UPDATED) {
+					return $this->compileModuleUpdate($task['recordId'], $task['description']);
+				}
+				else {
+					return $this->compileModuleDelete($task['recordId']);
+				}
 			case ChangelogOperations::CHANGELOG_TYPE_FIELD_GROUP:
 			case ChangelogOperations::CHANGELOG_TYPE_MEDIA_REFERENCE:
 		}
@@ -563,6 +633,45 @@ class Compiler {
 
 	private function compilePageDelete($pid) {
 
+	}
+
+	private function compileModuleUpdate($mid, $data) {
+		// load module
+		$module = $this->moduleOperations->getModule($mid);
+		if ($module === false) {
+			return false;
+		}
+		$moduleDef = RichModule::loadModuleDefinition($module['definitionId']);
+		if ($moduleDef === false) {
+			$this->saveErrorWithId('COMPILATION_MODULE_DEFINITION_NOT_FOUND');
+			return false;
+		}
+
+		$subpage = (int) Utils::readFirstLine($data);
+		$intermoduleProperties = unserialize(Utils::deleteFirstLine($data));
+
+		// compile
+		$moduleDef->setModule($module);
+		$moduleDef->setCurrentCompilationPage($subpage);
+
+		$subpageTitle = $subpage;
+		if ($subpage > 0) {
+			$customSubpageTitle = $moduleDef->getExternalId();
+			if (isset($customSubpageTitle)) {
+				$subpageTitle = $customSubpageTitle;
+			}
+		}
+
+		$subpageContent = $subpageTitle . "\n" . $moduleDef->getContent($this->config);
+
+		$path = $this->compilationPath . '/' . $module['page'] . '_' . $module['mid'] . '_' .
+				$subpage . '.module';
+		$fileWrite = file_put_contents($path, $subpageContent);
+		if ($fileWrite === false) {
+			$this->saveErrorWithId('COMPILATION_MODULE_SAVING_FAILED');
+			return false;
+		}
+		return true;
 	}
 
 	private function determinePageTitle($defaultTitle, $modules) {

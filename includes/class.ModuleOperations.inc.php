@@ -29,10 +29,12 @@ final class ModuleOperations {
 
 	private $db;
 	private $fieldGroupOperations;
+	private $changelogOperations;
 
-	public function __construct($db, $fieldGroupOperations) {
+	public function __construct($db, $fieldGroupOperations, $changelogOperations) {
 		$this->db = $db;
 		$this->fieldGroupOperations = $fieldGroupOperations;
+		$this->changelogOperations = $changelogOperations;
 	}
 
 	public function addModule($page, $section, $moduleId) {
@@ -60,6 +62,17 @@ final class ModuleOperations {
 		if ($fgid === false) {
 			return false;
 		}
+
+		// publish module
+		$result = $this->changelogOperations->addChange(
+			ChangelogOperations::CHANGELOG_TYPE_MODULE,
+			ChangelogOperations::CHANGELOG_OPERATION_UPDATED,
+			$mid,
+			$moduleId);
+		if ($result === false) {
+			return false;
+		}
+
 		return $mid;
 	}
 
@@ -110,6 +123,27 @@ final class ModuleOperations {
 				ORDER BY `order` ASC',
 				'ii',
 				$pid, $section);
+		}
+	}
+
+	public function getModulesOfPage($pid) {
+		// global modules
+		if (!isset($pid)) {
+			return $this->db->valuesQuery('
+				SELECT *
+				FROM `Modules`
+				WHERE `page` IS NULL
+				ORDER BY `order` ASC');
+		}
+		// page modules
+		else {
+			return $this->db->valuesQuery('
+				SELECT *
+				FROM `Modules`
+				WHERE `page`=?
+				ORDER BY `order` ASC',
+				'i',
+				$pid);
 		}
 	}
 

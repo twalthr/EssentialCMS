@@ -11,9 +11,8 @@ final class ChangelogOperations {
 	const CHANGELOG_TYPE_FIELD_GROUP = 3;
 	const CHANGELOG_TYPE_MEDIA_REFERENCE = 4;
 
-	const CHANGELOG_OPERATION_INSERTED = 0;
-	const CHANGELOG_OPERATION_UPDATED = 1;
-	const CHANGELOG_OPERATION_DELETED = 2;
+	const CHANGELOG_OPERATION_UPDATED = 0;
+	const CHANGELOG_OPERATION_DELETED = 1;
 
 	private $db;
 
@@ -48,14 +47,14 @@ final class ChangelogOperations {
 			ORDER BY `time` ASC');
 	}
 
-	public function addInternalChange($type, $operation, $recordId) {
+	public function addInternalChange($type, $operation, $recordId, $description) {
 		return $this->db->impactQuery('
 			INSERT INTO `Changelog`
-			(`internal`, `type`, `operation`, `recordId`, `time`)
+			(`internal`, `type`, `operation`, `recordId`, `time`, `description`)
 			VALUES
-			(?,?,?,?,NOW())',
-			'iiii',
-			ChangelogOperations::CHANGELOG_INTERNAL_TRUE, $type, $operation, $recordId);
+			(?,?,?,?,NOW(),?)',
+			'iiiis',
+			ChangelogOperations::CHANGELOG_INTERNAL_TRUE, $type, $operation, $recordId, $description);
 	}
 
 	public function addChange($type, $operation, $recordId, $description) {

@@ -1,5 +1,7 @@
 <?php
 
+// v1: FEATURE COMPLETE
+
 class AdminChangelogStatusModule extends BasicModule {
 
 	// member variables

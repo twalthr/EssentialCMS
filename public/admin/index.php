@@ -167,6 +167,12 @@ switch ($action) {
 			$controller->getCompiler());
 		$controller->layoutLoggedInContent(null, null, null, $module);
 		break;
+	case 'media':
+		$controller->verifyLogin();
+		$module = new AdminMediaModule(
+			$controller->getMediaGroupOperations());
+		$controller->layoutLoggedInContent(null, null, null, $module);
+		break;
 	default:
 		echo "Invalid command.";
 }

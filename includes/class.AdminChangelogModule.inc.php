@@ -136,13 +136,6 @@ class AdminChangelogModule extends BasicModule {
 		foreach ($this->changelog as $change) {
 			echo '<li class="rowLike">';
 			switch ($change['operation']) {
-				case changelogOperations::CHANGELOG_OPERATION_INSERTED:
-					echo '<label class="changeOperation inserted" title="';
-					$this->text('INSERTED');
-					echo '">';
-					$this->text('INSERTED');
-					echo '</label>';
-					break;
 				case changelogOperations::CHANGELOG_OPERATION_UPDATED:
 					echo '<label class="changeOperation updated" title="';
 					$this->text('UPDATED');

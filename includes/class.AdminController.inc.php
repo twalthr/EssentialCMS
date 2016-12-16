@@ -10,6 +10,9 @@ class AdminController {
 	private $fieldGroupOperations;
 	private $moduleOperations;
 	private $pageOperations;
+	private $mediaGroupOperations;
+	private $mediaOperations;
+	private $imageOperations;
 	private $globalOperations;
 
 	public function __construct() {
@@ -26,8 +29,12 @@ class AdminController {
 		$this->menuItemOperations = new MenuItemOperations($DB);
 		$this->fieldOperations = new FieldOperations($DB);
 		$this->fieldGroupOperations = new FieldGroupOperations($DB, $this->fieldOperations);
-		$this->moduleOperations = new ModuleOperations($DB, $this->fieldGroupOperations);
+		$this->moduleOperations = new ModuleOperations($DB, $this->fieldGroupOperations,
+			$this->changelogOperations);
 		$this->pageOperations = new PageOperations($DB, $this->moduleOperations, $this->changelogOperations);
+		$this->mediaGroupOperations = new MediaGroupOperations($DB);
+		$this->mediaOperations = new MediaOperations($DB);
+		$this->imageOperations = new ImageOperations($DB);
 		$this->globalOperations = new GlobalOperations($this->menuItemOperations,
 			$this->pageOperations);
 	}
@@ -143,6 +150,7 @@ class AdminController {
 			') && $DB->successQuery('
 				CREATE TABLE IF NOT EXISTS `MediaFiles` (
 					`mfid` INT(10) NOT NULL AUTO_INCREMENT,
+					`group` INT(10) NULL,
 					`originalName` VARCHAR(512) NOT NULL,
 					`internalName` VARCHAR(512) NULL,
 					`copyrightInfo` VARCHAR(512) NULL,
@@ -221,6 +229,13 @@ class AdminController {
 					`content` TEXT NOT NULL,
 					PRIMARY KEY (`fid`),
 					UNIQUE KEY `position` (`group`, `key`, `fid`)
+				)
+			') && $DB->successQuery('
+				CREATE TABLE IF NOT EXISTS `MediaGroups` (
+					`mgid` INT(10) NOT NULL AUTO_INCREMENT,
+					`title` VARCHAR(256) NOT NULL,
+					`options` INT(10) NOT NULL,
+					PRIMARY KEY (`mgid`)
 				)
 			') && $DB->impactQuery('
 				INSERT INTO `Configuration` (`key`, `value`, `order`) 
@@ -328,6 +343,18 @@ class AdminController {
 
 	public function getChangelogOperations() {
 		return $this->changelogOperations;
+	}
+
+	public function getMediaGroupOperations() {
+		return $this->mediaGroupOperations;
+	}
+
+	public function getMediaOperations() {
+		return $this->mediaOperations;
+	}
+
+	public function getImageOperations() {
+		return $this->imageOperations;
 	}
 
 	// --------------------------------------------------------------------------------------------

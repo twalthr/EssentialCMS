@@ -737,19 +737,14 @@ div.siteMap .subLevel>li {
 	overflow: hidden;
 }
 
-.changelog .changeOperation.inserted {
-	background-color: #B5E8B9;
-	border: 1px solid #8BD291;
-}
-
 .changelog .changeOperation.deleted {
 	background-color: #E8B5B5;
 	border: 1px solid #E49494;
 }
 
 .changelog .changeOperation.updated {
-	background-color: #E8E7B5;
-	border: 1px solid #E5CC68;
+	background-color: #B5E8B9;
+	border: 1px solid #8BD291;
 }
 
 /* --------------------------------------------------------------------------------------------- */

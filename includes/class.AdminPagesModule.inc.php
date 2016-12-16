@@ -254,7 +254,7 @@ class AdminPagesModule extends BasicModule {
 	}
 
 	private function printPages($config) {
-		if ($this->pages === false) {
+		if ($this->pages === false || count($this->pages) === 0) {
 			echo '<p class="empty">';
 			echo $this->text('NO_PAGES');
 			echo '</p>';

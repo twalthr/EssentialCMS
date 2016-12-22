@@ -219,7 +219,7 @@ class AdminEditPageModule extends BasicModule {
 						<div class="fields">
 							<div class="field">
 								<label for="title"><?php $this->text('PAGE_TITLE'); ?></label>
-								<input type="text" name="title" id="title" class="large"
+								<input type="text" name="title" id="title" class="large" maxlength="256"
 									value="<?php echo Utils::getEscapedFieldOrVariable('title',
 										$this->page['title']); ?>"
 									required />
@@ -227,6 +227,7 @@ class AdminEditPageModule extends BasicModule {
 							<div class="field">
 								<label for="hoverTitle"><?php $this->text('HOVER_TITLE'); ?></label>
 								<input type="text" name="hoverTitle" id="hoverTitle"  class="large"
+									maxlength="256"
 									value="<?php echo Utils::getEscapedFieldOrVariable('hoverTitle',
 										$this->page['hoverTitle']); ?>"
 									/>
@@ -248,7 +249,8 @@ class AdminEditPageModule extends BasicModule {
 							</div>
 							<div class="field">
 								<label for="externalId"><?php $this->text('PAGE_EXTERNAL_ID'); ?></label>
-								<input type="text" name="externalId" id="externalId"  class="large" disabled
+								<input type="text" name="externalId" id="externalId"  class="large" 
+									maxlength="256" disabled
 									value="<?php echo Utils::getEscapedFieldOrVariable('externalId',
 										$this->page['externalId']); ?>"/>
 								<span class="hint"><?php $this->text('PAGE_EXTERNAL_ID_HINT'); ?></span>
@@ -270,7 +272,8 @@ class AdminEditPageModule extends BasicModule {
 							<div class="field">
 								<label for="externalLastChanged">
 									<?php $this->text('PAGE_EXTERNAL_LAST_CHANGED'); ?></label>
-								<input type="text" name="externalLastChanged" id="externalLastChanged" 
+								<input type="text" name="externalLastChanged" id="externalLastChanged"
+									maxlength="19"
 									value="<?php echo Utils::getEscapedFieldOrVariable('externalLastChanged',
 										$this->page['externalLastChanged']); ?>" disabled />
 							</div>

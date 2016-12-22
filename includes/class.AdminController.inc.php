@@ -234,6 +234,9 @@ class AdminController {
 				CREATE TABLE IF NOT EXISTS `MediaGroups` (
 					`mgid` INT(10) NOT NULL AUTO_INCREMENT,
 					`title` VARCHAR(256) NOT NULL,
+					`description` TEXT NULL,
+					`tags` TEXT NULL,
+					`checksum` CHAR(40) NULL,
 					`options` INT(10) NOT NULL,
 					PRIMARY KEY (`mgid`)
 				)

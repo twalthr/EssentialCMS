@@ -171,7 +171,34 @@ switch ($action) {
 		$controller->verifyLogin();
 		$module = new AdminMediaModule(
 			$controller->getMediaGroupOperations());
-		$controller->layoutLoggedInContent(null, null, null, $module);
+		$controller->layoutLoggedInContent(3, null, null, $module);
+		break;
+	case 'new-global-media-group':
+		$controller->verifyLogin();
+		$module = new AdminEditMediaGroupModule(
+			true,
+			$controller->getMediaGroupOperations(),
+			$controller->getMediaOperations(),
+			$parameters);
+		$controller->layoutLoggedInContent(3, null, null, $module);
+		break;
+	case 'new-local-media-group':
+		$controller->verifyLogin();
+		$module = new AdminEditMediaGroupModule(
+			false,
+			$controller->getMediaGroupOperations(),
+			$controller->getMediaOperations(),
+			$parameters);
+		$controller->layoutLoggedInContent(3, null, null, $module);
+		break;
+	case 'media-group':
+		$controller->verifyLogin();
+		$module = new AdminEditMediaGroupModule(
+			null,
+			$controller->getMediaGroupOperations(),
+			$controller->getMediaOperations(),
+			$parameters);
+		$controller->layoutLoggedInContent(3, null, null, $module);
 		break;
 	default:
 		echo "Invalid command.";

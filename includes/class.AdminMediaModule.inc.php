@@ -47,7 +47,16 @@ class AdminMediaModule extends BasicModule {
 		?>
 		<script type="text/javascript">
 			$(document).ready(function(){
-				
+				$('#globalMediaGroupOperations .addButton').click(function() {
+					window.open(
+						'<?php echo $config->getPublicRoot(); ?>/admin/new-global-media-group',
+						'_self');
+				});
+				$('#localMediaGroupOperations .addButton').click(function() {
+					window.open(
+						'<?php echo $config->getPublicRoot(); ?>/admin/new-local-media-group',
+						'_self');
+				});
 			});
 		</script>
 		<?php if (isset($this->state)) : ?>
@@ -64,21 +73,32 @@ class AdminMediaModule extends BasicModule {
 		<section>
 			<h1><?php $this->text('GLOBAL_MEDIA_GROUPS'); ?></h1>
 			<form method="post" action="<?php echo $config->getPublicRoot(); ?>/admin/media"
-					id="mediaOperations">
-				<button id="createMediaGlobalGroup" class="addButton">
+					id="globalMediaGroupOperations">
+				<button class="addButton">
 					<?php $this->text('CREATE_MEDIA_GROUP'); ?>
 				</button>
 				<input type="hidden" name="operationSpace" value="global" />
-				<input type="hidden" name="operation" id="mediaGlobalOperation" />
+				<input type="hidden" name="operation" />
 				<?php $this->printMediaGroups($config, true); ?>
 				<div class="buttonSet">
-					<button id="mediumDelete"  class="disableListIfClicked" disabled>
-						<?php $this->text('DELETE'); ?></button>
+					<button id="delete" class="disableListIfClicked" disabled>
+						<?php $this->text('DELETE'); ?>
+					</button>
+					<button id="lock" class="disableListIfClicked" disabled>
+						<?php $this->text('LOCK'); ?>
+					</button>
+					<button id="unlock" class="disableListIfClicked" disabled>
+						<?php $this->text('UNLOCK'); ?>
+					</button>
+					<button id="move" class="disableListIfClicked" disabled>
+						<?php $this->text('MOVE'); ?>
+					</button>
 				</div>
 				<div class="dialog-box hidden">
 					<div class="dialog-message"></div>
 					<div class="options">
-						<button id="mediumDeleteConfirm" class="hidden"><?php $this->text('DELETE'); ?></button>
+						<button id="mediumDeleteConfirm" class="hidden">
+							<?php $this->text('DELETE'); ?></button>
 						<button class="hidden cancel"><?php $this->text('CANCEL'); ?></button>
 					</div>
 				</div>
@@ -87,21 +107,32 @@ class AdminMediaModule extends BasicModule {
 		<section>
 			<h1><?php $this->text('LOCAL_MEDIA_GROUPS'); ?></h1>
 			<form method="post" action="<?php echo $config->getPublicRoot(); ?>/admin/media"
-					id="mediaOperations">
-				<button id="createMediaLocalGroup" class="addButton">
+					id="localMediaGroupOperations">
+				<button class="addButton">
 					<?php $this->text('CREATE_MEDIA_GROUP'); ?>
 				</button>
 				<input type="hidden" name="operationSpace" value="local" />
-				<input type="hidden" name="operation" id="mediaLocalOperation" />
+				<input type="hidden" name="operation" />
 				<?php $this->printMediaGroups($config, false); ?>
 				<div class="buttonSet">
-					<button id="mediumDelete"  class="disableListIfClicked" disabled>
-						<?php $this->text('DELETE'); ?></button>
+					<button id="delete" class="disableListIfClicked" disabled>
+						<?php $this->text('DELETE'); ?>
+					</button>
+					<button id="lock" class="disableListIfClicked" disabled>
+						<?php $this->text('LOCK'); ?>
+					</button>
+					<button id="unlock" class="disableListIfClicked" disabled>
+						<?php $this->text('UNLOCK'); ?>
+					</button>
+					<button id="move" class="disableListIfClicked" disabled>
+						<?php $this->text('MOVE'); ?>
+					</button>
 				</div>
 				<div class="dialog-box hidden">
 					<div class="dialog-message"></div>
 					<div class="options">
-						<button id="mediumDeleteConfirm" class="hidden"><?php $this->text('DELETE'); ?></button>
+						<button id="mediumDeleteConfirm" class="hidden">
+							<?php $this->text('DELETE'); ?></button>
 						<button class="hidden cancel"><?php $this->text('CANCEL'); ?></button>
 					</div>
 				</div>
@@ -127,9 +158,28 @@ class AdminMediaModule extends BasicModule {
 			return;
 		}
 		echo '<ul class="tableLike enableButtonsIfChecked">';
-		foreach ($mediaGroups as $mediaGroup) {
+		foreach ($this->mediaGroups as $mediaGroup) {
 			echo '<li class="rowLike">';
-			
+			echo '<input type="checkbox" id="mediaGroup' . $mediaGroup['mgid'] . '" name="mediaGroup[]"';
+			echo ' value="' . $mediaGroup['mgid'] . '" />';
+			echo '<label for="mediaGroup' . $mediaGroup['mgid'] . '" class="checkbox">';
+			echo Utils::escapeString($mediaGroup['title']) .' </label>';
+			echo '<a href="' . $config->getPublicRoot() . '/admin/media-group/' . $mediaGroup['pid'] . '"';
+			if (Utils::hasStringContent($mediaGroup['description'])) {
+				echo ' title="' . Utils::escapeString($mediaGroup['description']) . '"';
+			}
+			if (Utils::isFlagged($mediaGroup['options'], MediaGroupOperations::LOCKED_OPTION)) {
+				echo ' class="locked componentLink"';
+			}
+			else {
+				echo ' class="componentLink"';
+			}
+			echo '>' . Utils::escapeString($mediaGroup['title']) . '</a>';
+			if (Utils::hasStringContent($mediaGroup['tags'])) {
+				echo '<span class="rowAdditionalInfo">';
+				echo Utils::escapeString($mediaGroup['tags']);
+				echo '</span>';
+			}
 			echo '</li>';
 		}
 		echo '</ul>';

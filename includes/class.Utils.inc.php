@@ -116,6 +116,17 @@ abstract class Utils {
 		return false;
 	}
 
+	public static function isValidFieldWithMaxLength($str, $maxlength) {
+		if (isset($_POST[$str]) && is_string($_POST[$str])) {
+			$trimmed = trim($_POST[$str]);
+			$strLength = strlen($trimmed);
+			if ($strLength <= $maxlength) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	public static function isValidFieldNotEmpty($str) {
 		if (isset($_POST[$str]) && is_string($_POST[$str])) {
 			$trimmed = trim($_POST[$str]);
@@ -151,6 +162,17 @@ abstract class Utils {
 
 	public static function getValidFieldString($str) {
 		return trim($_POST[$str]);
+	}
+
+	public static function isValidFieldWithTags($str, $maxlength) {
+		if (isset($_POST[$str]) && is_string($_POST[$str])) {
+			$trimmed = trim($_POST[$str]);
+			$strLength = strlen($trimmed);
+			if ($strLength <= $maxlength && preg_match('/^[\w ,_#]+$/', $str) === 1) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public static function getUnmodifiedStringOrEmpty($str) {

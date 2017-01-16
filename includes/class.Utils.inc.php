@@ -168,7 +168,7 @@ abstract class Utils {
 		if (isset($_POST[$str]) && is_string($_POST[$str])) {
 			$trimmed = trim($_POST[$str]);
 			$strLength = strlen($trimmed);
-			if ($strLength <= $maxlength && preg_match('/^[\w ,_#]+$/', $str) === 1) {
+			if ($strLength <= $maxlength && preg_match('/^[\w ,_#]*$/', $trimmed) === 1) {
 				return true;
 			}
 		}

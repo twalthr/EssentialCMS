@@ -648,7 +648,7 @@ class AdminEditPageModule extends BasicModule {
 			Utils::isChecked('pageCustomLastChange')? 
 				Utils::getValidFieldString('externalLastChanged') : null);
 
-		if ($result == false) {
+		if ($result === false) {
 			$this->state = false;
 			$this->message = 'UNKNOWN_ERROR';
 			return;

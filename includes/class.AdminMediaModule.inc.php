@@ -34,11 +34,13 @@ class AdminMediaModule extends BasicModule {
 			$this->handleMediaGroupOperations(true);
 			// reload media groups
 			$this->loadMediaGroups(true);
+			$this->loadMediaGroups(false);
 		}
 		// handle global media group operations
 		else if (Utils::getUnmodifiedStringOrEmpty('operationSpace') === 'local') {
 			$this->handleMediaGroupOperations(false);
 			// reload media groups
+			$this->loadMediaGroups(true);
 			$this->loadMediaGroups(false);
 		}
 	}
@@ -56,6 +58,41 @@ class AdminMediaModule extends BasicModule {
 					window.open(
 						'<?php echo $config->getPublicRoot(); ?>/admin/new-local-media-group',
 						'_self');
+				});
+				$('.delete').click(function() {
+					$(this).closest('form').find('input[name=operation]').val('delete');
+					openButtonSetDialog($(this),
+						'<?php $this->text('DELETE_QUESTION'); ?>',
+						'.deleteConfirm');
+				});
+				$('.deleteConfirm').click(function() {
+					enableList($(this));
+					$(this).closest('form').submit();
+				});
+				$('.lock').click(function() {
+					var form = $(this).closest('form');
+					form.find('input[name=operation]').val('lock');
+					form.submit();
+				});
+				$('.unlock').click(function() {
+					$(this).closest('form').find('input[name=operation]').val('unlock');
+					openButtonSetDialog($(this),
+						'<?php $this->text('UNLOCK_QUESTION'); ?>',
+						'.unlockConfirm');
+				});
+				$('.unlockConfirm').click(function() {
+					enableList($(this));
+					$(this).closest('form').submit();
+				});
+				$('.move').click(function() {
+					var form = $(this).closest('form');
+					form.find('input[name=operation]').val('move');
+					form.submit();
+				});
+				$('.copy').click(function() {
+					var form = $(this).closest('form');
+					form.find('input[name=operation]').val('copy');
+					form.submit();
 				});
 			});
 		</script>
@@ -81,24 +118,29 @@ class AdminMediaModule extends BasicModule {
 				<input type="hidden" name="operation" />
 				<?php $this->printMediaGroups($config, true); ?>
 				<div class="buttonSet">
-					<button id="delete" class="disableListIfClicked" disabled>
+					<button class="disableListIfClicked delete" disabled>
 						<?php $this->text('DELETE'); ?>
 					</button>
-					<button id="lock" class="disableListIfClicked" disabled>
+					<button class="disableListIfClicked lock" disabled>
 						<?php $this->text('LOCK'); ?>
 					</button>
-					<button id="unlock" class="disableListIfClicked" disabled>
+					<button class="disableListIfClicked unlock" disabled>
 						<?php $this->text('UNLOCK'); ?>
 					</button>
-					<button id="move" class="disableListIfClicked" disabled>
+					<button class="disableListIfClicked move" disabled>
 						<?php $this->text('MOVE'); ?>
+					</button>
+					<button class="disableListIfClicked copy" disabled>
+						<?php $this->text('COPY'); ?>
 					</button>
 				</div>
 				<div class="dialog-box hidden">
 					<div class="dialog-message"></div>
 					<div class="options">
-						<button id="mediumDeleteConfirm" class="hidden">
+						<button class="hidden deleteConfirm">
 							<?php $this->text('DELETE'); ?></button>
+						<button class="hidden unlockConfirm">
+							<?php $this->text('UNLOCK'); ?></button>
 						<button class="hidden cancel"><?php $this->text('CANCEL'); ?></button>
 					</div>
 				</div>
@@ -115,24 +157,29 @@ class AdminMediaModule extends BasicModule {
 				<input type="hidden" name="operation" />
 				<?php $this->printMediaGroups($config, false); ?>
 				<div class="buttonSet">
-					<button id="delete" class="disableListIfClicked" disabled>
+					<button class="disableListIfClicked delete" disabled>
 						<?php $this->text('DELETE'); ?>
 					</button>
-					<button id="lock" class="disableListIfClicked" disabled>
+					<button class="disableListIfClicked lock" disabled>
 						<?php $this->text('LOCK'); ?>
 					</button>
-					<button id="unlock" class="disableListIfClicked" disabled>
+					<button class="disableListIfClicked unlock" disabled>
 						<?php $this->text('UNLOCK'); ?>
 					</button>
-					<button id="move" class="disableListIfClicked" disabled>
+					<button class="disableListIfClicked move" disabled>
 						<?php $this->text('MOVE'); ?>
+					</button>
+					<button class="disableListIfClicked copy" disabled>
+						<?php $this->text('COPY'); ?>
 					</button>
 				</div>
 				<div class="dialog-box hidden">
 					<div class="dialog-message"></div>
 					<div class="options">
-						<button id="mediumDeleteConfirm" class="hidden">
+						<button class="hidden deleteConfirm">
 							<?php $this->text('DELETE'); ?></button>
+						<button class="hidden unlockConfirm">
+							<?php $this->text('UNLOCK'); ?></button>
 						<button class="hidden cancel"><?php $this->text('CANCEL'); ?></button>
 					</div>
 				</div>
@@ -158,13 +205,13 @@ class AdminMediaModule extends BasicModule {
 			return;
 		}
 		echo '<ul class="tableLike enableButtonsIfChecked">';
-		foreach ($this->mediaGroups as $mediaGroup) {
+		foreach ($mediaGroups as $mediaGroup) {
 			echo '<li class="rowLike">';
 			echo '<input type="checkbox" id="mediaGroup' . $mediaGroup['mgid'] . '" name="mediaGroup[]"';
 			echo ' value="' . $mediaGroup['mgid'] . '" />';
 			echo '<label for="mediaGroup' . $mediaGroup['mgid'] . '" class="checkbox">';
 			echo Utils::escapeString($mediaGroup['title']) .' </label>';
-			echo '<a href="' . $config->getPublicRoot() . '/admin/media-group/' . $mediaGroup['pid'] . '"';
+			echo '<a href="' . $config->getPublicRoot() . '/admin/media-group/' . $mediaGroup['mgid'] . '"';
 			if (Utils::hasStringContent($mediaGroup['description'])) {
 				echo ' title="' . Utils::escapeString($mediaGroup['description']) . '"';
 			}
@@ -190,9 +237,91 @@ class AdminMediaModule extends BasicModule {
 	// --------------------------------------------------------------------------------------------
 
 	private function handleMediaGroupOperations($isGlobal) {
+		if ($isGlobal) {
+			$mediaGroups = $this->globalMediaGroups;
+		} else {
+			$mediaGroups = $this->localMediaGroups;
+		}
 		$operation = Utils::getUnmodifiedStringOrEmpty('operation');
 
-		
+		// check for media groups
+		if (!Utils::isValidFieldIntArray('mediaGroup')) {
+			return;
+		}
+
+		// normalize media groups
+		$uniqueMediaGroups = array_unique(Utils::getValidFieldArray('mediaGroup'));
+
+		// foreach media group
+		$result = true;
+		foreach ($uniqueMediaGroups as $mediaGroupId) {
+			// check if media group exists
+			$mediaGroup = Utils::getColumnWithValue($mediaGroups, 'mgid', (int) $mediaGroupId);
+			if ($mediaGroup === false) {
+				continue;
+			}
+
+			// do operation
+			switch ($operation) {
+				case 'delete':
+					// check for lock
+					if (Utils::isFlagged($mediaGroup['options'], MediaGroupOperations::LOCKED_OPTION)) {
+						$result = false;
+						$this->message = 'LOCKED';
+					} else {
+						$result = $result &&
+							$this->mediaGroupOperations->deleteMediaGroup($mediaGroup['mgid']);
+					}
+					break;
+				case 'lock':
+					$result = $result && $this->mediaGroupOperations->lockMediaGroup($mediaGroup['mgid']);
+					break;
+				case 'unlock':
+					$result = $result && $this->mediaGroupOperations->unlockMediaGroup($mediaGroup['mgid']);
+					break;
+				case 'move':
+					// check for lock
+					if (Utils::isFlagged($mediaGroup['options'], MediaGroupOperations::LOCKED_OPTION)) {
+						$result = false;
+						$this->message = 'LOCKED';
+					} else {
+						$result = $result && $this->mediaGroupOperations->moveMediaGroup($mediaGroup['mgid']);
+					}
+					break;
+				case 'copy':
+					$result = $result && $this->mediaGroupOperations->copyMediaGroup($mediaGroup['mgid']);
+					// TODO COPY FILES!!!!!!!!!
+					break;
+				default:
+					$result = false;
+				break;
+			}
+		}
+
+		// set state
+		$this->state = $result;
+		if ($result === true) {
+			switch ($operation) {
+				case 'delete':
+					$this->message = 'MEDIA_GROUPS_DELETED';
+					break;
+				case 'lock':
+					$this->message = 'MEDIA_GROUPS_LOCKED';
+					break;
+				case 'unlock':
+					$this->message = 'MEDIA_GROUPS_UNLOCKED';
+					break;
+				case 'move':
+					$this->message = 'MEDIA_GROUPS_MOVED';
+					break;
+				case 'copy':
+					$this->message = 'MEDIA_GROUPS_COPIED';
+					break;
+			}
+		}
+		else if (!isset($this->message)) {
+			$this->message = 'UNKNOWN_ERROR';
+		}
 	}
 
 	// --------------------------------------------------------------------------------------------

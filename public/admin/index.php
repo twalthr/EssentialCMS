@@ -177,6 +177,7 @@ switch ($action) {
 		$controller->verifyLogin();
 		$module = new AdminEditMediaGroupModule(
 			true,
+			$controller->getConfig(),
 			$controller->getMediaGroupOperations(),
 			$controller->getMediaOperations(),
 			$parameters);
@@ -186,6 +187,7 @@ switch ($action) {
 		$controller->verifyLogin();
 		$module = new AdminEditMediaGroupModule(
 			false,
+			$controller->getConfig(),
 			$controller->getMediaGroupOperations(),
 			$controller->getMediaOperations(),
 			$parameters);
@@ -195,6 +197,7 @@ switch ($action) {
 		$controller->verifyLogin();
 		$module = new AdminEditMediaGroupModule(
 			null,
+			$controller->getConfig(),
 			$controller->getMediaGroupOperations(),
 			$controller->getMediaOperations(),
 			$parameters);

@@ -10,9 +10,9 @@
 		<meta name="description" content="<?php echo $layoutContext->getDescription(); ?>" />
 		<?php endif; ?>
 		<meta name="generator" content="<?php echo $layoutContext->getCmsFullname(); ?>" />
-		<script type="text/javascript" src="<?php echo $layoutContext->getRoot(); ?>/js/jquery.js"></script>
-		<script type="text/javascript" src="<?php echo $layoutContext->getRoot(); ?>/js/admin.js"></script>
-		<link rel="stylesheet" href="<?php echo $layoutContext->getRoot(); ?>/css/admin.css" type="text/css" media="all" />
+		<script type="text/javascript" src="<?php echo $layoutContext->getRoot(); ?>/admin/js/jquery.js"></script>
+		<script type="text/javascript" src="<?php echo $layoutContext->getRoot(); ?>/admin/js/admin.js"></script>
+		<link rel="stylesheet" href="<?php echo $layoutContext->getRoot(); ?>/admin/css/admin.css" type="text/css" media="all" />
 		<?php if ($layoutContext->hasCustomHeader()) : ?>
 		<?php echo $layoutContext->getCustomHeader(); ?>
 		<?php endif; ?>

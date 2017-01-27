@@ -1,0 +1,833 @@
+/* --------------------------------------------------------------------------------------------- */
+/*                                      Fonts                                                    */
+/* --------------------------------------------------------------------------------------------- */
+/*  Source: Apache License Version 2.0 (see ../fonts/[FONT]/LICENSE.txt)                         */
+/* --------------------------------------------------------------------------------------------- */
+@font-face {
+	font-family: 'Open Sans';
+	font-weight: 300;
+	font-style: normal;
+	src: url('../fonts/Open-Sans-300/Open-Sans-300.eot');
+	src: url('../fonts/Open-Sans-300/Open-Sans-300.eot?#iefix') format('embedded-opentype'),
+		local('Open Sans Light'),
+		local('Open-Sans-300'),
+		local('Open Sans'),
+		local('OpenSans'),
+		url('../fonts/Open-Sans-300/Open-Sans-300.woff2') format('woff2'),
+		url('../fonts/Open-Sans-300/Open-Sans-300.woff') format('woff'),
+		url('../fonts/Open-Sans-300/Open-Sans-300.ttf') format('truetype'),
+		url('../fonts/Open-Sans-300/Open-Sans-300.svg#OpenSans') format('svg');
+}
+
+@font-face {
+	font-family: 'Open Sans';
+	font-weight: 400;
+	font-style: normal;
+	src: url('../fonts/Open-Sans-regular/Open-Sans-regular.eot');
+	src: url('../fonts/Open-Sans-regular/Open-Sans-regular.eot?#iefix') format('embedded-opentype'),
+		local('Open Sans'),
+		local('Open-Sans-regular'),
+		local('Open Sans'),
+		local('OpenSans'),
+		url('../fonts/Open-Sans-regular/Open-Sans-regular.woff2') format('woff2'),
+		url('../fonts/Open-Sans-regular/Open-Sans-regular.woff') format('woff'),
+		url('../fonts/Open-Sans-regular/Open-Sans-regular.ttf') format('truetype'),
+		url('../fonts/Open-Sans-regular/Open-Sans-regular.svg#OpenSans') format('svg');
+}
+
+@font-face {
+	font-family: 'Open Sans';
+	font-weight: 600;
+	font-style: normal;
+	src: url('../fonts/Open-Sans-600/Open-Sans-600.eot');
+	src: url('../fonts/Open-Sans-600/Open-Sans-600.eot?#iefix') format('embedded-opentype'),
+		local('Open Sans Semibold'),
+		local('Open-Sans-600'),
+		local('Open Sans'),
+		local('OpenSans'),
+		url('../fonts/Open-Sans-600/Open-Sans-600.woff2') format('woff2'),
+		url('../fonts/Open-Sans-600/Open-Sans-600.woff') format('woff'),
+		url('../fonts/Open-Sans-600/Open-Sans-600.ttf') format('truetype'),
+		url('../fonts/Open-Sans-600/Open-Sans-600.svg#OpenSans') format('svg');
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/*                                      CSS reset                                                */
+/* --------------------------------------------------------------------------------------------- */
+/*  Source: http://meyerweb.com/eric/tools/css/reset/                                            */
+/*  v2.0 | 20110126                                                                              */
+/*  License: none (public domain)                                                                */
+/* --------------------------------------------------------------------------------------------- */
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, embed, 
+figure, figcaption, footer, header, hgroup, 
+menu, nav, output, ruby, section, summary,
+time, mark, audio, video {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	font-size: 100%;
+	font: inherit;
+	vertical-align: baseline;
+}
+/* HTML5 display-role reset for older browsers */
+article, aside, details, figcaption, figure, 
+footer, header, hgroup, menu, nav, section {
+	display: block;
+}
+body {
+	line-height: 1;
+}
+ol, ul {
+	list-style: none;
+}
+blockquote, q {
+	quotes: none;
+}
+blockquote:before, blockquote:after,
+q:before, q:after {
+	content: '';
+	content: none;
+}
+table {
+	border-collapse: collapse;
+	border-spacing: 0;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/*                                      General style                                            */
+/* --------------------------------------------------------------------------------------------- */
+html {
+	-webkit-font-smoothing: antialiased;
+}
+
+input, body, textarea {
+	font-family: "Open Sans", Helvetica, Arial, sans-serif;
+}
+
+body {
+	font-size: 13px;
+	line-height: 23px;
+	background: #FFFFFF;
+	color: #494949;
+	width:100%;
+}
+
+html, body, .page {
+	height: 100%;
+}
+
+body>.page {
+	height: auto;
+	min-height: 100%;
+	position: relative;
+}
+
+a {
+	text-decoration: none;
+	color: #2A2A2A;
+	font-weight: 600;
+}
+
+a.goto::after {
+	content: '▶';
+	font-size: 9px;
+	padding-left: 5px;
+	vertical-align: top;
+	line-height: 21px;
+	display: inline-block;
+	color: #2A2A2A;
+}
+
+a.gotoBack::before {
+	content: '◀';
+	font-size: 9px;
+	padding-right: 5px;
+	vertical-align: top;
+	line-height: 21px;
+	display: inline-block;
+	color: #2A2A2A;
+}
+
+a.goto:hover::after, a.gotoBack:hover::before {
+	color: #000000;
+}
+
+a:hover, a.current {
+	text-decoration: underline;
+	color: #000000;
+}
+
+input[type='submit'], button {
+	background-color: #EAEAEA;
+	border: 1px solid #DCDCDC;
+	line-height: 23px;
+	font-weight: 600;
+	color: #2A2A2A;
+	padding-left: 10px;
+	padding-right: 10px;
+	display: block;
+	margin-bottom: 20px;
+}
+
+input[type='checkbox'], input[type='radio'] {
+	display: none;
+}
+
+input[type='checkbox'] + label.checkbox, input[type='radio'] + label.checkbox {
+	display: inline-block;
+	padding: 0;
+	width: 12px;
+	height: 12px;
+	background-color: #EAEAEA;
+	border: 1px solid #DCDCDC;
+	cursor: pointer;
+	text-indent: 100%;
+	white-space: nowrap;
+	overflow: hidden;
+	margin-bottom: -2px;
+	margin-right: 20px;
+}
+
+input[type='radio'] + label.checkbox {
+	border-radius: 6px;
+}
+
+input[type='checkbox'] + label.checkbox:hover, input[type='radio'] + label.checkbox:hover {
+	background-color: #CCCCCC;
+	border: 1px solid #B5B4B4;
+}
+
+input[type='checkbox']:checked + label.checkbox, input[type='radio']:checked + label.checkbox {
+	background-color: #999999;
+	border: 1px solid #B5B4B4;
+}
+
+input[type='checkbox']:checked + label.checkbox:hover, input[type='radio']:checked + label.checkbox:hover {
+	background-color: #777777;
+	border: 1px solid #B5B4B4;
+}
+
+input[type='checkbox']:disabled + label.checkbox:hover, input[type='radio']:disabled + label.checkbox:hover {
+	background-color: #EAEAEA;
+	border: 1px solid #DCDCDC;
+	cursor: default;
+}
+
+input[type='checkbox']:checked:disabled + label.checkbox:hover,
+input[type='radio']:checked:disabled + label.checkbox:hover {
+	background-color: #999999;
+	border: 1px solid #B5B4B4;
+	cursor: default;
+}
+
+input[type='submit']:last-child, button:last-child {
+	margin-bottom: 0;
+}
+
+input[type='submit']:hover, button:hover {
+	background-color: #CCCCCC;
+	border: 1px solid #B5B4B4;
+	color: #000000;
+	cursor: pointer;
+}
+
+input[type='submit']:disabled, button:disabled, select:disabled {
+	background-color: #FAFAFA;
+	border: 1px solid #EDEDED;
+	color: #EDEDED;
+	cursor: default;
+}
+
+input[type='text'], input[type='password'], input[type='email'], textarea {
+	background-color: #FFFFFF;
+	line-height: 23px;
+	color: #494949;
+	padding-left: 5px;
+	padding-right: 5px;
+	border: 1px solid #DCDCDC;
+	margin-bottom: 20px;
+	width: 200px;
+	box-sizing: border-box;
+}
+
+input[type='text']:disabled, input[type='password']:disabled, input[type='email']:disabled, textarea:disabled {
+	background-color: #EAEAEA;
+	border: 1px solid #DCDCDC;
+}
+
+input[type='text'].large, input[type='password'].large, input[type='email'].large, textarea.large {
+	width: 100%;
+} 
+
+input::after {
+	clear: both;
+	content: '.';
+	visibility: hidden;
+}
+
+input[type='text']:hover, input[type='password']:hover, input[type='email']:hover, select:hover,
+		textarea:hover {
+	border: 1px solid #B5B4B4;
+}
+
+input[type='text']:focus, input[type='password']:focus, input[type='email']:focus, select:focus,
+		textarea:focus {
+	border: 1px solid #B5B4B4;
+	color: #000000;
+}
+
+select {
+	background-color: #EAEAEA;
+	height: 27px;
+	color: #494949;
+	padding-left: 5px;
+	padding-right: 5px;
+	border: 1px solid #DCDCDC;
+	margin-bottom: 20px;
+	width: 200px;
+}
+
+label {
+	font-weight: 600;
+	padding-right: 20px;
+}
+
+.labelLike {
+	font-weight: 600;
+}
+
+.fields {
+	display: table;
+	width: 100%;
+}
+
+.fields .field {
+	display: table-row;
+}
+
+.fields .field>* {
+	display: table-cell;
+	text-align: left;
+	vertical-align: top;
+}
+
+.fields .field .hint {
+	width: 1px; /* hack to make column as small as possible */
+	white-space: nowrap;
+	padding-left: 20px;
+}
+
+.fields .field .inputWithOption button {
+	float: right;
+	position: relative;
+	top: -47px;
+	margin-bottom: -47px;
+}
+
+.fieldsRequired {
+	padding-bottom: 20px;
+}
+
+.buttonSet.general {
+	padding-bottom: 20px;
+	text-align: left;
+}
+
+.buttonSet {
+	text-align: right;
+}
+
+.buttonSet button, .buttonSet input[type='submit'], .buttonSet select {
+	display: inline-block;
+	margin-right: 5px;
+	margin-bottom: 0;
+}
+
+.buttonSet button:last-child, .buttonSet select:last-child {
+	margin-right: 0;
+}
+
+.checkboxWrapper {
+	padding-bottom: 20px;
+	font-weight: 600;
+}
+
+.checkboxWrapper label.checkbox {
+	margin-right: 5px !important;
+}
+
+.hidden {
+	display: none !important;
+}
+
+body>.page>header {
+	width: 100%;
+	padding: 15px 0 15px 0;
+	max-width: 978px;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+body>.page>header:after {
+	clear:both;
+	content:".";
+	display:block;
+	height:0;
+	line-height:0;
+	visibility:hidden;
+}
+
+body>.page>header .logo {
+	float: left;
+	height: 63px;
+	display: table;
+}
+
+body>.page>header hgroup {
+	display: table-cell;
+	vertical-align: middle;
+}
+
+body>.page>header .logo h1 {
+	font-size: 18px;
+	font-weight: 300;
+}
+
+body>.page>header .logo h2 {
+	font-weight: 300;
+}
+
+body>.page>header nav {
+	float: right;
+}
+
+body>.page>header ul {
+	margin-top: 20px;
+}
+
+body>.page>header li {
+	margin-left: 45px;
+	padding-bottom: 20px;
+	float: left;
+	font-size: 15px;
+}
+
+body>.page>main, body>.page>section.pre-content {
+	width: 100%;
+}
+
+body>.page>main section.content, body>.page>section.pre-content>* {
+	max-width: 978px;
+}
+
+body>.page>main section.content {
+	margin: 45px auto 45px;
+}
+
+body>.page>section.pre-content>* {
+	margin: 0 auto 0;
+}
+
+body>.page>footer {
+	position: absolute;
+	bottom: 0;
+	width: 100%;
+	padding: 20px 0 20px 0;
+	background: #272B32;
+	border-top: 5px solid #2F353D;
+	box-shadow: inset #3D4551 0 1px 0;
+	-webkit-box-shadow: inset #3D4551 0 1px 0;
+	-moz-box-shadow: inset #3D4551 0 1px 0;
+	color: #99A7BD;
+	text-align: center;
+}
+
+body>.page>footer a {
+	color: #99A7BD;
+}
+
+body>.page>*:nth-last-child(2) {
+	padding-bottom: 88px;
+}
+
+.dialog-box {
+	max-width: 500px;
+	padding: 20px;
+	border: 1px solid #DCDCDC;
+	margin: 0 auto !important;
+	text-align: center;
+}
+
+.dialog-box h1 {
+	font-size: 21px;
+	font-weight: 600;
+	line-height: normal;
+	border-bottom: 1px solid #DCDCDC;
+	margin-bottom: 20px;
+	text-align: left;
+}
+
+.dialog-box .fields {
+	width: auto;
+}
+
+.dialog-box .dialog-message, .dialog-error-message, .dialog-success-message, .dialog-notice-message {
+	margin-bottom: 20px;
+}
+
+.dialog-box .dialog-message:last-child, .dialog-box .dialog-error-message:last-child,
+.dialog-box .dialog-success-message:last-child {
+	margin-bottom: 0px
+}
+
+.dialog-error-message, .dialog-success-message, .dialog-notice-message {
+	padding: 7px;
+}
+
+.dialog-error-message {
+	background-color: #E8B5B5;
+	border: 1px solid #E49494;
+}
+
+.dialog-success-message {
+	background-color: #B5E8B9;
+	border: 1px solid #8BD291;
+}
+
+.dialog-notice-message {
+	background-color: #E8E7B5;
+	border: 1px solid #E5CC68;
+}
+
+.dialog-box .fields, .dialog-box input[type='submit'], .dialog-box button {
+	margin: auto;
+}
+
+.dialog-box .options input[type='submit'], .dialog-box .options button{
+	display: inline-block;
+}
+
+section.content section {
+	padding-left: 5px;
+	padding-right: 5px;
+}
+
+section.content section h1 {
+	font-size: 21px;
+	font-weight: 600;
+	line-height: normal;
+	border-bottom: 1px solid #DCDCDC;
+	padding-left: 5px;
+	margin-left: -5px;
+	margin-bottom: 20px;
+}
+
+section.content section, section.content section+* {
+	margin-top: 20px;
+}
+
+section.content section:first-child {
+	margin-top: 0;
+}
+
+section.content .dialog-success-message + section, section.content .dialog-error-message + section {
+	margin-top: 0;
+}
+
+p.empty, p.description {
+	text-align: center;
+	margin-bottom: 20px;
+}
+
+.tableLike {
+	margin-bottom: 20px;
+}
+
+.rowLike:last-child {
+	border-bottom: 1px dotted #DCDCDC;
+}
+
+.rowLike {
+	border-top: 1px dotted #DCDCDC;
+	padding: 5px;
+}
+
+.rowLike::after {
+	content: '';
+	display: table;
+	clear: both;
+}
+
+.rowLike:nth-child(2n) {
+	background-color: #FAFAFA;
+}
+
+.rowAdditionalInfo {
+	margin-left: 20px;
+	display: block;
+	float: right;
+	color: #DCDCDC;
+}
+
+a.componentLink {
+	font-size: 15px;
+}
+
+a.private {
+	text-decoration: line-through;
+}
+
+a.locked {
+	font-style: italic;
+}
+
+.tabBox .tabs {
+	border-bottom: 1px solid #DCDCDC;
+}
+
+.tabBox .tabs li {
+	line-height: normal;
+	margin-left: 20px;
+	margin-bottom: -1px;
+	display: inline-block;
+}
+
+.tabBox .tabs li.current a, .tabBox .tabs li.current a:hover {
+	background-color: #FFFFFF;
+	border: 1px solid #DCDCDC;
+	border-bottom: 1px solid #FFFFFF;
+	cursor: default;
+	text-decoration: none;
+}
+
+.tabBox .tabs a {
+	color: #2A2A2A;
+	padding: 4px 10px 4px;
+	background-color: #EAEAEA;
+	border: 1px solid #DCDCDC;
+	border-top-right-radius: 2px;
+	border-top-left-radius: 2px;
+	display: block;
+}
+
+.tabBox .tabs a:hover {
+	background-color: #CCCCCC;
+	border: 1px solid #B5B4B4;
+	border-bottom: 1px solid #DCDCDC;
+	color: #000000;
+	cursor: pointer;
+}
+
+.tabBox .tabContent .tab {
+	padding-top: 5px;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/*                                      Admin pages style                                        */
+/* --------------------------------------------------------------------------------------------- */
+div.siteMap .subLevel>li {
+	padding-left: 20px;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/*                                      Lightbox style                                           */
+/* --------------------------------------------------------------------------------------------- */
+.lightbox-overlay {
+	position: absolute;
+	top: 0;
+	left: 0;
+	height: 100%;
+	width: 100%;
+	background: #000000;
+	opacity: 0;
+	z-index: 50;
+}
+
+.lightbox-overlay-dialog {
+	position: absolute;
+	opacity: 0;
+	left: -9999px;
+	z-index: 51;
+	background-color: #FFFFFF;
+	overflow-y: auto;
+}
+
+.dialog-window {
+	padding: 5px;
+	border: 1px solid #DCDCDC;
+}
+
+.dialog-window h1 {
+	font-size: 21px;
+	font-weight: 600;
+	line-height: normal;
+	border-bottom: 1px solid #DCDCDC;
+	margin-bottom: 20px;
+}
+
+.dialog-window h2 {
+	font-weight: 600;
+}
+
+.dialog-window p {
+	display: inline-block;
+	margin-bottom: 20px;
+	margin-right: 20px;
+}
+
+.dialog-window p + .dialog-window .lightbox-close {
+	display: inline-block;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/*                                      Rich fields                                              */
+/* --------------------------------------------------------------------------------------------- */
+.fields .richField {
+	display: table-row;
+}
+
+.fields .richField>* {
+	display: table-cell;
+	text-align: left;
+}
+
+.fields .richField .hint {
+	width: 1px; /* hack to make column as small as possible */
+	white-space: nowrap;
+	padding-left: 20px;
+}
+
+.fields .richField .array .arrayElement {
+	display: table;
+	width: 100%;
+}
+
+.fields .richField .array .arrayElement>* {
+	display: table-cell;
+	text-align: left;
+}
+
+.fields .richField .array .arrayElement .arrayElementOptions {
+	width: 1px; /* hack to make column as small as possible */
+	padding-left: 20px;
+}
+
+.fields .richField .array .arrayOptions {
+	display: table-row;
+}
+
+.fields .richField .array .arrayOptions button {
+	display: table-cell;
+}
+
+.fields .richField .inputWithOption button {
+	float: right;
+	position: relative;
+	top: -47px;
+	margin-bottom: -47px;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/*                                    Admin Changelog                                            */
+/* --------------------------------------------------------------------------------------------- */
+.changelog .changeOperation {
+	padding: 0;
+	width: 12px;
+	height: 12px;
+	margin-right: 20px;
+	margin-bottom: -2px;
+	display: inline-block;
+	text-indent: 100%;
+	white-space: nowrap;
+	overflow: hidden;
+}
+
+.changelog .changeOperation.deleted {
+	background-color: #E8B5B5;
+	border: 1px solid #E49494;
+}
+
+.changelog .changeOperation.updated {
+	background-color: #B5E8B9;
+	border: 1px solid #8BD291;
+}
+
+/* --------------------------------------------------------------------------------------------- */
+/*                                    Admin Spinner                                              */
+/* --------------------------------------------------------------------------------------------- */
+
+/*
+Source: https://github.com/tobiasahlin/SpinKit
+
+The MIT License (MIT)
+
+Copyright (c) 2015 Tobias Ahlin
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+*/
+
+.spinner {
+	margin: 0 auto 20px;
+	width: 50px;
+	text-align: center;
+}
+
+.spinner > div {
+	width: 12px;
+	height: 12px;
+	background-color: #333;
+
+	border-radius: 100%;
+	display: inline-block;
+	-webkit-animation: sk-bouncedelay 1.4s infinite ease-in-out both;
+	animation: sk-bouncedelay 1.4s infinite ease-in-out both;
+}
+
+.spinner .bounce1 {
+	-webkit-animation-delay: -0.32s;
+	animation-delay: -0.32s;
+}
+
+.spinner .bounce2 {
+	-webkit-animation-delay: -0.16s;
+	animation-delay: -0.16s;
+}
+
+@-webkit-keyframes sk-bouncedelay {
+	0%, 80%, 100% { -webkit-transform: scale(0) }
+	40% { -webkit-transform: scale(1.0) }
+}
+
+@keyframes sk-bouncedelay {
+	0%, 80%, 100% { 
+		-webkit-transform: scale(0);
+		transform: scale(0);
+	} 40% { 
+		-webkit-transform: scale(1.0);
+		transform: scale(1.0);
+	}
+}

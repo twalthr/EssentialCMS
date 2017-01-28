@@ -88,21 +88,37 @@ class AdminEditMediaGroupModule extends BasicModule {
 							// do not calculate checksums
 							DISABLED: 3
 						},
-						_FILE_FILTER: ['thumbs.db', 'desktop.ini', '.ds_store', 'ehthumbs.db'], // need to be lower case
+						// need to be lower case
+						_FILE_FILTER: ['thumbs.db', 'desktop.ini', '.ds_store', 'ehthumbs.db'],
+						_CONFLICT_STRATEGIES: {
+							NO_STRATEGY: 0,
+							COEXIST: 1,
+							REPLACE: 2,
+							SKIP: 3
+						},
 
 						// configuration
 						_mode: 0,
 						_checksumLevel: 0,
 						_uploadArea: $('.uploadarea'),
-						_currentContent: [],
 						_checksumWorker: null,
 						_selectionEnabled: true, // determines if new files can be selected
+						// stratgy for file conflicts, chosen by user for all future files
+						_globalFileStrategy: 0,
+						// stratgy for directory conflicts, chosen by user for all future directories
+						_globalDirStrategy: 0,
+						// persisted content that will be modified by uploading files
+						_overallContent: [],
+						// persisted content that needs to be deleted due to replacement
+						_deletedContent: [],
+						// files to be uploaded
+						_fileQueue: [],
 
 						// public functions
-						init: function (currentContent) {
+						init: function (overallContent) {
 							this._detectMode();
 
-							this._currentContent = currentContent;
+							this._overallContent = overallContent;
 
 							this._checksumLevel = this._CHECKSUM_LEVELS.REQUIRED;
 							this._initChecksumWorkers();
@@ -322,13 +338,193 @@ class AdminEditMediaGroupModule extends BasicModule {
 							// check for conflicts
 
 							// we need a decision if
-							// directories should be merged, be replaced, or coexist
-							// files should be replaced, or coexist
+							// directories should be merged, replaced, or skipped
+							// files should be replaced, coexist, or be skipped
 
-							// check for similar directories
+							var that = this;
 
-							// check for similar files
+							// list of directories that are allowed to coexist
+							var conflictContext = {
+								coexistDirs: [],
+								replaceDirs: [],
+								skipDirs: [],
+								coexistFiles: [],
+								replaceFiles: [],
+								skipFiles: []
+							}
 
+							var fileConflictRoutine = function () {
+								var conflict = that._checkForFileConflicts(fileList, conflictContext);
+								if (conflict !== null) {
+									that._showDialog(
+										"<?php $this->text('FILE_CONFLICT', '" + conflict + "'); ?>",
+										["<?php $this->text('KEEP_BOTH'); ?>",
+											"<?php $this->text('REPLACE'); ?>",
+											"<?php $this->text('SKIP'); ?>",
+											"<?php $this->text('CANCEL'); ?>"],
+										function (decision) {
+											that._hideDialog();
+											if (decision == 0) {
+												conflictContext.coexistFiles.push(conflict);
+												fileConflictRoutine(fileList);
+											} else if (decision == 1) {
+												conflictContext.replaceFiles.push(conflict);
+												fileConflictRoutine(fileList);
+											} else if (decision == 2) {
+												conflictContext.skipFiles.push(conflict);
+												fileConflictRoutine(fileList, conflictContext);
+											} else if (decision == 3) {
+												that._enableSelection();
+											}
+										}
+									);
+								} else {
+
+								}
+							};
+
+							// check for directory conflicts
+							var directoryConflictRoutine = function () {
+								var conflict = that._checkForDirectoryConflicts(fileList, conflictContext);
+								if (conflict !== null) {
+									that._showDialog(
+										"<?php $this->text('DIRECTORY_CONFLICT', '" + conflict + "'); ?>",
+										["<?php $this->text('MERGE'); ?>",
+											"<?php $this->text('REPLACE'); ?>",
+											"<?php $this->text('SKIP'); ?>",
+											"<?php $this->text('CANCEL'); ?>"],
+										function (decision) {
+											that._hideDialog();
+											if (decision == 0) {
+												conflictContext.coexistDirs.push(conflict);
+												directoryConflictRoutine(fileList);
+											} else if (decision == 1) {
+												conflictContext.replaceDirs.push(conflict);
+												directoryConflictRoutine(fileList);
+											} else if (decision == 2) {
+												conflictContext.skipDirs.push(conflict);
+												directoryConflictRoutine(fileList, conflictContext);
+											} else if (decision == 3) {
+												that._enableSelection();
+											}
+										}
+									);
+								} else {
+									fileConflictRoutine();
+								}
+							};
+							directoryConflictRoutine();
+						},
+
+						// checks if there are unhandled conflicts
+						// returns the conflict if any
+						_checkForDirectoryConflicts: function (fileList, context) {
+							for (var i = 0; i < fileList.length; i++) {
+								var fileDescriptor = fileList[i];
+
+								// split into directory hierarchy
+								var split = fileDescriptor.path.split('/');
+								var currentDirectory = '/';
+								var directories = []
+								for (var j = 0; j < split.length - 1; j++) {
+									currentDirectory += split[j]
+									directories.push(currentDirectory);
+								}
+
+								// search for same directories
+								directoryLoop:
+								for (var k = 1; k < directories.length; k++) {
+									var currentDir = directories[k] + '/'
+
+									for (var j = 0; j < this._overallContent.length; j++) {
+										// potential conflict found
+										if (this._overallContent[j].internalName.startsWith(currentDir)) {
+											// check if strategy already given
+											if ($.inArray(currentDir, context.coexistDirs) != -1 ||
+													$.inArray(currentDir, context.replaceDirs)  != -1 ||
+													$.inArray(currentDir, context.skipDirs)  != -1) {
+												continue directoryLoop;
+											}
+											// check for global strategy coexist
+											else if (this._globalDirStrategy ==
+													this._CONFLICT_STRATEGIES.COEXIST) {
+												context.coexistDirs.push(currentDir);
+											}
+											// check for global strategy replace
+											else if (this._globalDirStrategy ==
+													this._CONFLICT_STRATEGIES.REPLACE) {
+												context.replaceDirs.push(currentDir);
+											}
+											// check for global strategy skip
+											else if (this._globalDirStrategy ==
+													this._CONFLICT_STRATEGIES.SKIP) {
+												context.skipDirs.push(currentDir);
+											} else {
+												// no strategy could be applied
+												return currentDir;
+											}
+										}
+									}
+								}
+							}
+							return null;
+						},
+
+						_checkForFileConflicts: function (fileList, context) {
+							for (var i = 0; i < fileList.length; i++) {
+								var fileDescriptor = fileList[i];
+
+								for (var j = 0; j < this._overallContent.length; j++) {
+									// potential conflict found
+									if (this._overallContent[j].internalName == fileDescriptor.path) {
+										// check if strategy already given
+										if (false) {
+											
+										}
+										// check for global strategy coexist
+										else if (this._globalFileStrategy ==
+												this._CONFLICT_STRATEGIES.COEXIST) {
+											context.coexistFiles.push(currentDir);
+										}
+										// check for global strategy replace
+										else if (this._globalFileStrategy ==
+												this._CONFLICT_STRATEGIES.REPLACE) {
+											context.replaceFiles.push(currentDir);
+										}
+										// check for global strategy skip
+										else if (this._globalFileStrategy ==
+												this._CONFLICT_STRATEGIES.SKIP) {
+											context.skipFiles.push(currentDir);
+										} else {
+											// no strategy could be applied
+											return fileDescriptor.path;
+										}
+									}
+								}
+							}
+							return null;
+						},
+
+						_hideDialog: function () {
+							$('.dialog-box', this._getDropArea()).remove();
+						},
+
+						_showDialog: function (message, buttons, callback) {
+							var dialog = $('<div class="dialog-box">');
+							dialog.append($('<div class="dialog-message">').text(message))
+							var options = $('<div class="options">');
+							for (var i = 0; i < buttons.length; i++) {
+								options.append(
+									$('<button>')
+										.text(buttons[i])
+										.click(function () {
+											callback($(this).index());
+										}
+									)
+								);
+							};
+							dialog.append(options);
+							this._getDropArea().append(dialog);
 						},
 
 						// filters files that are usually not needed
@@ -411,15 +607,14 @@ class AdminEditMediaGroupModule extends BasicModule {
 
 						// monitors the traversing of entries
 						_monitorTraversing: function (traversingStatus, traversingMonitor) {
-							this._setDropAreaCancel(function() {
-								traversingStatus.stopped = true;
-							});
-
 							var that = this;
 							var interval = setInterval(function() {
-								that._setDropAreaText("<?php $this->text('ITEMS_FOUND',
+								that._setDropAreaText("<?php $this->text('SEARCHING_FOR_ITEMS',
 									'" + traversingStatus.files + "',
 									'" + traversingStatus.dirs + "'); ?>");
+								that._setDropAreaCancel(function() {
+									traversingStatus.stopped = true;
+								});
 
 								if (traversingStatus.stopped) {
 									clearInterval(interval);

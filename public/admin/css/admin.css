@@ -465,6 +465,8 @@ body>.page>*:nth-last-child(2) {
 	border: 1px solid #DCDCDC;
 	margin: 0 auto !important;
 	text-align: center;
+	background-color: #FFFFFF;
+	color: #000000;
 }
 
 .dialog-box h1 {
@@ -510,10 +512,12 @@ body>.page>*:nth-last-child(2) {
 
 .dialog-box .fields, .dialog-box input[type='submit'], .dialog-box button {
 	margin: auto;
+	margin-right: 5px;
 }
 
 .dialog-box .options input[type='submit'], .dialog-box .options button{
 	display: inline-block;
+	margin-right: 5px;
 }
 
 section.content section {
@@ -847,6 +851,11 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 	margin-bottom: 20px;
 }
 
+.uploadarea .droparea>button {
+	margin: auto;
+	margin-top: 20px;
+}
+
 .uploadarea .droparea.dragover {
 	background-color: #CCCCCC;
 	border: 1px solid #B5B4B4;
@@ -857,7 +866,6 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 .uploadarea .droparea.loading {
 	background-color: #FAFAFA;
 	border: 1px solid #EDEDED;
-	color: #EDEDED;
 	cursor: default;
 }
 

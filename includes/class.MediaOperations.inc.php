@@ -8,8 +8,13 @@ final class MediaOperations {
 		$this->db = $db;
 	}
 
-	public function getMedia() {
-		
+	public function getMediaSummary($mgid) {
+		return $this->db->valuesQuery('
+			SELECT `mid`, `internalName`, `description`, `tags`, `checksum`, `options`, `lastChanged`
+			FROM `Media`
+			WHERE `group`=?',
+			'i',
+			$mgid);
 	}
 
 }

@@ -88,17 +88,21 @@ class AdminEditMediaGroupModule extends BasicModule {
 							// do not calculate checksums
 							DISABLED: 3
 						},
+						_FILE_FILTER: ['thumbs.db', 'desktop.ini', '.ds_store', 'ehthumbs.db'], // need to be lower case
 
 						// configuration
 						_mode: 0,
 						_checksumLevel: 0,
 						_uploadArea: $('.uploadarea'),
+						_currentContent: [],
 						_checksumWorker: null,
 						_selectionEnabled: true, // determines if new files can be selected
 
 						// public functions
-						init: function () {
+						init: function (currentContent) {
 							this._detectMode();
+
+							this._currentContent = currentContent;
 
 							this._checksumLevel = this._CHECKSUM_LEVELS.REQUIRED;
 							this._initChecksumWorkers();
@@ -312,7 +316,28 @@ class AdminEditMediaGroupModule extends BasicModule {
 						},
 
 						_preprocessFileList: function (fileList) {
-							console.log(fileList)
+							// reject certain files
+							this._filterFileList(fileList);
+
+							// check for conflicts
+
+							// we need a decision if
+							// directories should be merged, be replaced, or coexist
+							// files should be replaced, or coexist
+
+							// check for similar directories
+
+							// check for similar files
+
+						},
+
+						// filters files that are usually not needed
+						_filterFileList: function (fileList) {
+							for (var i = 0; i < fileList.length; i++) {
+								if ($.inArray(name.toLowerCase(), this._FILE_FILTER) != -1) {
+									fileList.splice(i, 1);
+								}
+							}
 						},
 
 						// create a file descriptor describing a file
@@ -392,7 +417,7 @@ class AdminEditMediaGroupModule extends BasicModule {
 
 							var that = this;
 							var interval = setInterval(function() {
-								that._setDropAreaText("<?php $this->text('UPLOADING_ITEMS_FOUND',
+								that._setDropAreaText("<?php $this->text('ITEMS_FOUND',
 									'" + traversingStatus.files + "',
 									'" + traversingStatus.dirs + "'); ?>");
 
@@ -534,7 +559,17 @@ class AdminEditMediaGroupModule extends BasicModule {
 					// ----------------------------------------------------------------------------
 					// END OF UPLOAD UTIL
 					// ----------------------------------------------------------------------------
-					uploadUtil.init();
+
+					// ----------------------------------------------------------------------------
+					// BEGIN OF MEDIA DATA
+					// ----------------------------------------------------------------------------
+					var currentContent = <?php echo $this->getMediaAsJson(); ?>;
+					// ----------------------------------------------------------------------------
+					// END OF MEDIA DATA
+					// ----------------------------------------------------------------------------
+
+					// start upload util
+					uploadUtil.init(currentContent);
 				<?php endif; ?>
 			});
 		</script>
@@ -647,6 +682,10 @@ class AdminEditMediaGroupModule extends BasicModule {
 	// Printing methods
 	// --------------------------------------------------------------------------------------------
 
+	private function getMediaAsJson() {
+		return json_encode($this->media);
+	}
+
 
 	// --------------------------------------------------------------------------------------------
 	// User input handling methods
@@ -744,7 +783,16 @@ class AdminEditMediaGroupModule extends BasicModule {
 	}
 
 	private function loadMedia() {
-
+		if (!isset($this->mediaGroup)) {
+			return;
+		}
+		$media = $this->mediaOperations->getMediaSummary($this->mediaGroup['mgid']);
+		if ($media === false) {
+			$this->state = false;
+			$this->message = 'MEDIA_NOT_FOUND';
+			return;
+		}
+		$this->media = $media;
 	}
 }
 

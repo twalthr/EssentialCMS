@@ -122,51 +122,54 @@ class AdminController {
 
 		$result = $DB->successQuery('
 				CREATE TABLE IF NOT EXISTS `Changelog` (
-					`clid` INT(10) NOT NULL AUTO_INCREMENT,
+					`clid` INT NOT NULL AUTO_INCREMENT,
 					`internal` TINYINT NOT NULL,
 					`type` TINYINT NOT NULL,
 					`operation` TINYINT NOT NULL,
-					`recordId` INT(10) NOT NULL,
+					`recordId` INT NOT NULL,
 					`time` TIMESTAMP NOT NULL,
 					`description` TEXT NULL,
 					PRIMARY KEY (`clid`)
 				)
 			') && $DB->successQuery('
 				CREATE TABLE IF NOT EXISTS `Images` (
-					`iid` INT(10) NOT NULL AUTO_INCREMENT,
-					`file` INT(10) NOT NULL,
+					`iid` INT NOT NULL AUTO_INCREMENT,
+					`file` INT NOT NULL,
 					`externalId` VARCHAR(256) NULL,
 					`hoverTitle` VARCHAR(256) NULL,
 					`altTitle` VARCHAR(256) NULL,
-					`topCornerX` INT(10) NOT NULL,
-					`topCornerY` INT(10) NOT NULL,
-					`bottomCornerX` INT(10) NOT NULL,
-					`bottomCornerY` INT(10) NOT NULL,
-					`width` INT(10) NOT NULL,
-					`height` INT(10) NOT NULL,
-					`format` INT(10) NOT NULL,
+					`topCornerX` INT NOT NULL,
+					`topCornerY` INT NOT NULL,
+					`bottomCornerX` INT NOT NULL,
+					`bottomCornerY` INT NOT NULL,
+					`width` INT NOT NULL,
+					`height` INT NOT NULL,
+					`format` INT NOT NULL,
 					PRIMARY KEY (`iid`)
 				)
 			') && $DB->successQuery('
-				CREATE TABLE IF NOT EXISTS `MediaFiles` (
-					`mfid` INT(10) NOT NULL AUTO_INCREMENT,
-					`group` INT(10) NULL,
+				CREATE TABLE IF NOT EXISTS `Media` (
+					`mid` INT NOT NULL AUTO_INCREMENT,
+					`group` INT NOT NULL,
 					`originalName` VARCHAR(512) NOT NULL,
-					`internalName` VARCHAR(512) NULL,
-					`copyrightInfo` VARCHAR(512) NULL,
+					`internalName` VARCHAR(512) NOT NULL,
+					`description` TEXT NULL,
+					`tags` TEXT NULL,
+					`checksum` CHAR(40) NULL,
+					`size` BIGINT NULL,
 					`externalId` VARCHAR(256) NULL,
-					`options` INT(10) NOT NULL,
+					`options` INT NOT NULL,
 					`lastChanged` TIMESTAMP NOT NULL,
 					`externalLastChanged` TIMESTAMP NULL,
-					PRIMARY KEY (`mfid`)
+					PRIMARY KEY (`mid`)
 				)
 			') && $DB->successQuery('
 				CREATE TABLE IF NOT EXISTS `Pages` (
-					`pid` INT(10) NOT NULL AUTO_INCREMENT,
+					`pid` INT NOT NULL AUTO_INCREMENT,
 					`title` VARCHAR(256) NOT NULL,
 					`hoverTitle` VARCHAR(256) NULL,
 					`externalId` VARCHAR(256) NULL,
-					`options` INT(10) NOT NULL,
+					`options` INT NOT NULL,
 					`lastChanged` TIMESTAMP NOT NULL,
 					`externalLastChanged` TIMESTAMP NULL,
 					PRIMARY KEY (`pid`)
@@ -175,69 +178,69 @@ class AdminController {
 				CREATE TABLE IF NOT EXISTS `Configuration` (
 					`key` VARCHAR(32) NOT NULL,
 					`value` VARCHAR(1024) NULL,
-					`order` INT(10) NOT NULL,
+					`order` INT NOT NULL,
 					PRIMARY KEY (`key`),
 					UNIQUE KEY `position` (`key`, `order`)
 				)
 			') && $DB->successQuery('
 				CREATE TABLE IF NOT EXISTS `MenuItems` (
-					`miid` INT(10) NOT NULL AUTO_INCREMENT,
-					`parent` INT(10) NULL,
-					`order` INT(10) NOT NULL,
+					`miid` INT NOT NULL AUTO_INCREMENT,
+					`parent` INT NULL,
+					`order` INT NOT NULL,
 					`title` VARCHAR(256) NOT NULL,
 					`hoverTitle` VARCHAR(256) NULL,
 					`externalId` VARCHAR(256) NOT NULL,
-					`destPage` INT(10) NULL,
+					`destPage` INT NULL,
 					`destLink` VARCHAR(1024) NULL,
-					`options` INT(10) NOT NULL,
+					`options` INT NOT NULL,
 					PRIMARY KEY (`miid`),
 					UNIQUE KEY `position` (`parent`, `order`),
 					UNIQUE `external` (`parent`, `externalId`)
 				)
 			') && $DB->successQuery('
 				CREATE TABLE IF NOT EXISTS `Modules` (
-					`mid` INT(10) NOT NULL AUTO_INCREMENT,
-					`page` INT(10) NULL,
-					`section` INT(10) NOT NULL,
-					`order` INT(10) NOT NULL,
+					`mid` INT NOT NULL AUTO_INCREMENT,
+					`page` INT NULL,
+					`section` INT NOT NULL,
+					`order` INT NOT NULL,
 					`definitionId` VARCHAR(32) NOT NULL,
 					PRIMARY KEY (`mid`),
 					UNIQUE KEY `position` (`page`, `section`, `order`)
 				)
 			') && $DB->successQuery('
 				CREATE TABLE IF NOT EXISTS `FieldGroups` (
-					`fgid` INT(10) NOT NULL AUTO_INCREMENT,
-					`module` INT(10) NOT NULL,
+					`fgid` INT NOT NULL AUTO_INCREMENT,
+					`module` INT NOT NULL,
 					`key` VARCHAR(32) NULL,
-					`order` INT(10) NULL,
+					`order` INT NULL,
 					PRIMARY KEY (`fgid`),
 					UNIQUE KEY `position` (`module`, `key`, `order`)
 				)
 			') && $DB->successQuery('
 				CREATE TABLE IF NOT EXISTS `MediaReferences` (
-					`mrid` INT(10) NOT NULL AUTO_INCREMENT,
-					`file` INT(10) NOT NULL,
-					`fieldGroup` INT(10) NOT NULL,
+					`mrid` INT NOT NULL AUTO_INCREMENT,
+					`file` INT NOT NULL,
+					`fieldGroup` INT NOT NULL,
 					PRIMARY KEY (`mrid`)
 				)
 			') && $DB->successQuery('
 				CREATE TABLE IF NOT EXISTS `Fields` (
-					`fid` INT(10) NOT NULL AUTO_INCREMENT,
-					`group` INT(10) NOT NULL,
+					`fid` INT NOT NULL AUTO_INCREMENT,
+					`group` INT NOT NULL,
 					`key` VARCHAR(32) NOT NULL,
-					`type` INT(10) NOT NULL,
+					`type` INT NOT NULL,
 					`content` TEXT NOT NULL,
 					PRIMARY KEY (`fid`),
 					UNIQUE KEY `position` (`group`, `key`, `fid`)
 				)
 			') && $DB->successQuery('
 				CREATE TABLE IF NOT EXISTS `MediaGroups` (
-					`mgid` INT(10) NOT NULL AUTO_INCREMENT,
+					`mgid` INT NOT NULL AUTO_INCREMENT,
 					`title` VARCHAR(256) NOT NULL,
 					`description` TEXT NULL,
 					`tags` TEXT NULL,
 					`checksum` CHAR(40) NULL,
-					`options` INT(10) NOT NULL,
+					`options` INT NOT NULL,
 					PRIMARY KEY (`mgid`)
 				)
 			') && $DB->impactQuery('

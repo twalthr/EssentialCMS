@@ -215,6 +215,7 @@ MAKE_GLOBAL=Make Global
 MEDIA_GROUP_PROPERTIES=General Media Group Properties
 EDIT_MEDIA_GROUP=Edit Media Group
 MEDIA_GROUP_NOT_FOUND=The media group could not be found.
+MEDIA_NOT_FOUND=The media data could not be found.
 MEDIA_GROUP_TITLE=Group title*:
 DESCRIPTION=Description:
 TAGS=Tags:

@@ -249,3 +249,6 @@ DIRECTORY_CONFLICT=The directory '%1$s' already exists. Please select how to con
 MERGE=Merge
 REPLACE=Replace
 SKIP=Skip
+FILE_CONFLICT=The file '%1$s' already exists. Please select how to continue.
+KEEP_BOTH=Keep both
+REMEMBER_DECISION=Remember selection for other conflicts

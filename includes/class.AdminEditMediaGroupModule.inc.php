@@ -96,13 +96,19 @@ class AdminEditMediaGroupModule extends BasicModule {
 							REPLACE: 2,
 							SKIP: 3
 						},
+						// how ofter do we check for updates in queue
+						_FILE_QUEUE_MONITOR_INTERVAL: 1000,
 
 						// configuration
 						_mode: 0,
 						_checksumLevel: 0,
 						_uploadArea: $('.uploadarea'),
+						// a web worker for creating checksums; null if not supported by the browser
 						_checksumWorker: null,
-						_selectionEnabled: true, // determines if new files can be selected
+						// last action timestamp of the web worker; null if no worker is active
+						_checksumLastAction: null,
+						// determines if new files can be selected
+						_selectionEnabled: true,
 						// stratgy for file conflicts, chosen by user for all future files
 						_globalFileStrategy: 0,
 						// stratgy for directory conflicts, chosen by user for all future directories
@@ -113,6 +119,8 @@ class AdminEditMediaGroupModule extends BasicModule {
 						_deletedContent: [],
 						// files to be uploaded
 						_fileQueue: [],
+						// monitor that watches the progress of files in the queue
+						_fileQueueMonitor: null,
 
 						// public functions
 						init: function (overallContent) {
@@ -362,24 +370,39 @@ class AdminEditMediaGroupModule extends BasicModule {
 											"<?php $this->text('REPLACE'); ?>",
 											"<?php $this->text('SKIP'); ?>",
 											"<?php $this->text('CANCEL'); ?>"],
-										function (decision) {
+										"<?php $this->text('REMEMBER_DECISION'); ?>",
+										function (decision, remember) {
 											that._hideDialog();
 											if (decision == 0) {
+												if (remember) {
+													that._globalFileStrategy =
+														that._CONFLICT_STRATEGIES.COEXIST;
+												}
 												conflictContext.coexistFiles.push(conflict);
-												fileConflictRoutine(fileList);
+												fileConflictRoutine();
 											} else if (decision == 1) {
+												if (remember) {
+													that._globalFileStrategy =
+														that._CONFLICT_STRATEGIES.REPLACE;
+												}
 												conflictContext.replaceFiles.push(conflict);
-												fileConflictRoutine(fileList);
+												fileConflictRoutine();
 											} else if (decision == 2) {
+												if (remember) {
+													that._globalFileStrategy =
+														that._CONFLICT_STRATEGIES.SKIP;
+												}
 												conflictContext.skipFiles.push(conflict);
-												fileConflictRoutine(fileList, conflictContext);
+												fileConflictRoutine();
 											} else if (decision == 3) {
 												that._enableSelection();
 											}
 										}
 									);
 								} else {
-
+									// no conflicts anymore
+									that._globalFileStrategy = that._CONFLICT_STRATEGIES.NO_STRATEGY;
+									that._addFileListToProcessQueue(fileList, conflictContext);
 								}
 							};
 
@@ -393,23 +416,37 @@ class AdminEditMediaGroupModule extends BasicModule {
 											"<?php $this->text('REPLACE'); ?>",
 											"<?php $this->text('SKIP'); ?>",
 											"<?php $this->text('CANCEL'); ?>"],
-										function (decision) {
+										"<?php $this->text('REMEMBER_DECISION'); ?>",
+										function (decision, remember) {
 											that._hideDialog();
 											if (decision == 0) {
+												if (remember) {
+													that._globalDirStrategy =
+														that._CONFLICT_STRATEGIES.COEXIST;
+												}
 												conflictContext.coexistDirs.push(conflict);
-												directoryConflictRoutine(fileList);
+												directoryConflictRoutine();
 											} else if (decision == 1) {
+												if (remember) {
+													that._globalDirStrategy =
+														that._CONFLICT_STRATEGIES.REPLACE;
+												}
 												conflictContext.replaceDirs.push(conflict);
-												directoryConflictRoutine(fileList);
+												directoryConflictRoutine();
 											} else if (decision == 2) {
+												if (remember) {
+													that._globalDirStrategy =
+														that._CONFLICT_STRATEGIES.SKIP;
+												}
 												conflictContext.skipDirs.push(conflict);
-												directoryConflictRoutine(fileList, conflictContext);
+												directoryConflictRoutine();
 											} else if (decision == 3) {
 												that._enableSelection();
 											}
 										}
 									);
 								} else {
+									that._globalDirStrategy = that._CONFLICT_STRATEGIES.NO_STRATEGY;
 									fileConflictRoutine();
 								}
 							};
@@ -419,31 +456,34 @@ class AdminEditMediaGroupModule extends BasicModule {
 						// checks if there are unhandled conflicts
 						// returns the conflict if any
 						_checkForDirectoryConflicts: function (fileList, context) {
+							fileLoop:
 							for (var i = 0; i < fileList.length; i++) {
 								var fileDescriptor = fileList[i];
 
 								// split into directory hierarchy
 								var split = fileDescriptor.path.split('/');
-								var currentDirectory = '/';
+								var currentDirectory = '';
 								var directories = []
 								for (var j = 0; j < split.length - 1; j++) {
-									currentDirectory += split[j]
+									currentDirectory += split[j] + '/'
 									directories.push(currentDirectory);
 								}
 
 								// search for same directories
 								directoryLoop:
 								for (var k = 1; k < directories.length; k++) {
-									var currentDir = directories[k] + '/'
+									var currentDir = directories[k]
 
 									for (var j = 0; j < this._overallContent.length; j++) {
 										// potential conflict found
 										if (this._overallContent[j].internalName.startsWith(currentDir)) {
 											// check if strategy already given
-											if ($.inArray(currentDir, context.coexistDirs) != -1 ||
-													$.inArray(currentDir, context.replaceDirs)  != -1 ||
+											if ($.inArray(currentDir, context.coexistDirs) != -1) {
+												continue directoryLoop; // only skip this directory
+											}
+											else if ($.inArray(currentDir, context.replaceDirs)  != -1 ||
 													$.inArray(currentDir, context.skipDirs)  != -1) {
-												continue directoryLoop;
+												continue fileLoop; // skip all sub directories
 											}
 											// check for global strategy coexist
 											else if (this._globalDirStrategy ==
@@ -471,33 +511,48 @@ class AdminEditMediaGroupModule extends BasicModule {
 						},
 
 						_checkForFileConflicts: function (fileList, context) {
+							fileLoop:
 							for (var i = 0; i < fileList.length; i++) {
-								var fileDescriptor = fileList[i];
+								var filePath = fileList[i].path;
 
 								for (var j = 0; j < this._overallContent.length; j++) {
 									// potential conflict found
-									if (this._overallContent[j].internalName == fileDescriptor.path) {
+									if (this._overallContent[j].internalName == filePath) {
 										// check if strategy already given
-										if (false) {
-											
+										if ($.inArray(filePath, context.coexistFiles) != -1 ||
+													$.inArray(filePath, context.replaceFiles)  != -1 ||
+													$.inArray(filePath, context.skipFiles)  != -1) {
+											continue fileLoop;
 										}
 										// check for global strategy coexist
 										else if (this._globalFileStrategy ==
 												this._CONFLICT_STRATEGIES.COEXIST) {
-											context.coexistFiles.push(currentDir);
+											context.coexistFiles.push(filePath);
 										}
 										// check for global strategy replace
 										else if (this._globalFileStrategy ==
 												this._CONFLICT_STRATEGIES.REPLACE) {
-											context.replaceFiles.push(currentDir);
+											context.replaceFiles.push(filePath);
 										}
 										// check for global strategy skip
 										else if (this._globalFileStrategy ==
 												this._CONFLICT_STRATEGIES.SKIP) {
-											context.skipFiles.push(currentDir);
+											context.skipFiles.push(filePath);
 										} else {
+											// check if entire directory is replaced anyway
+											for (var k = 0; k < context.replaceDirs.length; k++) {
+												if (filePath.startsWith(context.replaceDirs[k])) {
+													continue fileLoop;
+												}
+											}
+											// check if entire directory is skipped anyway
+											for (var k = 0; k < context.skipDirs.length; k++) {
+												if (filePath.startsWith(context.skipDirs[k])) {
+													continue fileLoop;
+												}
+											}
 											// no strategy could be applied
-											return fileDescriptor.path;
+											return filePath;
 										}
 									}
 								}
@@ -505,20 +560,160 @@ class AdminEditMediaGroupModule extends BasicModule {
 							return null;
 						},
 
+						_addFileListToProcessQueue: function (fileList, conflictContext) {
+							// collect content to delete
+							// replaced directories
+							for (var i = 0; i < conflictContext.replaceDirs.length; i++) {
+								var dir = conflictContext.replaceDirs[i];
+								for (var j = 0; j < this._overallContent.length; j++) {
+									var content = this._overallContent[j];
+									if (content.internalName.startsWith(dir)) {
+										this._deletedContent.push(content.mid);
+									}
+								}
+							}
+							// replaced files
+							for (var i = 0; i < conflictContext.replaceFiles.length; i++) {
+								var replaceFile = conflictContext.replaceFiles[i];
+								for (var j = 0; j < this._overallContent.length; j++) {
+									var content = this._overallContent[j];
+									if (content.internalName == replaceFile) {
+										this._deletedContent.push(content.mid);
+									}
+								}
+							}
+
+							// add file list to process queue
+							fileLoop:
+							for (var i = 0; i < fileList.length; i++) {
+								var file = fileList[i];
+								// file must not be in directory skip list
+								for (var j = 0; conflictContext.skipDirs.length; j++) {
+									var dir = conflictContext.skipDirs[j];
+									if (file.path.startsWith(dir)) {
+										continue fileLoop;
+									}
+								}
+								// file must not be in file skip list
+								for (var j = 0; conflictContext.skipFiles.length; j++) {
+									var skipFile = conflictContext.skipFiles[j];
+									if (file.path == skipFile) {
+										continue fileLoop;
+									}
+								}
+
+								// add file
+								this._fileQueue.push(file);
+								this._startFileQueueMonitor();
+							}
+						},
+
+						// starts the file queue observer process
+						_startFileQueueMonitor: function() {
+							if (this._fileQueueMonitor == null) {
+								var that = this;
+								this._fileQueueMonitor = setInterval(
+									function () {
+										that._monitorFileQueue(that);
+									}
+									,
+									this._FILE_QUEUE_MONITOR_INTERVAL);
+							}
+						},
+						// stops the file queue monitor process
+						_stopFileQueueMonitor: function() {
+							if (this._fileQueueMonitor != null) {
+								clearInterval(this._fileQueueMonitor);
+								this._fileQueueMonitor = null;
+							}
+						},
+						// interval function for monitoring queue
+						_monitorFileQueue: function (that) {
+							if (that._fileQueue.length == 0) {
+								that._stopFileQueueMonitor();
+							}
+							// reactivate file queue processing chain if it has stopped, but
+							// elements are still in queue
+							else {
+								// timeout to prevent call stack overflow
+								setTimeout(function () {
+									that._popFileQueue();
+								}, 1);
+							}
+						},
+
+						_popFileQueue: function() {
+							// cancel queue processing chain
+							if (this._checksumLastAction != null) {
+								return;
+							}
+
+							var nextFile = this._fileQueue[0];
+
+							// set last action so that file queue monitor notices action
+							this._checksumLastAction = new Date().getTime();
+							this._checksumWorker.postMessage({
+								'type': 'start',
+								'file': nextFile
+							});
+						},
+						// handling event coming from the checksum worker
+						_processChecksumWorkerEvent: function (e) {
+								// register progress
+							if (e.data.type == 'status') {
+								this._checksumLastAction = new Date().getTime();
+							} else if (e.data.type == 'error') {
+								// inform about the error
+								if (t2u._currentChecksumLevel != t2u._CHECKSUM_LEVELS.OPTIONAL) {
+									if (e.data.reason == 'unsupported') {
+										t2e.showErrorDialog("<@lang id='UPLOAD.NO_CHECKSUM_POSSIBLE' />");
+										t2u._currentChecksumLevel = t2u._CHECKSUM_LEVELS.DISABLED;
+										t2u._uplChecksumQueue = [];
+									} else if (e.data.reason == 'unknown') {
+										t2e.showErrorDialog("<@lang id='UPLOAD.ERROR.CHECKSUM' params=['<span class=\'ellipsis_in_middle highlighted\' />'] />", null, function(dialog) {
+											$('.ellipsis_in_middle', dialog).attr('title', t2u._uplChecksumQueue[0].filename).text(t2u._uplChecksumQueue[0].filename);
+										});
+									}
+								}
+							} else if (e.data.type == 'DONE') {
+								var fileObj = t2u._uplChecksumQueue[0];
+								fileObj.checksum = e.data.checksum;
+								t2u._checksumsPending.push(fileObj);
+							}
+
+							if (e.data.type == 'DONE' || (e.data.type == 'ERROR' && e.data.reason == 'unknown')) {
+								t2u._uplChecksumQueue.splice(0, 1);
+								t2u._checksumLastAction = null;
+
+								// timeout to prevent call stack overflow
+								setTimeout(function() {
+									t2u._pollChecksumQueue();
+								}, 1);
+							}
+						},
+
+
 						_hideDialog: function () {
 							$('.dialog-box', this._getDropArea()).remove();
 						},
 
-						_showDialog: function (message, buttons, callback) {
+						_showDialog: function (message, buttons, checkboxText, callback) {
 							var dialog = $('<div class="dialog-box">');
 							dialog.append($('<div class="dialog-message">').text(message))
 							var options = $('<div class="options">');
+							var wrapper = $('<div class="checkboxWrapper">');
+							var checkbox = $('<input type="checkbox" id="remember">');
+							wrapper.append(checkbox);
+							wrapper.append($('<label for="remember" class="checkbox">')
+								.text(checkboxText));
+							wrapper.append(checkboxText);
+							options.append(wrapper);
 							for (var i = 0; i < buttons.length; i++) {
 								options.append(
 									$('<button>')
 										.text(buttons[i])
 										.click(function () {
-											callback($(this).index());
+											callback($(this).index() - 1, checkbox.is(':checked'));
 										}
 									)
 								);
@@ -542,7 +737,8 @@ class AdminEditMediaGroupModule extends BasicModule {
 								'name': name,
 								'path': path,
 								'file': file,
-								'size': size
+								'size': size, // can be null if browser does not support it
+								'checksum': null
 							};
 						},
 
@@ -715,10 +911,6 @@ class AdminEditMediaGroupModule extends BasicModule {
 									this._handleError('<?php $this->text('CHECKSUM_NOT_SUPPORTED'); ?>');
 								}
 							}
-						},
-
-						_processChecksumWorkerEvent: function (e) {
-							console.log("TODO");
 						},
 
 						// checks which functions are supported by the browser

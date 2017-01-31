@@ -105,8 +105,6 @@ class AdminEditMediaGroupModule extends BasicModule {
 						_uploadArea: $('.uploadarea'),
 						// a web worker for creating checksums; null if not supported by the browser
 						_checksumWorker: null,
-						// last action timestamp of the web worker; null if no worker is active
-						_checksumLastAction: null,
 						// determines if new files can be selected
 						_selectionEnabled: true,
 						// stratgy for file conflicts, chosen by user for all future files
@@ -117,10 +115,14 @@ class AdminEditMediaGroupModule extends BasicModule {
 						_overallContent: [],
 						// persisted content that needs to be deleted due to replacement
 						_deletedContent: [],
-						// files to be uploaded
+						// content that needs to be persisted
+						_uploadedContent: [],
+						// files to be checksumed and uploaded
 						_fileQueue: [],
 						// monitor that watches the progress of files in the queue
 						_fileQueueMonitor: null,
+						// counter for temporary file session ids
+						_tmpFileIdCounter: 0, 
 
 						// public functions
 						init: function (overallContent) {
@@ -321,6 +323,7 @@ class AdminEditMediaGroupModule extends BasicModule {
 
 							// check for conflicts and add items if file system has been read
 							traversingEvent.done(function () {
+								that._setDropAreaText("<?php $this->text('SEARCHING_FOR_CONFLICTS'); ?>");
 								that._preprocessFileList(fileList);
 							});
 
@@ -604,92 +607,74 @@ class AdminEditMediaGroupModule extends BasicModule {
 
 								// add file
 								this._fileQueue.push(file);
-								this._startFileQueueMonitor();
 							}
+
+							// start processing queue
+							this._checksumFileQueue();
 						},
 
-						// starts the file queue observer process
-						_startFileQueueMonitor: function() {
-							if (this._fileQueueMonitor == null) {
-								var that = this;
-								this._fileQueueMonitor = setInterval(
-									function () {
-										that._monitorFileQueue(that);
-									}
-									,
-									this._FILE_QUEUE_MONITOR_INTERVAL);
-							}
-						},
-						// stops the file queue monitor process
-						_stopFileQueueMonitor: function() {
-							if (this._fileQueueMonitor != null) {
-								clearInterval(this._fileQueueMonitor);
-								this._fileQueueMonitor = null;
-							}
-						},
-						// interval function for monitoring queue
-						_monitorFileQueue: function (that) {
-							if (that._fileQueue.length == 0) {
-								that._stopFileQueueMonitor();
-							}
-							// reactivate file queue processing chain if it has stopped, but
-							// elements are still in queue
-							else {
-								// timeout to prevent call stack overflow
-								setTimeout(function () {
-									that._popFileQueue();
-								}, 1);
-							}
-						},
-
-						_popFileQueue: function() {
+						_checksumFileQueue: function() {
 							// cancel queue processing chain
 							if (this._checksumLastAction != null) {
 								return;
 							}
 
 							var nextFile = this._fileQueue[0];
+							nextFile.tmpfileId = this._tmpFileIdCounter++;
 
 							// set last action so that file queue monitor notices action
 							this._checksumLastAction = new Date().getTime();
+							this._setDropAreaText("<?php $this->text('CREATING_CHECKSUM', '" + nextFile.name + "'); ?>");
 							this._checksumWorker.postMessage({
 								'type': 'start',
-								'file': nextFile
+								'file': nextFile.file
 							});
+
+							// TODO start upload directly
 						},
 						// handling event coming from the checksum worker
 						_processChecksumWorkerEvent: function (e) {
-								// register progress
+
+							var currentFile = this._fileQueue[0];
+
+							// register progress
 							if (e.data.type == 'status') {
 								this._checksumLastAction = new Date().getTime();
+								var progress = Math.round(e.data.chunk / e.data.of * 100);
+								this._setDropAreaText("<?php $this->text('CREATING_CHECKSUM_PROGRESS',
+									'" + currentFile.name + "',
+									'" + progress + "'); ?>");
 							} else if (e.data.type == 'error') {
 								// inform about the error
-								if (t2u._currentChecksumLevel != t2u._CHECKSUM_LEVELS.OPTIONAL) {
+								if (this._currentChecksumLevel != this._CHECKSUM_LEVELS.OPTIONAL) {
 									if (e.data.reason == 'unsupported') {
-										t2e.showErrorDialog("<@lang id='UPLOAD.NO_CHECKSUM_POSSIBLE' />");
-										t2u._currentChecksumLevel = t2u._CHECKSUM_LEVELS.DISABLED;
-										t2u._uplChecksumQueue = [];
+										this._handleError('<?php $this->text('CHECKSUM_NOT_SUPPORTED'); ?>');
 									} else if (e.data.reason == 'unknown') {
-										t2e.showErrorDialog("<@lang id='UPLOAD.ERROR.CHECKSUM' params=['<span class=\'ellipsis_in_middle highlighted\' />'] />", null, function(dialog) {
-											$('.ellipsis_in_middle', dialog).attr('title', t2u._uplChecksumQueue[0].filename).text(t2u._uplChecksumQueue[0].filename);
-										});
+										this._handleError('<?php $this->text('CHECKSUM_UNKNOWN_ERROR'); ?>');
+										// TODO add button for restart page
 									}
 								}
-							} else if (e.data.type == 'DONE') {
-								var fileObj = t2u._uplChecksumQueue[0];
-								fileObj.checksum = e.data.checksum;
-								t2u._checksumsPending.push(fileObj);
+							} else if (e.data.type == 'done') {
+								currentFile.checksum = e.data.checksum;
+								this._uploadFileQueue();
+								this._checksumLastAction = null;
 							}
-
-							if (e.data.type == 'DONE' || (e.data.type == 'ERROR' && e.data.reason == 'unknown')) {
-								t2u._uplChecksumQueue.splice(0, 1);
-								t2u._checksumLastAction = null;
-
-								// timeout to prevent call stack overflow
-								setTimeout(function() {
-									t2u._pollChecksumQueue();
-								}, 1);
-							}
+						},
+						// uploads a file
+						_uploadFileQueue: function () {
+							var currentFile = this._fileQueue[0];
+							var formdata = new FormData();
+							formdata.append('file', currentFile, currentFile.tmpfileId);
+							$.ajax({
+								url: "upload.php",
+								type: 'post',
+								data: formdata,
+								processData: false,
+								contentType: false,
+								success: function (res) {
+									console.log(res); // server should accept the file, save it in db as tmp flagged
+								}
+							});
 						},
 
 
@@ -738,7 +723,8 @@ class AdminEditMediaGroupModule extends BasicModule {
 								'path': path,
 								'file': file,
 								'size': size, // can be null if browser does not support it
-								'checksum': null
+								'checksum': null,
+								'tmpfileId': null // will be set once conflicts have been handled
 							};
 						},
 
@@ -903,8 +889,9 @@ class AdminEditMediaGroupModule extends BasicModule {
 							if ('FileReader' in window && !!window.Worker) {
 								this._checksumWorker = new Worker(
 									'<?php echo $config->getPublicRoot(); ?>/admin/js/checksum-worker.js');
+								var that = this;
 								this._checksumWorker.onmessage = function (e) {
-									this._processChecksumWorkerEvent(e);
+									that._processChecksumWorkerEvent(e);
 								};
 							} else {
 								if (this._checksumLevel == this._CHECKSUM_LEVELS.REQUIRED) {

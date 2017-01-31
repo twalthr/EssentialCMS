@@ -252,3 +252,7 @@ SKIP=Skip
 FILE_CONFLICT=The file '%1$s' already exists. Please select how to continue.
 KEEP_BOTH=Keep both
 REMEMBER_DECISION=Remember selection for other conflicts
+CREATING_CHECKSUM=Creating checksum for file '%1$s'...
+CREATING_CHECKSUM_PROGRESS=Creating checksum for file '%1$s'... (%2$s%%)
+CHECKSUM_UNKNOWN_ERROR=Unknown error occured during checksum creation.
+SEARCHING_FOR_CONFLICTS=Searching for file conflicts...

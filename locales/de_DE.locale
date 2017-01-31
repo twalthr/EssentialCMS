@@ -252,3 +252,7 @@ SKIP=Überspringen
 FILE_CONFLICT=Die Datei '%1$s' existiert bereits. Bitte wählen Sie aus, wie Sie fortfahren möchten.
 KEEP_BOTH=Beide behalten
 REMEMBER_DECISION=Auswahl für andere Konflikt merken
+CREATING_CHECKSUM=Erzeuge Prüfsumme für Datei '%$1s'...
+CREATING_CHECKSUM_PROGRESS=Erzeuge Prüfsumme für Datei '%1$s'... (%2$s%%)
+CHECKSUM_UNKNOWN_ERROR=Ein unbekannter Fehler ist während der Prüfsummengenerierung aufgetreten.
+SEARCHING_FOR_CONFLICTS=Suche nach Dateikonflikten...

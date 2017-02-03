@@ -200,6 +200,7 @@ switch ($action) {
 			$controller->getConfig(),
 			$controller->getMediaGroupOperations(),
 			$controller->getMediaOperations(),
+			$controller->getMediaStore(),
 			$parameters);
 		$controller->layoutLoggedInContent(3, null, null, $module);
 		break;

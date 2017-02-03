@@ -15,18 +15,21 @@ class AdminEditMediaGroupModule extends BasicModule {
 	private $config; // config for page redirect after media group creation
 	private $mediaGroup; // media group information from database
 	private $media; // media information from database
+	private $mediaStore; // manages media files
 
 	public function __construct(
 			$createGlobal,
 			$config,
 			$mediaGroupOperations,
 			$mediaOperations,
+			$mediaStore,
 			$parameters = null) {
 		parent::__construct(1, 'admin-edit-media-group');
 		$this->createGlobal = $createGlobal;
 		$this->config = $config;
 		$this->mediaGroupOperations = $mediaGroupOperations;
 		$this->mediaOperations = $mediaOperations;
+		$this->mediaStore = $mediaStore;
 
 		// media group id is present
 		if (isset($parameters) && count($parameters) > 0) {
@@ -37,8 +40,14 @@ class AdminEditMediaGroupModule extends BasicModule {
 			$this->loadMedia();
 		}
 		// handle media group operations
-		if (Utils::getUnmodifiedStringOrEmpty('operationSpace') === 'mediaGroup') {
+		if (isset($this->mediaGroup) &&
+				Utils::getUnmodifiedStringOrEmpty('operationSpace') === 'mediaGroup') {
 			$this->handleEditMediaGroup();
+		}
+		// handle media operations
+		else if (isset($this->media) &&
+				Utils::getUnmodifiedStringOrEmpty('operationSpace') === 'media') {
+			$this->handleEditMedia();
 		}
 
 		// show success message for newly created media group
@@ -121,8 +130,6 @@ class AdminEditMediaGroupModule extends BasicModule {
 						_fileQueue: [],
 						// monitor that watches the progress of files in the queue
 						_fileQueueMonitor: null,
-						// counter for temporary file session ids
-						_tmpFileIdCounter: 0, 
 
 						// public functions
 						init: function (overallContent) {
@@ -610,27 +617,57 @@ class AdminEditMediaGroupModule extends BasicModule {
 							}
 
 							// start processing queue
-							this._checksumFileQueue();
+							this._checksumAndUploadFileDesc();
 						},
-
-						_checksumFileQueue: function() {
-							// cancel queue processing chain
-							if (this._checksumLastAction != null) {
-								return;
-							}
-
-							var nextFile = this._fileQueue[0];
-							nextFile.tmpfileId = this._tmpFileIdCounter++;
-
-							// set last action so that file queue monitor notices action
-							this._checksumLastAction = new Date().getTime();
-							this._setDropAreaText("<?php $this->text('CREATING_CHECKSUM', '" + nextFile.name + "'); ?>");
-							this._checksumWorker.postMessage({
-								'type': 'start',
-								'file': nextFile.file
-							});
-
-							// TODO start upload directly
+						// creates a checksum and/or uploads a file descriptor
+						// commits content changes if all files have been processed
+						_checksumAndUploadFileDesc: function() {
+							var that = this;
+							// we call it with timeout to prevent stack overflow
+							setTimeout(function () {
+								// cancel queue processing chain
+								if (that._fileQueue.length === 0) {
+									// new files added
+									if (that._uploadedContent.length > 0) {
+										that._commitContentChanges();
+									}
+								} else {
+									var nextFile = that._fileQueue[0];
+									// checksums supported
+									if (that._checksumWorker != null) {
+										that._setDropAreaText("<?php $this->text('CREATING_CHECKSUM', '" +
+											nextFile.name + "'); ?>");
+										that._checksumWorker.postMessage({
+											'type': 'start',
+											'file': nextFile.file
+										});
+									}
+									// checksums not supported but required
+									else if (that._checksumLevel == that._CHECKSUM_LEVELS.REQUIRED) {
+										that._handleError("<?php $this->text('CHECKSUM_UNKNOWN_ERROR'); ?>");
+									}
+									// checksum not supported but optional
+									else {
+										that._uploadFileDesc();
+									}
+								}
+							}, 1);
+						},
+						// commits all content changes to the server
+						_commitContentChanges: function () {
+							var form = $('<form class="changeSubmission" method="post">');
+							form.append($('<input type="hidden" name="operationSpace" value="media">'));
+							form.append($('<input type="hidden" name="operation" value="commit">'));
+							form.append(
+								$('<input type="hidden" name="deletedContent">')
+									.val(JSON.stringify(this._deletedContent))
+							);
+							form.append(
+								$('<input type="hidden" name="uploadedContent">')
+									.val(JSON.stringify(this._uploadedContent))
+							);
+							this._getFormArea().append(form);
+							form.submit();
 						},
 						// handling event coming from the checksum worker
 						_processChecksumWorkerEvent: function (e) {
@@ -639,7 +676,6 @@ class AdminEditMediaGroupModule extends BasicModule {
 
 							// register progress
 							if (e.data.type == 'status') {
-								this._checksumLastAction = new Date().getTime();
 								var progress = Math.round(e.data.chunk / e.data.of * 100);
 								this._setDropAreaText("<?php $this->text('CREATING_CHECKSUM_PROGRESS',
 									'" + currentFile.name + "',
@@ -656,27 +692,40 @@ class AdminEditMediaGroupModule extends BasicModule {
 								}
 							} else if (e.data.type == 'done') {
 								currentFile.checksum = e.data.checksum;
-								this._uploadFileQueue();
-								this._checksumLastAction = null;
+								this._uploadFileDesc();
 							}
 						},
 						// uploads a file
-						_uploadFileQueue: function () {
-							var currentFile = this._fileQueue[0];
+						_uploadFileDesc: function () {
+							var currentFileDesc = this._fileQueue[0];
 							var formdata = new FormData();
-							formdata.append('file', currentFile, currentFile.tmpfileId);
+							formdata.append('operationSpace', 'media');
+							formdata.append('operation', 'upload');
+							formdata.append('file', currentFileDesc.file, 'file');
+							var that = this;
 							$.ajax({
-								url: "upload.php",
-								type: 'post',
-								data: formdata,
-								processData: false,
-								contentType: false,
-								success: function (res) {
-									console.log(res); // server should accept the file, save it in db as tmp flagged
+								'type': 'post',
+								'data': formdata,
+								'processData': false,
+								'contentType': false,
+								'dataType': 'json',
+								'success': function (data) {
+									if (data.status === 'success') {
+										that._uploadedContent.push({
+											'mid': data.mid,
+											'size': currentFileDesc.size,
+											'checksum': currentFileDesc.checksum,
+											'path': currentFileDesc.path
+										});
+										that._fileQueue.splice(0, 1);
+										// start processing queue
+										that._checksumAndUploadFileDesc();
+									} else {
+
+									}
 								}
 							});
 						},
-
 
 						_hideDialog: function () {
 							$('.dialog-box', this._getDropArea()).remove();
@@ -723,8 +772,7 @@ class AdminEditMediaGroupModule extends BasicModule {
 								'path': path,
 								'file': file,
 								'size': size, // can be null if browser does not support it
-								'checksum': null,
-								'tmpfileId': null // will be set once conflicts have been handled
+								'checksum': null
 							};
 						},
 
@@ -825,6 +873,10 @@ class AdminEditMediaGroupModule extends BasicModule {
 
 						_getDropArea: function () {
 							return $('.droparea', this._uploadArea);
+						},
+
+						_getFormArea: function () {
+							return $('.formarea', this._uploadArea);
 						},
 
 						_setDropAreaText: function (text) {
@@ -1039,15 +1091,13 @@ class AdminEditMediaGroupModule extends BasicModule {
 				</section>
 			</form>
 		<?php if (isset($this->mediaGroup)) : ?>
-			<form method="post">
-				<input type="hidden" name="operationSpace" value="media" />
-				<section>
-					<h1><?php $this->text('MEDIA'); ?></h1>
-					<div class="uploadarea">
-					</div>
-					<div class="media">
-					</div>
-				</section>
+			<section>
+				<h1><?php $this->text('MEDIA'); ?></h1>
+				<div class="uploadarea">
+				</div>
+				<div class="media">
+				</div>
+			</section>
 		<?php endif; ?>
 	<?php
 	}
@@ -1135,6 +1185,75 @@ class AdminEditMediaGroupModule extends BasicModule {
 				$this->message = 'MEDIA_GROUP_EDITED';
 			}
 		}
+	}
+
+	private function handleEditMedia() {
+		$operation = Utils::getUnmodifiedStringOrEmpty('operation');
+		// check if locked
+		if (isset($this->mediaGroup)
+				&& Utils::isFlagged($this->mediaGroup['options'], MediaGroupOperations::LOCKED_OPTION)) {
+			$this->state = false;
+			$this->message = 'MEDIA_GROUP_LOCKED';
+			return;
+		}
+
+		switch ($operation) {
+			case 'upload':
+				$mid = $this->mediaStore->storeTempMedia(
+					$this->mediaGroup['mgid'], $_FILES['file']['tmp_name']);
+				$data = null;
+				// an error occured
+				if (is_string($mid)) {
+					$data = array('status' => 'error', 'message' => $this->config->text($mid));
+				} else {
+					$data = array('status' => 'success', 'mid' => $mid);
+				}
+				die(json_encode($data));
+			case 'commit':
+				// add content
+				$uploadedContent = Utils::getJsonFieldOrNull('uploadedContent', 3);
+				if ($uploadedContent === null || !is_array($uploadedContent)) {
+					$this->state = false;
+					$this->message = 'PARAMETERS_INVALID';
+					return;
+				}
+				foreach ($uploadedContent as $content) {
+					if (array_key_exists('mid', $content) && is_int($content['mid']) &&
+							array_key_exists('size', $content)  &&
+							(is_int($content['size']) || $content['size'] === null) &&
+							array_key_exists('checksum', $content)  && ((is_string($content['checksum']) &&
+							strlen($content['checksum']) === 32) || $content['checksum'] === null) &&
+							array_key_exists('path', $content)  && is_string($content['path']) &&
+							strlen($content['path']) < 512 && strlen($content['path']) > 0) {
+						$result = $this->mediaStore->commitTempMedia(
+							$this->mediaGroup['mgid'],
+							$content['mid'],
+							$content['size'],
+							$content['checksum'],
+							$content['path']);
+						if ($result === true) {
+							continue;
+						} else {
+							$this->state = false;
+							$this->message = $result;
+							return;
+						}
+					}
+					// invalid parameters
+					else {
+						$this->state = false;
+						$this->message = 'PARAMETERS_INVALID';
+						return;
+					}
+				}
+
+				// delete content
+				break;
+			default:
+				# code...
+				break;
+		}
+		
 	}
 
 	// --------------------------------------------------------------------------------------------

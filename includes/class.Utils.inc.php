@@ -190,6 +190,17 @@ abstract class Utils {
 		return $trimmed;
 	}
 
+	public static function getJsonFieldOrNull($str, $depth) {
+		if (!Utils::isValidField($str)) {
+			return null;
+		}
+		$fieldContent = Utils::getValidFieldStringOrNull($str);
+		if ($fieldContent === null) {
+			return null;
+		}
+		return json_decode($fieldContent, true, $depth);
+	}
+
 	public static function getValidFieldArray($str) {
 		return $_POST[$str];
 	}

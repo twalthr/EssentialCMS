@@ -151,12 +151,12 @@ class AdminController {
 				CREATE TABLE IF NOT EXISTS `Media` (
 					`mid` INT NOT NULL AUTO_INCREMENT,
 					`group` INT NOT NULL,
-					`originalName` VARCHAR(512) NOT NULL,
-					`internalName` VARCHAR(512) NOT NULL,
+					`originalName` VARCHAR(512) NULL,
+					`internalName` VARCHAR(512) NULL,
 					`description` TEXT NULL,
 					`tags` TEXT NULL,
-					`checksum` CHAR(40) NULL,
-					`size` BIGINT NULL,
+					`checksum` CHAR(32) NOT NULL,
+					`size` BIGINT NOT NULL,
 					`externalId` VARCHAR(256) NULL,
 					`options` INT NOT NULL,
 					`lastChanged` TIMESTAMP NOT NULL,
@@ -424,6 +424,15 @@ class AdminController {
 			$this->changelogOperations,
 			$this->pageOperations,
 			$this->moduleOperations);
+	}
+
+	public function getMediaStore() {
+		global $ROOT_DIRECTORY;
+		return new MediaStore(
+			$ROOT_DIRECTORY . '/media/raw',
+			$ROOT_DIRECTORY . '/media/small',
+			$ROOT_DIRECTORY . '/media/large',
+			$this->mediaOperations);
 	}
 }
 

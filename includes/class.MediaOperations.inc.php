@@ -12,7 +12,7 @@ final class MediaOperations {
 		return $this->db->valuesQuery('
 			SELECT `mid`, `internalName`, `description`, `tags`, `options`, `lastChanged`
 			FROM `Media`
-			WHERE `group`=?',
+			WHERE `group`=? AND `originalName` IS NOT NULL AND `internalName` IS NOT NULL',
 			'i',
 			$mgid);
 	}
@@ -53,6 +53,27 @@ final class MediaOperations {
 			WHERE `mid`=?',
 			'ssi',
 			$path, $path, $mid);
+	}
+
+	public function deleteMedia($mgid, $mid) {
+		return $this->db->impactQuery('
+			DELETE FROM `Media`
+			WHERE `group`=? AND `mid`=?',
+			'ii',
+			$mgid, $mid);
+	}
+
+	public function getAllTempMedia() {
+		return $this->db->valuesQuery('
+			SELECT `mid` AS `value`
+			FROM `Media`
+			WHERE `originalName` IS NULL AND `internalName` IS NULL');
+	}
+
+	public function deleteAllTempMedia() {
+		return $this->db->impactQuery('
+			DELETE FROM `Media`
+			WHERE `originalName` IS NULL AND `internalName` IS NULL');
 	}
 
 }

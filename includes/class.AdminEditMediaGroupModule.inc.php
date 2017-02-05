@@ -43,11 +43,26 @@ class AdminEditMediaGroupModule extends BasicModule {
 		if (isset($this->mediaGroup) &&
 				Utils::getUnmodifiedStringOrEmpty('operationSpace') === 'mediaGroup') {
 			$this->handleEditMediaGroup();
+			// reload media group
+			if (isset($parameters) && count($parameters) > 0) {
+				$this->loadMediaGroup($parameters[0]);
+			}
 		}
 		// handle media operations
 		else if (isset($this->media) &&
 				Utils::getUnmodifiedStringOrEmpty('operationSpace') === 'media') {
 			$this->handleEditMedia();
+			// reload media
+			$this->loadMedia();
+		}
+
+		// delete temp media if not media operation or error occured
+		if (Utils::getUnmodifiedStringOrEmpty('operationSpace') !== 'media' || $this->state === false) {
+			$result = $this->mediaStore->deleteAllTempMedia();
+			if ($result !== true) {
+				$this->state = false;
+				$this->message = $result;
+			}
 		}
 
 		// show success message for newly created media group
@@ -128,6 +143,8 @@ class AdminEditMediaGroupModule extends BasicModule {
 						_uploadedContent: [],
 						// files to be checksumed and uploaded
 						_fileQueue: [],
+						// additional variable to validate file queue with final uploaded content
+						_numberNewContent: 0,
 						// monitor that watches the progress of files in the queue
 						_fileQueueMonitor: null,
 
@@ -616,6 +633,8 @@ class AdminEditMediaGroupModule extends BasicModule {
 								this._fileQueue.push(file);
 							}
 
+							this._numberNewContent = this._fileQueue.length;
+
 							// start processing queue
 							this._checksumAndUploadFileDesc();
 						},
@@ -658,6 +677,8 @@ class AdminEditMediaGroupModule extends BasicModule {
 							var form = $('<form class="changeSubmission" method="post">');
 							form.append($('<input type="hidden" name="operationSpace" value="media">'));
 							form.append($('<input type="hidden" name="operation" value="commit">'));
+							form.append($('<input type="hidden" name="numberNewContent" value="' +
+								this._numberNewContent + '">'));
 							form.append(
 								$('<input type="hidden" name="deletedContent">')
 									.val(JSON.stringify(this._deletedContent))
@@ -698,17 +719,36 @@ class AdminEditMediaGroupModule extends BasicModule {
 						// uploads a file
 						_uploadFileDesc: function () {
 							var currentFileDesc = this._fileQueue[0];
+							var files = this._fileQueue.length;
 							var formdata = new FormData();
 							formdata.append('operationSpace', 'media');
 							formdata.append('operation', 'upload');
 							formdata.append('file', currentFileDesc.file, 'file');
 							var that = this;
+							that._setDropAreaText(
+								"<?php $this->text('UPLOADING',
+								'" + currentFileDesc.name + "',
+								'" + files + "'); ?>");
 							$.ajax({
 								'type': 'post',
 								'data': formdata,
 								'processData': false,
 								'contentType': false,
 								'dataType': 'json',
+								'xhr': function (){
+									// get the native XmlHttpRequest object
+									var xhr = $.ajaxSettings.xhr() ;
+									// set the onprogress event handler
+									xhr.upload.onprogress = function (e) {
+										var progress = Math.round(e.loaded / e.total * 100);
+										that._setDropAreaText(
+											"<?php $this->text('UPLOADING_PROGRESS',
+											'" + currentFileDesc.name + "',
+											'" + files + "',
+											'" + progress + "'); ?>");
+									};
+									return xhr;
+								},
 								'success': function (data) {
 									if (data.status === 'success') {
 										that._uploadedContent.push({
@@ -721,8 +761,11 @@ class AdminEditMediaGroupModule extends BasicModule {
 										// start processing queue
 										that._checksumAndUploadFileDesc();
 									} else {
-
+										// TODO
 									}
+								},
+								'error': function () {
+									// TODO
 								}
 							});
 						},
@@ -1212,28 +1255,35 @@ class AdminEditMediaGroupModule extends BasicModule {
 			case 'commit':
 				// add content
 				$uploadedContent = Utils::getJsonFieldOrNull('uploadedContent', 3);
-				if ($uploadedContent === null || !is_array($uploadedContent)) {
+				if ($uploadedContent === null || !is_array($uploadedContent) ||
+						!Utils::isValidFieldInt('numberNewContent')) {
 					$this->state = false;
 					$this->message = 'PARAMETERS_INVALID';
 					return;
 				}
+				$numberNewContent = (int) Utils::getUnmodifiedStringOrEmpty('numberNewContent');
+				if ($numberNewContent !== count($uploadedContent)) {
+					$this->state = false;
+					$this->message = 'UNKNOWN_ERROR';
+					return;
+				}
 				foreach ($uploadedContent as $content) {
-					if (array_key_exists('mid', $content) && is_int($content['mid']) &&
+					// parameter checking
+					if (array_key_exists('mid', $content) && Utils::isValidInt($content['mid']) &&
 							array_key_exists('size', $content)  &&
-							(is_int($content['size']) || $content['size'] === null) &&
+							(Utils::isValidInt($content['size']) || $content['size'] === null) &&
 							array_key_exists('checksum', $content)  && ((is_string($content['checksum']) &&
 							strlen($content['checksum']) === 32) || $content['checksum'] === null) &&
 							array_key_exists('path', $content)  && is_string($content['path']) &&
-							strlen($content['path']) < 512 && strlen($content['path']) > 0) {
+							strlen($content['path']) < 512 && strlen($content['path']) > 1 &&
+							substr($content['path'], 0, 1) === '/') {
 						$result = $this->mediaStore->commitTempMedia(
 							$this->mediaGroup['mgid'],
 							$content['mid'],
 							$content['size'],
 							$content['checksum'],
 							$content['path']);
-						if ($result === true) {
-							continue;
-						} else {
+						if ($result !== true) {
 							$this->state = false;
 							$this->message = $result;
 							return;
@@ -1248,12 +1298,35 @@ class AdminEditMediaGroupModule extends BasicModule {
 				}
 
 				// delete content
+				$deletedContent = Utils::getJsonFieldOrNull('deletedContent', 2);
+				if ($deletedContent === null || !is_array($deletedContent)) {
+					$this->state = false;
+					$this->message = 'PARAMETERS_INVALID';
+					return;
+				}
+				foreach ($deletedContent as $mid) {
+					if (is_int($mid)) {
+						$result = $this->mediaStore->deleteMedia($this->mediaGroup['mgid'], $mid);
+						if ($result !== true) {
+							$this->state = false;
+							$this->message = $result;
+							return;
+						}
+					}
+					// invalid parameters
+					else {
+						$this->state = false;
+						$this->message = 'PARAMETERS_INVALID';
+						return;
+					}
+				}
 				break;
 			default:
-				# code...
+				// do nothing
 				break;
 		}
-		
+		$this->state = true;
+		$this->message = 'MEDIA_GROUP_EDITED';
 	}
 
 	// --------------------------------------------------------------------------------------------

@@ -13,5 +13,5 @@
 # compiled pages
 compiled/*
 
-# uploaded files
-uploaded/*
+# media files
+media/*

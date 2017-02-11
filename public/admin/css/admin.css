@@ -869,6 +869,11 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 	cursor: default;
 }
 
-.uploadarea .buttonarea .selectbutton {
-	margin: auto;
+.uploadarea .buttonarea {
+	text-align: center;
+}
+
+.uploadarea .buttonarea button {
+	display: inline-block;
+	margin-right: 20px;
 }

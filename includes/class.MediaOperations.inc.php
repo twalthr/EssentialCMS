@@ -70,10 +70,12 @@ final class MediaOperations {
 			WHERE `originalName` IS NULL AND `internalName` IS NULL');
 	}
 
-	public function deleteAllTempMedia() {
+	public function deleteAllTempMedia($mgid) {
 		return $this->db->impactQuery('
 			DELETE FROM `Media`
-			WHERE `originalName` IS NULL AND `internalName` IS NULL');
+			WHERE `originalName` IS NULL AND `internalName` IS NULL AND `group`=?',
+			'i',
+			$mgid);
 	}
 
 }

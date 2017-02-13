@@ -137,6 +137,10 @@ a {
 	font-weight: 600;
 }
 
+a:hover {
+	cursor: pointer;
+}
+
 a.goto::after {
 	content: '▶';
 	font-size: 9px;
@@ -238,6 +242,13 @@ input[type='submit']:hover, button:hover {
 	border: 1px solid #B5B4B4;
 	color: #000000;
 	cursor: pointer;
+}
+
+button.selected {
+	background-color: #FFFFFF;
+	border: 1px solid #DCDCDC;
+	cursor: default;
+	text-decoration: none;
 }
 
 input[type='submit']:disabled, button:disabled, select:disabled {
@@ -594,18 +605,18 @@ a.locked {
 	font-style: italic;
 }
 
-.tabBox .tabs {
+.tabs {
 	border-bottom: 1px solid #DCDCDC;
 }
 
-.tabBox .tabs li {
+.tabs li {
 	line-height: normal;
 	margin-left: 20px;
 	margin-bottom: -1px;
 	display: inline-block;
 }
 
-.tabBox .tabs li.current a, .tabBox .tabs li.current a:hover {
+.tabs li.current a, .tabBox .tabs li.current a:hover {
 	background-color: #FFFFFF;
 	border: 1px solid #DCDCDC;
 	border-bottom: 1px solid #FFFFFF;
@@ -613,7 +624,7 @@ a.locked {
 	text-decoration: none;
 }
 
-.tabBox .tabs a {
+.tabs a {
 	color: #2A2A2A;
 	padding: 4px 10px 4px;
 	background-color: #EAEAEA;
@@ -623,15 +634,16 @@ a.locked {
 	display: block;
 }
 
-.tabBox .tabs a:hover {
+.tabs a:hover {
 	background-color: #CCCCCC;
 	border: 1px solid #B5B4B4;
 	border-bottom: 1px solid #DCDCDC;
 	color: #000000;
 	cursor: pointer;
+	text-decoration: none;
 }
 
-.tabBox .tabContent .tab {
+.tabContent .tab {
 	padding-top: 5px;
 }
 
@@ -876,4 +888,34 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 .uploadarea .buttonarea button {
 	display: inline-block;
 	margin-right: 20px;
+}
+
+.media .locator {
+	border: 1px solid #DCDCDC;
+	padding: 5px;
+	margin-bottom: 5px;
+}
+
+.media .locator li {
+	display: inline-block;
+	margin-right: 5px;
+}
+
+.media .locator .pathseperator:after {
+	content: '▶';
+	font-size: 9px;
+	vertical-align: top;
+	line-height: 21px;
+	display: inline-block;
+	color: #2A2A2A;
+}
+
+.media .viewarea .directory:before {
+	content: '▶';
+	font-size: 9px;
+	padding-right: 5px;
+	vertical-align: top;
+	line-height: 21px;
+	display: inline-block;
+	color: #2A2A2A;
 }

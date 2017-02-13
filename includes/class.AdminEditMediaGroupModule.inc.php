@@ -78,6 +78,10 @@ class AdminEditMediaGroupModule extends BasicModule {
 		<?php include __DIR__ . '/js.Uploader.inc.php'; ?>
 		<!-- END OF UPLOADER -->
 
+		<!-- START OF FILE MANAGER -->
+		<?php include __DIR__ . '/js.FileManager.inc.php'; ?>
+		<!-- END OF UPLOADER -->
+
 		<script type="text/javascript">
 			$(document).ready(function() {
 				$('#editMediaGroupCancel').click(function() {
@@ -102,6 +106,9 @@ class AdminEditMediaGroupModule extends BasicModule {
 
 					// initialize uploader
 					uploader.init(currentContent, $('.uploadarea'));
+
+					// initialize file manager
+					fileManager.init(currentContent, $('.media'));
 				<?php endif; ?>
 			});
 		</script>
@@ -193,16 +200,14 @@ class AdminEditMediaGroupModule extends BasicModule {
 									<?php echo Utils::escapeString($this->mediaGroup['tags']); ?></div>
 						<?php endif; ?>
 					</div>
+					<div class="uploadarea hidden showInEditMode"></div>
 					<?php endif; ?>
 				</section>
 			</form>
 		<?php if (isset($this->mediaGroup)) : ?>
 			<section>
 				<h1><?php $this->text('MEDIA'); ?></h1>
-				<div class="uploadarea">
-				</div>
-				<div class="media">
-				</div>
+				<div class="media"></div>
 			</section>
 		<?php endif; ?>
 	<?php

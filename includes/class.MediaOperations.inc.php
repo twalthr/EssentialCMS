@@ -12,7 +12,8 @@ final class MediaOperations {
 		return $this->db->valuesQuery('
 			SELECT `mid`, `internalName`, `description`, `tags`, `options`, `lastChanged`
 			FROM `Media`
-			WHERE `group`=? AND `originalName` IS NOT NULL AND `internalName` IS NOT NULL',
+			WHERE `group`=? AND `originalName` IS NOT NULL AND `internalName` IS NOT NULL
+			ORDER BY `internalName` ASC',
 			'i',
 			$mgid);
 	}

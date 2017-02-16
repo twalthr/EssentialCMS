@@ -57,12 +57,12 @@ final class MediaOperations {
 			$path, $modified, $path, $mid);
 	}
 
-	public function deleteMedia($mgid, $mid) {
+	public function deleteMedia($mid) {
 		return $this->db->impactQuery('
 			DELETE FROM `Media`
-			WHERE `group`=? AND `mid`=?',
-			'ii',
-			$mgid, $mid);
+			WHERE `mid`=?',
+			'i',
+			$mid);
 	}
 
 	public function getAllTempMedia() {
@@ -78,6 +78,15 @@ final class MediaOperations {
 			WHERE `originalName` IS NULL AND `internalName` IS NULL AND `group`=?',
 			'i',
 			$mgid);
+	}
+
+	public function moveMedia($mid, $internalName) {
+		return $this->db->impactQuery('
+			UPDATE `Media`
+			SET `internalName`=?
+			WHERE `mid`=?',
+			'si',
+			$internalName, $mid);
 	}
 
 }

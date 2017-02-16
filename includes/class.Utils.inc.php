@@ -337,6 +337,22 @@ abstract class Utils {
 	public static function unsetFlag($var, $flag) {
 		return $var & ~$flag;
 	}
+
+	public static function isValidPath($path) {
+		if (strlen($path) > 512 ||
+				strlen($path) < 1 ||
+				substr($path, 0, 1) !== '/' ||
+				substr($path, strlen($path) -1) === '/') {
+			return false;
+		}
+		$split = explode('/', substr($path, 1));
+		foreach ($split as $component) {
+			if (strlen($component) === 0) {
+				return false;
+			}
+		}
+		return true;
+	}
 }
 
 ?>

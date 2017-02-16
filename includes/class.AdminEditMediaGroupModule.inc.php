@@ -207,6 +207,7 @@ class AdminEditMediaGroupModule extends BasicModule {
 		<?php if (isset($this->mediaGroup)) : ?>
 			<form method="post">
 				<input type="hidden" name="operationSpace" value="media" />
+				<input type="hidden" name="operation" class="mediaOperation" value="" />
 				<section>
 					<h1><?php $this->text('MEDIA'); ?></h1>
 					<div class="media"></div>
@@ -389,8 +390,7 @@ class AdminEditMediaGroupModule extends BasicModule {
 							array_key_exists('checksum', $content)  && ((is_string($content['checksum']) &&
 							strlen($content['checksum']) === 32) || $content['checksum'] === null) &&
 							array_key_exists('path', $content)  && is_string($content['path']) &&
-							strlen($content['path']) < 512 && strlen($content['path']) > 1 &&
-							substr($content['path'], 0, 1) === '/' &&
+							Utils::isValidPath($content['path']) &&
 							array_key_exists('modified', $content) &&
 							(Utils::isValidInt($content['modified']) || $content['modified'] === null)) {
 						$result = $this->mediaStore->commitTempMedia(
@@ -443,16 +443,16 @@ class AdminEditMediaGroupModule extends BasicModule {
 			default:
 
 				// check for media
-				if (!Utils::isValidFieldIntArray('medium')) {
+				if (!Utils::isValidFieldIntArray('media')) {
 					return;
 				}
 
 				// normalize media
-				$uniqueMediumIds = array_unique(Utils::getValidFieldArray('medium'));
+				$uniqueMediumIds = array_unique(Utils::getValidFieldArray('media'));
 
 				// foreach medium
 				$result = true;
-				foreach ($uniqueMediumIds as $mediumId) {
+				foreach ($uniqueMediumIds as $index => $mediumId) {
 					// check if medium exists
 					$medium = Utils::getColumnWithValue($this->media, 'mid', (int) $mediumId);
 					if ($medium === false) {
@@ -461,13 +461,35 @@ class AdminEditMediaGroupModule extends BasicModule {
 
 					// do operation
 					switch ($operation) {
-						case 'rename':
-							$result = $result && false;
+						case 'move':
+							// check if number of paths equal to number of media
+							// and check if valid path
+							if (!Utils::isValidFieldArray('path')) {
+								return;
+							}
+							$paths = Utils::getValidFieldArray('path');
+							if (count($paths) !== count($uniqueMediumIds) ||
+									!Utils::isValidPath($paths[$index])) {
+								$this->state = false;
+								$this->message = 'PARAMETERS_INVALID';
+								return;
+							}
+							// check if same path
+							if ($paths[$index] === $medium['internalName']) {
+								continue;
+							}
+
+							// perform move
+							$result = $this->mediaStore->moveMedia(
+								$medium['mid'],
+								$paths[$index]);
+							if ($result !== true) {
+								$this->state = false;
+								$this->message = $result;
+								return;
+							}
 							break;
 						case 'attach':
-							$result = $result && false;
-							break;
-						case 'move':
 							$result = $result && false;
 							break;
 						case 'copy':
@@ -477,8 +499,12 @@ class AdminEditMediaGroupModule extends BasicModule {
 							$result = $result && false;
 							break;
 						case 'delete':
-							$result = $result && false;
-							break;
+							$result = $this->mediaStore->deleteMedia($medium['mid']);
+							if ($result !== true) {
+								$this->state = false;
+								$this->message = $result;
+								return;
+							}
 						default:
 							$result = false;
 						break;

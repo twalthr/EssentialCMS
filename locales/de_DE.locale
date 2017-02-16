@@ -273,3 +273,4 @@ VIEW_LARGE_THUMBNAILS=Große Vorschau
 MEDIA_ROOT=Übersicht
 RENAME=Umbenennen
 ATTACH=Anhängen
+RENAME_QUESTION=Bitte wählen Sie einen neuen Namen aus. Wenn Sie mehrere Datien umbenennen, bekommen diese den gleichen Namen. Wenn Sie mehrere Ordner umbenennen, werden diese zusammengeführt.

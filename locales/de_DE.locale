@@ -271,3 +271,5 @@ VIEW_LIST=Liste
 VIEW_SMALL_THUMBNAILS=Kleine Vorschau
 VIEW_LARGE_THUMBNAILS=Große Vorschau
 MEDIA_ROOT=Übersicht
+RENAME=Umbenennen
+ATTACH=Anhängen

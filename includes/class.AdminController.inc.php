@@ -152,6 +152,7 @@ class AdminController {
 					`mid` INT NOT NULL AUTO_INCREMENT,
 					`group` INT NOT NULL,
 					`originalName` VARCHAR(512) NULL,
+					`originalModified` TIMESTAMP NULL,
 					`internalName` VARCHAR(512) NULL,
 					`description` TEXT NULL,
 					`tags` TEXT NULL,

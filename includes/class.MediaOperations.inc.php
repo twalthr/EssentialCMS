@@ -10,7 +10,8 @@ final class MediaOperations {
 
 	public function getMediaSummary($mgid) {
 		return $this->db->valuesQuery('
-			SELECT `mid`, `internalName`, `description`, `tags`, `options`, `lastChanged`
+			SELECT `mid`, `internalName`, `originalModified`, `description`, `tags`, `options`,
+				`lastChanged`, `size`
 			FROM `Media`
 			WHERE `group`=? AND `originalName` IS NOT NULL AND `internalName` IS NOT NULL
 			ORDER BY `internalName` ASC',
@@ -39,21 +40,21 @@ final class MediaOperations {
 
 	public function getMedia($mid) {
 		return $this->db->valueQuery('
-			SELECT `mid`, `group`, `originalName`, `internalName`, `description`, `tags`, `checksum`,
-				`size`, `externalId`, `options`, `lastChanged`, `externalLastChanged`
+			SELECT `mid`, `group`, `originalName`, `originalModified`, `internalName`, `description`,
+				`tags`, `checksum`, `size`, `externalId`, `options`, `lastChanged`, `externalLastChanged`
 			FROM `Media`
 			WHERE `mid`=?',
 			'i',
 			$mid);
 	}
 
-	public function commitTempMedia($mid, $path) {
+	public function commitTempMedia($mid, $path, $modified) {
 		return $this->db->impactQuery('
 			UPDATE `Media`
-			SET `originalName`=?, `internalName`=?
+			SET `originalName`=?, `originalModified`=?, `internalName`=?
 			WHERE `mid`=?',
-			'ssi',
-			$path, $path, $mid);
+			'sssi',
+			$path, $modified, $path, $mid);
 	}
 
 	public function deleteMedia($mgid, $mid) {

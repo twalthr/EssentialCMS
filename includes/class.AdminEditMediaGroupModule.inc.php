@@ -41,8 +41,7 @@ class AdminEditMediaGroupModule extends BasicModule {
 		}
 
 		// handle media group operations
-		if (isset($this->mediaGroup) &&
-				Utils::getUnmodifiedStringOrEmpty('operationSpace') === 'mediaGroup') {
+		if (Utils::getUnmodifiedStringOrEmpty('operationSpace') === 'mediaGroup') {
 			$this->handleEditMediaGroup();
 			// reload media group
 			if (isset($parameters) && count($parameters) > 0) {
@@ -80,7 +79,7 @@ class AdminEditMediaGroupModule extends BasicModule {
 
 		<!-- START OF FILE MANAGER -->
 		<?php include __DIR__ . '/js.FileManager.inc.php'; ?>
-		<!-- END OF UPLOADER -->
+		<!-- END OF FILE MANAGER -->
 
 		<script type="text/javascript">
 			$(document).ready(function() {
@@ -94,6 +93,7 @@ class AdminEditMediaGroupModule extends BasicModule {
 					$('#editMediaGroup').click(function() {
 						$('.showInEditMode').removeClass('hidden');
 						$('.hiddenInEditMode').remove();
+						fileManager.enableEditing();
 					});
 
 					// ----------------------------------------------------------------------------
@@ -189,26 +189,29 @@ class AdminEditMediaGroupModule extends BasicModule {
 							<?php $this->text('REQUIRED'); ?>
 						</div>
 					</div>
-					<?php if (isset($this->mediaGroup)) : ?>
-					<div class="hiddenInEditMode">
-						<?php if (Utils::hasStringContent($this->mediaGroup['description'])) : ?>
-							<div><span class="labelLike"><?php $this->text('DESCRIPTION'); ?></span>
-									<?php echo Utils::escapeString($this->mediaGroup['description']); ?></div>
-						<?php endif; ?>
-						<?php if (Utils::hasStringContent($this->mediaGroup['tags'])) : ?>
-							<div><span class="labelLike"><?php $this->text('TAGS'); ?></span>
-									<?php echo Utils::escapeString($this->mediaGroup['tags']); ?></div>
-						<?php endif; ?>
-					</div>
-					<div class="uploadarea hidden showInEditMode"></div>
+				</form>
+				<?php if (isset($this->mediaGroup)) : ?>
+				<div class="hiddenInEditMode">
+					<?php if (Utils::hasStringContent($this->mediaGroup['description'])) : ?>
+						<div><span class="labelLike"><?php $this->text('DESCRIPTION'); ?></span>
+								<?php echo Utils::escapeString($this->mediaGroup['description']); ?></div>
 					<?php endif; ?>
+					<?php if (Utils::hasStringContent($this->mediaGroup['tags'])) : ?>
+						<div><span class="labelLike"><?php $this->text('TAGS'); ?></span>
+								<?php echo Utils::escapeString($this->mediaGroup['tags']); ?></div>
+					<?php endif; ?>
+				</div>
+				<div class="uploadarea hidden showInEditMode"></div>
+				<?php endif; ?>
+			</section>
+		<?php if (isset($this->mediaGroup)) : ?>
+			<form method="post">
+				<input type="hidden" name="operationSpace" value="media" />
+				<section>
+					<h1><?php $this->text('MEDIA'); ?></h1>
+					<div class="media"></div>
 				</section>
 			</form>
-		<?php if (isset($this->mediaGroup)) : ?>
-			<section>
-				<h1><?php $this->text('MEDIA'); ?></h1>
-				<div class="media"></div>
-			</section>
 		<?php endif; ?>
 	<?php
 	}
@@ -259,7 +262,7 @@ class AdminEditMediaGroupModule extends BasicModule {
 		$normalized = [];
 		foreach ($split as $value) {
 			$trimmed = trim($value);
-			if (count($trimmed) > 0) {
+			if (strlen($trimmed) > 0) {
 				$normalized[] = $trimmed;
 			}
 		}
@@ -286,6 +289,15 @@ class AdminEditMediaGroupModule extends BasicModule {
 		}
 		// update existing media group
 		else {
+			if ($updateColumns['title'] === $this->mediaGroup['title']) {
+				unset($updateColumns['title']);
+			}
+			if ($updateColumns['description'] === $this->mediaGroup['description']) {
+				unset($updateColumns['description']);
+			}
+			if ($updateColumns['tags'] === $this->mediaGroup['tags']) {
+				unset($updateColumns['tags']);
+			}
 			$result = $this->mediaGroupOperations->updateMediaGroup($this->mediaGroup['mgid'], $updateColumns);
 			if ($result === false) {
 				$this->state = false;
@@ -328,7 +340,8 @@ class AdminEditMediaGroupModule extends BasicModule {
 					$mid,
 					null,
 					null,
-					substr('/' . $_FILES['file']['name'], 0, 512));
+					substr('/' . $_FILES['file']['name'], 0, 512),
+					null);
 				if ($result !== true) {
 					$this->state = false;
 					$this->message = $result;
@@ -377,13 +390,16 @@ class AdminEditMediaGroupModule extends BasicModule {
 							strlen($content['checksum']) === 32) || $content['checksum'] === null) &&
 							array_key_exists('path', $content)  && is_string($content['path']) &&
 							strlen($content['path']) < 512 && strlen($content['path']) > 1 &&
-							substr($content['path'], 0, 1) === '/') {
+							substr($content['path'], 0, 1) === '/' &&
+							array_key_exists('modified', $content) &&
+							(Utils::isValidInt($content['modified']) || $content['modified'] === null)) {
 						$result = $this->mediaStore->commitTempMedia(
 							$this->mediaGroup['mgid'],
 							$content['mid'],
 							$content['size'],
 							$content['checksum'],
-							$content['path']);
+							$content['path'],
+							$content['modified']);
 						if ($result !== true) {
 							$this->state = false;
 							$this->message = $result;
@@ -422,7 +438,52 @@ class AdminEditMediaGroupModule extends BasicModule {
 					}
 				}
 				break;
+
+			// list operations
 			default:
+
+				// check for media
+				if (!Utils::isValidFieldIntArray('medium')) {
+					return;
+				}
+
+				// normalize media
+				$uniqueMediumIds = array_unique(Utils::getValidFieldArray('medium'));
+
+				// foreach medium
+				$result = true;
+				foreach ($uniqueMediumIds as $mediumId) {
+					// check if medium exists
+					$medium = Utils::getColumnWithValue($this->media, 'mid', (int) $mediumId);
+					if ($medium === false) {
+						continue;
+					}
+
+					// do operation
+					switch ($operation) {
+						case 'rename':
+							$result = $result && false;
+							break;
+						case 'attach':
+							$result = $result && false;
+							break;
+						case 'move':
+							$result = $result && false;
+							break;
+						case 'copy':
+							$result = $result && false;
+							break;
+						case 'export':
+							$result = $result && false;
+							break;
+						case 'delete':
+							$result = $result && false;
+							break;
+						default:
+							$result = false;
+						break;
+					}
+				}
 				// do nothing
 				break;
 		}

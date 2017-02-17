@@ -470,8 +470,6 @@ class AdminEditMediaGroupModule extends BasicModule {
 							$paths = Utils::getValidFieldArray('path');
 							if (count($paths) !== count($uniqueMediumIds) ||
 									!Utils::isValidPath($paths[$index])) {
-								$this->state = false;
-								$this->message = 'PARAMETERS_INVALID';
 								return;
 							}
 							// check if same path
@@ -490,7 +488,43 @@ class AdminEditMediaGroupModule extends BasicModule {
 							}
 							break;
 						case 'attach':
-							$result = $result && false;
+							if (!Utils::isValidFieldInt('attachTarget')) {
+								return;
+							}
+							$target = (int) Utils::getUnmodifiedStringOrEmpty('attachTarget');
+							// check if medium exists
+							$targetMedium = Utils::getColumnWithValue($this->media, 'mid', $target);
+							if ($targetMedium === false) {
+								return;
+							}
+							// check if not attached
+							if ($targetMedium['parent'] !== null) {
+								return;
+							}
+							// check if medium is not parent
+							$parent = Utils::getColumnWithValue($this->media, 'parent', $medium['mid']);
+							if ($parent !== false) {
+								$this->state = false;
+								$this->message = 'HAS_ATTACHED_ITEMS';
+								return;
+							}
+							// extract base path
+							$basePathPos = strrpos($targetMedium['internalName'], '/');
+							$basePath = substr($targetMedium['internalName'], 0, $basePathPos);
+
+							// check if medium starts with base path
+							if (substr($medium['internalName'], 0, strlen($basePath)) !== $basePath) {
+								return;
+							}
+							$this->mediaStore->attachMedia(
+								$targetMedium['mid'],
+								$medium['mid'],
+								substr($medium['internalName'], strlen($basePath)));
+							if ($result !== true) {
+								$this->state = false;
+								$this->message = $result;
+								return;
+							}
 							break;
 						case 'copy':
 							$result = $result && false;

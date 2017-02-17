@@ -10,11 +10,11 @@ final class MediaOperations {
 
 	public function getMediaSummary($mgid) {
 		return $this->db->valuesQuery('
-			SELECT `mid`, `internalName`, `originalModified`, `description`, `tags`, `options`,
+			SELECT `mid`, `parent`,`internalName`, `originalModified`, `description`, `tags`, `options`,
 				`lastChanged`, `size`
 			FROM `Media`
 			WHERE `group`=? AND `originalName` IS NOT NULL AND `internalName` IS NOT NULL
-			ORDER BY `internalName` ASC',
+			ORDER BY `parent` DESC, `internalName` ASC',
 			'i',
 			$mgid);
 	}
@@ -40,7 +40,7 @@ final class MediaOperations {
 
 	public function getMedia($mid) {
 		return $this->db->valueQuery('
-			SELECT `mid`, `group`, `originalName`, `originalModified`, `internalName`, `description`,
+			SELECT `mid`, `group`, `parent`,`originalName`, `originalModified`, `internalName`, `description`,
 				`tags`, `checksum`, `size`, `externalId`, `options`, `lastChanged`, `externalLastChanged`
 			FROM `Media`
 			WHERE `mid`=?',
@@ -87,6 +87,15 @@ final class MediaOperations {
 			WHERE `mid`=?',
 			'si',
 			$internalName, $mid);
+	}
+
+	public function attachMedia($targetMid, $attachmentMid, $attachmentPath) {
+		return $this->db->impactQuery('
+			UPDATE `Media`
+			SET `parent`=?, `internalName`=?
+			WHERE `mid`=?',
+			'isi',
+			$targetMid, $attachmentPath, $attachmentMid);
 	}
 
 }

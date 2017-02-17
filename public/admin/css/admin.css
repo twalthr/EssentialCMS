@@ -594,6 +594,7 @@ p.empty, p.description {
 
 a.componentLink {
 	font-size: 15px;
+	margin-right: 5px;
 }
 
 a.private {

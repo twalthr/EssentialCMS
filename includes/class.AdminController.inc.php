@@ -151,6 +151,7 @@ class AdminController {
 				CREATE TABLE IF NOT EXISTS `Media` (
 					`mid` INT NOT NULL AUTO_INCREMENT,
 					`group` INT NOT NULL,
+					`parent` INT NULL,
 					`originalName` VARCHAR(512) NULL,
 					`originalModified` TIMESTAMP NULL,
 					`internalName` VARCHAR(512) NULL,

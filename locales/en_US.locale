@@ -278,3 +278,4 @@ RENAME_QUESTION=Please select a new name. If you rename multiple files, they wil
 ATTACH_QUESTION=Please select the file you want to attach the items to.
 HAS_ATTACHED_ITEMS=The file cannot be attached if it has files attached.
 WITH_ATTACHMENT=(with attachment)
+DETACH_QUESTION=Do really want to detach the selected items?

@@ -900,7 +900,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 	margin-right: 5px;
 }
 
-.media .locator .pathseperator:after {
+.media .locator .pathseparator:after {
 	content: '▶';
 	font-size: 9px;
 	vertical-align: top;

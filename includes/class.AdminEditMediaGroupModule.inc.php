@@ -526,6 +526,24 @@ class AdminEditMediaGroupModule extends BasicModule {
 								return;
 							}
 							break;
+						case 'detach':
+							// check if medium has parent
+							if ($medium['parent'] === null) {
+								return;
+							}
+							$parent = Utils::getColumnWithValue($this->media, 'mid', $medium['parent']);
+							// extract base path
+							$basePathPos = strrpos($parent['internalName'], '/');
+							$basePath = substr($parent['internalName'], 0, $basePathPos);
+							$this->mediaStore->detachMedia(
+								$medium['mid'],
+								$basePath . $medium['internalName']);
+							if ($result !== true) {
+								$this->state = false;
+								$this->message = $result;
+								return;
+							}
+							break;
 						case 'copy':
 							$result = $result && false;
 							break;

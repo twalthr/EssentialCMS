@@ -98,6 +98,15 @@ final class MediaOperations {
 			$targetMid, $attachmentPath, $attachmentMid);
 	}
 
+	public function detachMedia($mid, $detachmentPath) {
+		return $this->db->impactQuery('
+			UPDATE `Media`
+			SET `parent`=NULL, `internalName`=?
+			WHERE `mid`=?',
+			'si',
+			$detachmentPath, $mid);
+	}
+
 }
 
 ?>

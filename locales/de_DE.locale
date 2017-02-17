@@ -278,3 +278,4 @@ RENAME_QUESTION=Bitte wählen Sie einen neuen Namen aus. Wenn Sie mehrere Datien
 ATTACH_QUESTION=Bitte wählen Sie die Datei aus, an die Sie die ausgewählten Einträge anhängen möchten.
 HAS_ATTACHED_ITEMS=Die Datei kann nicht angehängt werden, wenn sie Dateien angehängt hat.
 WITH_ATTACHMENT=(mit Anhang)
+DETACH_QUESTION=Möchten Sie wirklich die ausgewählten Einträge abtrennen?

@@ -10,9 +10,9 @@
 		// persisted content that will be shown
 		_persistedContent: [],
 		// current directory path
-		_currentPath: '/',
+		_currentRegularPath: '/',
 		// offset of current file path in persistet content
-		_currentPathOffset: 0,
+		_currentRegularPathOffset: 0,
 		// current attachment parent
 		_currentAttachmentContent: null,
 		// current attachment path
@@ -92,6 +92,26 @@
 			}
 		},
 
+		_inAttachment: function () {
+			return this._currentAttachmentContent !== null;
+		},
+
+		_getCurrentPath: function () {
+			if (this._inAttachment()) {
+				return this._currentAttachmentPath;
+			} else {
+				return this._currentRegularPath;
+			}
+		},
+
+		_getCurrentOffset: function () {
+			if (this._inAttachment()) {
+				return this._currentAttachmentPathOffset;
+			} else {
+				return this._currentRegularPathOffset;
+			}
+		},
+
 		_showList: function () {
 			var that = this;
 
@@ -99,10 +119,10 @@
 			var table = $('<ul class="tableLike enableButtonsIfChecked">');
 			for (var i = 0; i < this._currentContent.length; i++) {
 				var content = this._currentContent[i];
-				var item = this._extractItemFromPath(this._currentPath, content.internalName);
+				var item = this._extractItemFromPath(this._getCurrentPath(), content.internalName);
 				var element = $('<li class="rowLike">');
 
-				// add selection of sub content
+				// add checkbox for selection
 				var checkbox = $('<input type="checkbox" id="item' + i + '">');
 				(function (content, item) {
 					checkbox.change(function (e) {
@@ -116,21 +136,22 @@
 					label.removeClass('hidden');
 				}
 				element.append(label);
+
+				// add name
 				if (item.isFile) {
 					var link = "<?php echo $config->getPublicRoot(); ?>/admin/medium/" + content.mid;
 					var size = this._humanFileSize(content.size);
 					var modified = (content.originalModified === null) ?
 						content.lastChanged : content.originalModified;
 					element.append($('<a class="componentLink" href="' + link + '">').text(item.name));
-					var attachments = this._getAttachment(content.mid);
-					if (attachments.length > 0) {
+					if (this._hasAttachment(content.mid)) {
 						(function (content) {
 							element.append(
 								$('<a>')
 									.text("<?php $this->text('WITH_ATTACHMENT'); ?>")
 									.click(function (e) {
 										e.preventDefault();
-										that._openSubAttachment(content, '/');
+										that._openAttachment(content);
 									})
 							);
 						})(content); // force object copy
@@ -146,7 +167,7 @@
 								that._openSubDirectory(directory);
 							})
 						);
-					})(that._currentPath + item.name + '/'); // force string copy
+					})(that._getCurrentPath() + item.name + '/'); // force string copy
 				}
 				table.append(element);
 			}
@@ -165,7 +186,7 @@
 						// show first name in field
 						$('.newName').val(
 							that._extractItemFromPath(
-								that._currentPath,
+								that._getCurrentPath(),
 								that._currentSelectedContent[0].internalName).name
 						);
 						openButtonSetDialog($(this),
@@ -173,24 +194,36 @@
 							'.newName, .renameConfirm');
 					})
 			);
-			buttons.append($('<button class="disableListIfClicked" disabled>')
-				.text("<?php $this->text('ATTACH'); ?>")
-				.click(function() {
-					$('.mediaOperation').val('attach');
-					that._generateAttachSelect();
-					openButtonSetDialog($(this),
-						'<?php $this->text('ATTACH_QUESTION'); ?>',
-						'.attachSelect, .attachConfirm');
-				})
-			);
-			buttons.append($('<button class="disableListIfClicked" disabled>')
-				.text("<?php $this->text('DETACH'); ?>"));
-			buttons.append($('<button class="disableListIfClicked" disabled>')
+			if (!this._inAttachment()) {
+				buttons.append($('<button class="disableListIfClicked" disabled>')
 				.text("<?php $this->text('MOVE'); ?>"));
-			buttons.append($('<button class="disableListIfClicked" disabled>')
-				.text("<?php $this->text('COPY'); ?>"));
-			buttons.append($('<button class="disableListIfClicked" disabled>')
-				.text("<?php $this->text('EXPORT'); ?>"));
+				buttons.append($('<button class="disableListIfClicked" disabled>')
+					.text("<?php $this->text('COPY'); ?>"));
+				buttons.append($('<button class="disableListIfClicked" disabled>')
+					.text("<?php $this->text('EXPORT'); ?>"));
+				buttons.append($('<button class="disableListIfClicked" disabled>')
+					.text("<?php $this->text('ATTACH'); ?>")
+					.click(function() {
+						$('.mediaOperation').val('attach');
+						that._generateAttachSelect();
+						openButtonSetDialog($(this),
+							'<?php $this->text('ATTACH_QUESTION'); ?>',
+							'.attachSelect, .attachConfirm');
+					})
+				);
+			} else {
+				buttons.append(
+					$('<button class="disableListIfClicked" disabled>')
+						.text("<?php $this->text('DETACH'); ?>")
+						.click(function() {
+							$('.mediaOperation').val('detach');
+							openButtonSetDialog($(this),
+								'<?php $this->text('DETACH_QUESTION'); ?>',
+								'.detachConfirm');
+						})
+				);
+			}
+			
 			buttons.append(
 				$('<button class="disableListIfClicked" disabled>')
 					.text("<?php $this->text('DELETE'); ?>")
@@ -216,7 +249,7 @@
 				$('<button class="hidden renameConfirm">')
 					.text("<?php $this->text('RENAME'); ?>")
 					.click(function() {
-						var result = that._generatedRenamePaths($(this).closest('form'));
+						var result = that._generateRenamePaths($(this).closest('form'));
 						if (result) {
 							that._submitSelectedContent($(this).closest('form'));
 						}
@@ -236,12 +269,19 @@
 						that._submitSelectedContent($(this).closest('form'));
 					})
 			);
+			dialogOptions.append(
+				$('<button class="hidden detachConfirm">')
+					.text("<?php $this->text('DETACH'); ?>")
+					.click(function() {
+						that._submitSelectedContent($(this).closest('form'));
+					})
+			);
 			dialogOptions.append($('<button class="hidden cancel">').text("<?php $this->text('CANCEL'); ?>"));
 			dialog.append(dialogOptions);
 			this._getViewArea().append(dialog);
 		},
 		_generateAttachSelect: function () {
-			var basePath = this._currentPath;
+			var basePath = this._currentRegularPath;
 			var select = $('.attachSelect');
 			select.empty();
 			contentLoop:
@@ -260,12 +300,12 @@
 			}
 			return select;
 		},
-		_generatedRenamePaths: function (form) {
+		_generateRenamePaths: function (form) {
 			var name = $('.newName').val();
 			if (name.length === 0 || name.indexOf('/') !== -1) {
 				return false;
 			}
-			var basePath = this._currentPath;
+			var basePath = this._getCurrentPath();
 			for (var i = 0; i < this._currentSelectedContent.length; i++) {
 				var content = this._currentSelectedContent[i];
 				var item = this._extractItemFromPath(basePath, content.internalName);
@@ -275,18 +315,17 @@
 			}
 			return true;
 		},
-		_getAttachment: function (mid) {
-			var attachment = [];
+		_hasAttachment: function (mid) {
 			// attachments start at root
 			for (var i = 0; i < this._persistedContent.length; i++) {
 				var content = this._persistedContent[i];
 				if (content.parent === null) {
 					break;
 				} else if (content.parent === mid) {
-					attachment.push(content);
+					return true;
 				}
 			}
-			return attachment;
+			return false;
 		},
 		_submitSelectedContent: function (form) {
 			for (var i = 0; i < this._currentSelectedContent.length; i++) {
@@ -304,7 +343,7 @@
 					this._currentSelectedContent.splice(index, 1);
 				}
 			} else {
-				for (var i = this._currentPathOffset; i < this._persistedContent.length; i++) {
+				for (var i = this._currentRegularPathOffset; i < this._persistedContent.length; i++) {
 					var subcontent = this._persistedContent[i];
 					if (subcontent.internalName.startsWith(item.basePath + item.name + '/')) {
 						if (checked) {
@@ -372,7 +411,7 @@
 
 		_showLocator: function () {
 			// show locator for regular directory
-			var splitPath = this._currentPath.split('/');
+			var splitPath = this._currentRegularPath.split('/');
 			var fullPath = '';
 			var that = this;
 			for (var i = 0; i < splitPath.length - 1; i++) {
@@ -385,11 +424,11 @@
 
 				if (i > 0) {
 					this._getLocator().append(
-						$('<li>').append($('<span class="pathseperator">'))
+						$('<li>').append($('<span class="pathseparator">'))
 					);
 				}
 
-				if (i === splitPath.length - 2) {
+				if (i === splitPath.length - 2 && !this._inAttachment()) {
 					this._getLocator().append(
 					$('<li>').append(
 						$('<button class="selected">').text(directory))
@@ -399,7 +438,7 @@
 						that._getLocator().append(
 						$('<li>').append(
 							$('<button>').text(directory).click(function () {
-								that._openSuperDirectory(path);
+								that._openSuperRegularDirectory(path);
 							}))
 						);
 					})(fullPath); // force string copy
@@ -407,7 +446,7 @@
 			}
 
 			// show locator for attachment directory
-			if (this._currentAttachmentContent !== null) {
+			if (this._inAttachment()) {
 				var splitPath = this._currentAttachmentPath.split('/');
 				var fullPath = '';
 				var that = this;
@@ -416,12 +455,14 @@
 					fullPath += directory + '/';
 					// root directory
 					if (directory === '') {
-						var item = this._extractItemFromPath(this._currentPath, this._currentAttachmentContent.internalName);
+						var item = this._extractItemFromPath(
+							this._currentRegularPath,
+							this._currentAttachmentContent.internalName);
 						directory = item.name;
 					}
 
 					this._getLocator().append(
-						$('<li>').append($('<span class="pathseperator">'))
+						$('<li>').append($('<span class="pathseparator">'))
 					);
 					if (i === splitPath.length - 2) {
 						this._getLocator().append(
@@ -433,7 +474,7 @@
 							that._getLocator().append(
 							$('<li>').append(
 								$('<button>').text(directory).click(function () {
-									that._openSuperDirectory(path);
+									that._openSuperAttachmentDirectory(path);
 								}))
 							);
 						})(fullPath); // force string copy
@@ -442,12 +483,15 @@
 			}
 		},
 
-		_openSubAttachment: function (parent, directory) {
+		_openAttachment: function (parent) {
 			this._currentAttachmentContent = parent;
-			this._currentAttachmentPath = directory;
-			for (var i = this._currentAttachmentPathOffset; i < this._persistedContent.length; i++) {
+
+			for (var i = 0; i < this._persistedContent.length; i++) {
 				var content = this._persistedContent[i];
-				if (content.parent === parent.mid && content.internalName.startsWith(directory)) {
+				if (content.parent === null) {
+					break;
+				}
+				if (content.parent === parent.mid) {
 					this._currentAttachmentPathOffset = i;
 					break;
 				}
@@ -455,14 +499,34 @@
 			this._refresh();
 		},
 
-		_openSuperDirectory: function (directory) {
-			this._currentPath = directory;
-			var oldOffset = this._currentPathOffset;
-			this._currentPathOffset = 0;
+		_openSuperRegularDirectory: function (directory) {
+			// reset attachment
+			this._currentAttachmentContent = null;
+			this._currentAttachmentPath = '/';
+			this._currentAttachmentPathOffset = 0;
+
+			this._currentRegularPath = directory;
+			var oldOffset = this._currentRegularPathOffset;
+			this._currentRegularPathOffset = 0;
 			for (var i = oldOffset; i >= 0; i--) {
 				var content = this._persistedContent[i];
-				if (!content.internalName.startsWith(directory)) {
-					this._currentPathOffset = i + 1;
+				if (content.parent === null && !content.internalName.startsWith(directory)) {
+					this._currentRegularPathOffset = i + 1;
+					break;
+				}
+			}
+			this._refresh();
+		},
+
+		_openSuperAttachmentDirectory: function (directory) {
+			this._currentAttachmentPath = directory;
+			var oldOffset = this._currentAttachmentPathOffset;
+			this._currentAttachmentPathOffset = 0;
+			for (var i = oldOffset; i >= 0; i--) {
+				var content = this._persistedContent[i];
+				if (content.parent === this._currentAttachmentContent.mid &&
+						!content.internalName.startsWith(directory)) {
+					this._currentAttachmentPathOffset = i + 1;
 					break;
 				}
 			}
@@ -470,11 +534,36 @@
 		},
 
 		_openSubDirectory: function (directory) {
-			this._currentPath = directory;
-			for (var i = this._currentPathOffset; i < this._persistedContent.length; i++) {
+			if (this._currentAttachmentContent !== null) {
+				this._openAttachmentDirectory(directory);
+			} else {
+				this._openSubRegularDirectory(directory);
+			}
+		},
+
+		_openSubRegularDirectory: function (directory) {
+			this._currentRegularPath = directory;
+			for (var i = this._currentRegularPathOffset; i < this._persistedContent.length; i++) {
 				var content = this._persistedContent[i];
-				if (content.internalName.startsWith(directory)) {
-					this._currentPathOffset = i;
+				if (content.parent === null && content.internalName.startsWith(directory)) {
+					this._currentRegularPathOffset = i;
+					break;
+				}
+			}
+			this._refresh();
+		},
+
+		_openAttachmentDirectory: function (directory) {
+			this._currentAttachmentPath = directory;
+			for (var i = this._currentAttachmentPathOffset; i < this._persistedContent.length; i++) {
+				var content = this._persistedContent[i];
+				// no attachements left
+				if (content.parent === null) {
+					break;
+				}
+				if (content.parent === this._currentAttachmentContent.mid &&
+						content.internalName.startsWith(directory)) {
+					this._currentAttachmentPathOffset = i;
 					break;
 				}
 			}
@@ -485,9 +574,9 @@
 			// we sort by type first
 			var currentDirs = [];
 			var currentFiles = [];
-			var directory = this._currentPath;
+			var directory = this._currentRegularPath;
 			var lastSubdirectory = null;
-			for (var i = this._currentPathOffset; i < this._persistedContent.length; i++) {
+			for (var i = this._currentRegularPathOffset; i < this._persistedContent.length; i++) {
 				var content = this._persistedContent[i];
 				var contentName = content.internalName;
 				// only show non-attached  items

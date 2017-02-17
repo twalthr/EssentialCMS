@@ -142,5 +142,13 @@ class MediaStore {
 		}
 		return true;
 	}
+
+	public function detachMedia($mid, $detachmentPath) {
+		$result = $this->mediaOperations->detachMedia($mid, $detachmentPath);
+		if ($result === false) {
+			return 'UNKNOWN_ERROR';
+		}
+		return true;
+	}
 }
 ?>

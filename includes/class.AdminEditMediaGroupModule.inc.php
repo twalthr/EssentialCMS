@@ -205,7 +205,7 @@ class AdminEditMediaGroupModule extends BasicModule {
 				<?php endif; ?>
 			</section>
 		<?php if (isset($this->mediaGroup)) : ?>
-			<form method="post">
+			<form method="post" class="mediaOperations">
 				<input type="hidden" name="operationSpace" value="media" />
 				<input type="hidden" name="operation" class="mediaOperation" value="" />
 				<section>
@@ -443,125 +443,144 @@ class AdminEditMediaGroupModule extends BasicModule {
 			default:
 
 				// check for media
-				if (!Utils::isValidFieldIntArray('media')) {
-					return;
-				}
+				if (Utils::isValidFieldIntArray('media')) {
+					// normalize media
+					$uniqueMediumIds = array_unique(Utils::getValidFieldArray('media'));
 
-				// normalize media
-				$uniqueMediumIds = array_unique(Utils::getValidFieldArray('media'));
+					// foreach medium
+					foreach ($uniqueMediumIds as $index => $mediumId) {
+						// check if medium exists
+						$medium = Utils::getColumnWithValue($this->media, 'mid', (int) $mediumId);
+						if ($medium === false) {
+							continue;
+						}
 
-				// foreach medium
-				$result = true;
-				foreach ($uniqueMediumIds as $index => $mediumId) {
-					// check if medium exists
-					$medium = Utils::getColumnWithValue($this->media, 'mid', (int) $mediumId);
-					if ($medium === false) {
-						continue;
-					}
+						// do operation
+						switch ($operation) {
+							case 'copy':
+							case 'move':
+								// check if number of paths equal to number of media
+								// and check if valid path
+								if (!Utils::isValidFieldArray('path')) {
+									return;
+								}
+								$paths = Utils::getValidFieldArray('path');
+								if (count($paths) !== count($uniqueMediumIds) ||
+										!Utils::isValidPath($paths[$index])) {
+									return;
+								}
 
-					// do operation
-					switch ($operation) {
-						case 'move':
-							// check if number of paths equal to number of media
-							// and check if valid path
-							if (!Utils::isValidFieldArray('path')) {
-								return;
-							}
-							$paths = Utils::getValidFieldArray('path');
-							if (count($paths) !== count($uniqueMediumIds) ||
-									!Utils::isValidPath($paths[$index])) {
-								return;
-							}
-							// check if same path
-							if ($paths[$index] === $medium['internalName']) {
-								continue;
-							}
+								// perform move
+								$result = true;
+								if ($operation === 'move') {
+									// check if same path
+									if ($paths[$index] === $medium['internalName']) {
+										continue;
+									}
+									$result = $this->mediaStore->moveMedia(
+										$medium['mid'],
+										$paths[$index]);
+								}
+								// perform copy
+								else {
+									$result = $this->mediaStore->copyMedia(
+										$medium['mid'],
+										$paths[$index]);
+								}
+								if ($result !== true) {
+									$this->state = false;
+									$this->message = $result;
+									return;
+								}
+								break;
+							case 'attach':
+								if (!Utils::isValidFieldInt('attachTarget')) {
+									return;
+								}
+								$target = (int) Utils::getUnmodifiedStringOrEmpty('attachTarget');
+								// check if medium exists
+								$targetMedium = Utils::getColumnWithValue($this->media, 'mid', $target);
+								if ($targetMedium === false) {
+									return;
+								}
+								// do not allow attachment to itself
+								if ($targetMedium['mid'] === $medium['mid']) {
+									continue;
+								}
+								// check if not attached
+								if ($targetMedium['parent'] !== null) {
+									return;
+								}
+								// check if medium is not parent
+								$parent = Utils::getColumnWithValue($this->media, 'parent', $medium['mid']);
+								if ($parent !== false) {
+									$this->state = false;
+									$this->message = 'HAS_ATTACHED_ITEMS';
+									return;
+								}
+								// extract base path
+								$basePathPos = strrpos($targetMedium['internalName'], '/');
+								$basePath = substr($targetMedium['internalName'], 0, $basePathPos);
 
-							// perform move
-							$result = $this->mediaStore->moveMedia(
-								$medium['mid'],
-								$paths[$index]);
-							if ($result !== true) {
-								$this->state = false;
-								$this->message = $result;
-								return;
-							}
-							break;
-						case 'attach':
-							if (!Utils::isValidFieldInt('attachTarget')) {
-								return;
-							}
-							$target = (int) Utils::getUnmodifiedStringOrEmpty('attachTarget');
-							// check if medium exists
-							$targetMedium = Utils::getColumnWithValue($this->media, 'mid', $target);
-							if ($targetMedium === false) {
-								return;
-							}
-							// check if not attached
-							if ($targetMedium['parent'] !== null) {
-								return;
-							}
-							// check if medium is not parent
-							$parent = Utils::getColumnWithValue($this->media, 'parent', $medium['mid']);
-							if ($parent !== false) {
-								$this->state = false;
-								$this->message = 'HAS_ATTACHED_ITEMS';
-								return;
-							}
-							// extract base path
-							$basePathPos = strrpos($targetMedium['internalName'], '/');
-							$basePath = substr($targetMedium['internalName'], 0, $basePathPos);
-
-							// check if medium starts with base path
-							if (substr($medium['internalName'], 0, strlen($basePath)) !== $basePath) {
-								return;
-							}
-							$this->mediaStore->attachMedia(
-								$targetMedium['mid'],
-								$medium['mid'],
-								substr($medium['internalName'], strlen($basePath)));
-							if ($result !== true) {
-								$this->state = false;
-								$this->message = $result;
-								return;
-							}
-							break;
-						case 'detach':
-							// check if medium has parent
-							if ($medium['parent'] === null) {
-								return;
-							}
-							$parent = Utils::getColumnWithValue($this->media, 'mid', $medium['parent']);
-							// extract base path
-							$basePathPos = strrpos($parent['internalName'], '/');
-							$basePath = substr($parent['internalName'], 0, $basePathPos);
-							$this->mediaStore->detachMedia(
-								$medium['mid'],
-								$basePath . $medium['internalName']);
-							if ($result !== true) {
-								$this->state = false;
-								$this->message = $result;
-								return;
-							}
-							break;
-						case 'copy':
-							$result = $result && false;
-							break;
-						case 'export':
-							$result = $result && false;
-							break;
-						case 'delete':
-							$result = $this->mediaStore->deleteMedia($medium['mid']);
-							if ($result !== true) {
-								$this->state = false;
-								$this->message = $result;
-								return;
-							}
-						default:
-							$result = false;
-						break;
+								// check if medium starts with base path
+								if (substr($medium['internalName'], 0, strlen($basePath)) !== $basePath) {
+									return;
+								}
+								$result = $this->mediaStore->attachMedia(
+									$targetMedium['mid'],
+									$medium['mid'],
+									substr($medium['internalName'], strlen($basePath)));
+								if ($result !== true) {
+									$this->state = false;
+									$this->message = $result;
+									return;
+								}
+								break;
+							case 'detach':
+								// check if medium has parent
+								if ($medium['parent'] === null) {
+									return;
+								}
+								$parent = Utils::getColumnWithValue($this->media, 'mid', $medium['parent']);
+								// extract base path
+								$basePathPos = strrpos($parent['internalName'], '/');
+								$basePath = substr($parent['internalName'], 0, $basePathPos);
+								$result = $this->mediaStore->detachMedia(
+									$medium['mid'],
+									$basePath . $medium['internalName']);
+								if ($result !== true) {
+									$this->state = false;
+									$this->message = $result;
+									return;
+								}
+								break;
+						}
 					}
 				}
+
+				// check for media
+				if (Utils::isValidFieldIntArray('deleteMedia')) {
+					// normalize media
+					$uniqueMediumIds = array_unique(Utils::getValidFieldArray('deleteMedia'));
+
+					// foreach medium
+					$result = true;
+					foreach ($uniqueMediumIds as $index => $mediumId) {
+						// check if medium exists
+						$medium = Utils::getColumnWithValue($this->media, 'mid', (int) $mediumId);
+						if ($medium === false) {
+							continue;
+						}
+						// perform deletion
+						$result = $this->mediaStore->deleteMedia($medium['mid']);
+						if ($result !== true) {
+							$this->state = false;
+							$this->message = $result;
+							return;
+						}
+					}
+				}
+
 				// do nothing
 				break;
 		}

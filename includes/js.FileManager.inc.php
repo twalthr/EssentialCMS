@@ -5,6 +5,12 @@
 			SMALL_THUMBNAILS: 2,
 			LARGE_THUMBNAILS: 4
 		},
+		_CONFLICT_STRATEGIES: {
+			NO_STRATEGY: 0,
+			COEXIST: 1,
+			REPLACE: 2,
+			SKIP: 3
+		},
 		_mediaArea: null,
 		_viewMode: 0,
 		// persisted content that will be shown
@@ -21,10 +27,20 @@
 		_currentAttachmentPathOffset: 0,
 		// content of current directory path
 		_currentContent: [],
+		// selected content including subcontent
+		_selectedContent: [],
 		// flag if we are in edit mode
 		_editMode: false,
-		// collect currently selected content
-		_currentSelectedContent: [],
+		// content to be renamed, moved, copied, attached etc.
+		_contentToBeModified: [],
+		// paths for renaming, moving, copying
+		_pathsForModification: [],
+		// content to be deleted due to replacement or deletion
+		_contentToBeDeleted: [],
+		// stratgy for file conflicts, chosen by user for all future files
+		_globalFileStrategy: 0,
+		// stratgy for directory conflicts, chosen by user for all future directories
+		_globalDirStrategy: 0,
 
 		// public functions
 		init: function (persistedContent, mediaArea) {
@@ -126,7 +142,7 @@
 				var checkbox = $('<input type="checkbox" id="item' + i + '">');
 				(function (content, item) {
 					checkbox.change(function (e) {
-						that._selectSubContent(item, content, $(this).is(':checked'));
+						that._selectContent(item, content, $(this).is(':checked'));
 					});
 				})(content, item); // force object copy
 				element.append(checkbox);
@@ -187,7 +203,7 @@
 						$('.newName').val(
 							that._extractItemFromPath(
 								that._getCurrentPath(),
-								that._currentSelectedContent[0].internalName).name
+								that._selectedContent[0].internalName).name
 						);
 						openButtonSetDialog($(this),
 							'<?php $this->text('RENAME_QUESTION'); ?>',
@@ -195,10 +211,28 @@
 					})
 			);
 			if (!this._inAttachment()) {
-				buttons.append($('<button class="disableListIfClicked" disabled>')
-				.text("<?php $this->text('MOVE'); ?>"));
-				buttons.append($('<button class="disableListIfClicked" disabled>')
-					.text("<?php $this->text('COPY'); ?>"));
+				buttons.append(
+					$('<button class="disableListIfClicked" disabled>')
+						.text("<?php $this->text('MOVE'); ?>")
+						.click(function () {
+							$('.mediaOperation').val('move');
+							that._generateCopyMoveSelect(false);
+							openButtonSetDialog($(this),
+								'<?php $this->text('MOVE_COPY_QUESTION'); ?>',
+								'.copyMoveSelect, .newName, .moveConfirm');
+						})
+				);
+				buttons.append(
+					$('<button class="disableListIfClicked" disabled>')
+						.text("<?php $this->text('COPY'); ?>")
+						.click(function () {
+							$('.mediaOperation').val('copy');
+							that._generateCopyMoveSelect(true);
+							openButtonSetDialog($(this),
+								'<?php $this->text('MOVE_COPY_QUESTION'); ?>',
+								'.copyMoveSelect, .newName, .copyConfirm');
+						})
+				);
 				buttons.append($('<button class="disableListIfClicked" disabled>')
 					.text("<?php $this->text('EXPORT'); ?>"));
 				buttons.append($('<button class="disableListIfClicked" disabled>')
@@ -240,9 +274,10 @@
 			var dialog = $('<div class="dialog-box hidden">');
 			dialog.append($('<div class="dialog-message">'));
 			var dialogFields = $('<div class="fields">');
-			dialogFields.append($('<input type="text" class="newName hidden" maxlength="512" minlength="1">'));
-
 			dialogFields.append($('<select name="attachTarget" class="attachSelect hidden">'));
+			dialogFields.append($('<select name="copyMoveTarget" class="copyMoveSelect hidden">'));
+			dialogFields.append(
+				$('<input type="text" class="newName hidden" maxlength="512" minlength="1">'));
 			dialog.append(dialogFields);
 			var dialogOptions = $('<div class="options">');
 			dialogOptions.append(
@@ -251,7 +286,7 @@
 					.click(function() {
 						var result = that._generateRenamePaths($(this).closest('form'));
 						if (result) {
-							that._submitSelectedContent($(this).closest('form'));
+							that._submitModifications();
 						}
 					})
 			);
@@ -259,26 +294,124 @@
 				$('<button class="hidden deleteConfirm">')
 					.text("<?php $this->text('DELETE'); ?>")
 					.click(function() {
-						that._submitSelectedContent($(this).closest('form'));
+						that._contentToBeDeleted = that._selectedContent;
+						that._submitModifications();
 					})
 			);
 			dialogOptions.append(
 				$('<button class="hidden attachConfirm">')
 					.text("<?php $this->text('ATTACH'); ?>")
 					.click(function() {
-						that._submitSelectedContent($(this).closest('form'));
+						that._contentToBeModified = that._selectedContent;
+						that._submitModifications();
 					})
 			);
 			dialogOptions.append(
 				$('<button class="hidden detachConfirm">')
 					.text("<?php $this->text('DETACH'); ?>")
 					.click(function() {
-						that._submitSelectedContent($(this).closest('form'));
+						that._contentToBeModified = that._selectedContent;
+						that._submitModifications();
+					})
+			);
+			var copyMoveAction = function () {
+				var target = $('.copyMoveSelect').val();
+				if  (target === 'new') {
+					var newName = $('.newName').val();
+					if (newName.length < 1 || newName.indexOf('/') !== -1) {
+						return;
+					}
+					target = that._getCurrentPath() + newName + '/';
+				}
+				that._removeDialog();
+				that._preprocessCopyMove(target);
+			};
+
+			dialogOptions.append(
+				$('<button class="hidden moveConfirm">')
+					.text("<?php $this->text('MOVE'); ?>")
+					.click(function() {
+						copyMoveAction();
+					})
+			);
+			dialogOptions.append(
+				$('<button class="hidden copyConfirm">')
+					.text("<?php $this->text('COPY'); ?>")
+					.click(function() {
+						copyMoveAction();
 					})
 			);
 			dialogOptions.append($('<button class="hidden cancel">').text("<?php $this->text('CANCEL'); ?>"));
 			dialog.append(dialogOptions);
 			this._getViewArea().append(dialog);
+		},
+		_generateCopyMoveSelect: function (allowSameDirectory) {
+			var select = $('.copyMoveSelect');
+			var newDirInput = $('.newName');
+			select.empty();
+
+			// add new directory
+			select.append(
+				$('<option>')
+					.val('new')
+					.text("<?php $this->text('NEW_DIRECTORY'); ?>")
+			);
+
+			select.change(function () {
+				if (select.val() === 'new') {
+					newDirInput.removeClass('hidden');
+				} else {
+					newDirInput.addClass('hidden');
+				}
+			});
+
+			var lastDirectory = null;
+			var lastSplit = [];
+			var tmpElement = $("<div>");
+			for (var i = 0; i < this._persistedContent.length; i++) {
+				var content = this._persistedContent[i];
+				// skip attachments
+				if (content.parent !== null) {
+					continue;
+				}
+
+				var pos = content.internalName.lastIndexOf('/');
+				var basePath = content.internalName.substring(0, pos);
+				if (basePath !== lastDirectory) {
+					var split = basePath.split('/');
+					var diffLevel = 0;
+					// find difference to previous directory
+					for (; diffLevel < split.length && diffLevel < lastSplit.length; diffLevel++) {
+						if (split[diffLevel] !== lastSplit[diffLevel]) {
+							break;
+						}
+					}
+					// add differences
+					for (var j = diffLevel; j < split.length; j++) {
+						// compute full path
+						var fullPath = '';
+						for (var k = 0; k <= j; k++) {
+							fullPath += split[k] + '/';
+						}
+						// indention
+						var indention = '';
+						for (var k = 0; k < j; k++) {
+							indention += '&nbsp;&nbsp;&nbsp;&nbsp;';
+						}
+						var escaped = tmpElement
+							.text(split[j] === '' ? "<?php $this->text('MEDIA_ROOT'); ?>" : split[j])
+							.html();
+						select.append(
+							$('<option>')
+								.val(fullPath)
+								.html(indention + escaped)
+								.prop('disabled', fullPath === this._getCurrentPath() && !allowSameDirectory)
+						);
+					}
+					lastDirectory = basePath;
+					lastSplit = split;
+				}
+			}
 		},
 		_generateAttachSelect: function () {
 			var basePath = this._currentRegularPath;
@@ -290,15 +423,14 @@
 				var item = this._extractItemFromPath(basePath, content.internalName);
 				if (item.isFile) {
 					// item must not be selected
-					for (var j = 0; j < this._currentSelectedContent.length; j++) {
-						if (content.mid === this._currentSelectedContent[j].mid) {
+					for (var j = 0; j < this._selectedContent.length; j++) {
+						if (content.mid === this._selectedContent[j].mid) {
 							continue contentLoop;
 						}
 					}
 					select.append($('<option>').val(content.mid).text(item.name));
 				}
 			}
-			return select;
 		},
 		_generateRenamePaths: function (form) {
 			var name = $('.newName').val();
@@ -306,12 +438,20 @@
 				return false;
 			}
 			var basePath = this._getCurrentPath();
-			for (var i = 0; i < this._currentSelectedContent.length; i++) {
-				var content = this._currentSelectedContent[i];
+			var fileCounter = 1;
+			for (var i = 0; i < this._selectedContent.length; i++) {
+				var content = this._selectedContent[i];
 				var item = this._extractItemFromPath(basePath, content.internalName);
 				var oldPartOfPath = basePath + item.name;
-				var newName = basePath + name + content.internalName.substring(oldPartOfPath.length);
-				form.append($('<input type="hidden" name="path[]">').val(newName));
+				var remainingPath = content.internalName.substring(oldPartOfPath.length);
+				// add numbering if more than one file is renamed
+				var numbering = '';
+				if (this._selectedContent.length > 1 && remainingPath.length === 0) {
+					numbering = ' ' + (fileCounter++);
+				}
+				var newName = basePath + name + numbering + remainingPath;
+				this._contentToBeModified.push(content);
+				this._pathsForModification.push(newName);
 			}
 			return true;
 		},
@@ -327,30 +467,76 @@
 			}
 			return false;
 		},
-		_submitSelectedContent: function (form) {
-			for (var i = 0; i < this._currentSelectedContent.length; i++) {
-				var content = this._currentSelectedContent[i];
+		_submitModifications: function () {
+			var form = $('.mediaOperations');
+			for (var i = 0; i < this._contentToBeModified.length; i++) {
+				var content = this._contentToBeModified[i];
 				form.append($('<input type="hidden" name="media[]">').val(content.mid));
+			}
+			for (var i = 0; i < this._pathsForModification.length; i++) {
+				var path = this._pathsForModification[i];
+				form.append($('<input type="hidden" name="path[]">').val(path));
+			}
+			for (var i = 0; i < this._contentToBeDeleted.length; i++) {
+				var content = this._contentToBeDeleted[i];
+				form.append($('<input type="hidden" name="deleteMedia[]">').val(content.mid));
 			}
 			form.submit();
 		},
-		_selectSubContent: function (item, content, checked) {
+		_selectContent: function (item, content, checked) {
+			if (this._inAttachment()) {
+				this._selectAttachmentContent(item, content, checked);
+			} else {
+				this._selectRegularContent(item, content, checked);
+			}
+		},
+		_selectAttachmentContent: function (item, content, checked) {
 			if (item.isFile) {
 				if (checked) {
-					this._currentSelectedContent.push(content);
+					this._selectedContent.push(content);
 				} else {
-					var index = this._currentSelectedContent.indexOf(content);
-					this._currentSelectedContent.splice(index, 1);
+					var index = this._selectedContent.indexOf(content);
+					this._selectedContent.splice(index, 1);
+				}
+			} else {
+				for (var i = 0; i < this._persistedContent.length; i++) {
+					var subcontent = this._persistedContent[i];
+					// skip regular content
+					if (subcontent.parent === null) {
+						continue;
+					}
+					if (subcontent.internalName.startsWith(item.basePath + item.name + '/')) {
+						if (checked) {
+							this._selectedContent.push(subcontent);
+						} else {
+							var index = this._selectedContent.indexOf(subcontent);
+							this._selectedContent.splice(index, 1);
+						}
+					}
+				}
+			}
+		},
+		_selectRegularContent: function (item, content, checked) {
+			if (item.isFile) {
+				if (checked) {
+					this._selectedContent.push(content);
+				} else {
+					var index = this._selectedContent.indexOf(content);
+					this._selectedContent.splice(index, 1);
 				}
 			} else {
 				for (var i = this._currentRegularPathOffset; i < this._persistedContent.length; i++) {
 					var subcontent = this._persistedContent[i];
+					// skip attachments
+					if (subcontent.parent !== null) {
+						continue;
+					}
 					if (subcontent.internalName.startsWith(item.basePath + item.name + '/')) {
 						if (checked) {
-							this._currentSelectedContent.push(subcontent);
+							this._selectedContent.push(subcontent);
 						} else {
-							var index = this._currentSelectedContent.indexOf(subcontent);
-							this._currentSelectedContent.splice(index, 1);
+							var index = this._selectedContent.indexOf(subcontent);
+							this._selectedContent.splice(index, 1);
 						}
 					}
 				}
@@ -639,14 +825,17 @@
 
 		_updateCurrentContent: function () {
 			this._currentContent = [];
-			this._currentSelectedContent = [];
-			// update from directory content
-			if (this._currentAttachmentContent === null) {
-				this._updateCurrentRegularContent();
+			this._selectedContent = [];
+			this._contentToBeModified = [];
+			this._pathsForModification = [];
+			this._contentToBeDeleted = [];
+			// update from regular content
+			if (this._inAttachment()) {
+				this._updateCurrentAttachmentContent();
 			}
 			// update from attachment content
 			else {
-				this._updateCurrentAttachmentContent();
+				this._updateCurrentRegularContent();
 			}
 		},
 
@@ -672,9 +861,319 @@
 			}
 		},
 
+		_preprocessCopyMove: function (target) {
+			var contentList = this._selectedContent;
+			this._globalFileStrategy = this._CONFLICT_STRATEGIES.NO_STRATEGY;
+			this._globalDirStrategy = this._CONFLICT_STRATEGIES.NO_STRATEGY;
+
+			// check for conflicts
+
+			// we need a decision if
+			// directories should be merged, replaced, or skipped
+			// files should be replaced, coexist, or be skipped
+
+			var that = this;
+
+			// list of directories that are allowed to coexist
+			var conflictContext = {
+				coexistDirs: [],
+				replaceDirs: [],
+				skipDirs: [],
+				coexistFiles: [],
+				replaceFiles: [],
+				skipFiles: []
+			};
+
+			var fileConflictRoutine = function () {
+				var conflict = that._checkForFileConflicts(contentList, target, conflictContext);
+				if (conflict !== null) {
+					that._showDialog(
+						"<?php $this->text('FILE_CONFLICT', '" + conflict + "'); ?>",
+						["<?php $this->text('KEEP_BOTH'); ?>",
+							"<?php $this->text('REPLACE'); ?>",
+							"<?php $this->text('SKIP'); ?>",
+							"<?php $this->text('CANCEL'); ?>"],
+						"<?php $this->text('REMEMBER_DECISION'); ?>",
+						function (decision, remember) {
+							that._removeDialog();
+							if (decision == 0) {
+								if (remember) {
+									that._globalFileStrategy =
+										that._CONFLICT_STRATEGIES.COEXIST;
+								}
+								conflictContext.coexistFiles.push(conflict);
+								fileConflictRoutine();
+							} else if (decision == 1) {
+								if (remember) {
+									that._globalFileStrategy =
+										that._CONFLICT_STRATEGIES.REPLACE;
+								}
+								conflictContext.replaceFiles.push(conflict);
+								fileConflictRoutine();
+							} else if (decision == 2) {
+								if (remember) {
+									that._globalFileStrategy =
+										that._CONFLICT_STRATEGIES.SKIP;
+								}
+								conflictContext.skipFiles.push(conflict);
+								fileConflictRoutine();
+							} else if (decision == 3) {
+								that._refresh();
+							}
+						}
+					);
+				} else {
+					// no conflicts anymore
+					that._globalFileStrategy = that._CONFLICT_STRATEGIES.NO_STRATEGY;
+					that._processCopyMove(contentList, target, conflictContext);
+				}
+			};
+
+			// check for directory conflicts
+			var directoryConflictRoutine = function () {
+				var conflict = that._checkForDirectoryConflicts(contentList, target, conflictContext);
+				if (conflict !== null) {
+					that._showDialog(
+						"<?php $this->text('DIRECTORY_CONFLICT', '" + conflict + "'); ?>",
+						["<?php $this->text('MERGE'); ?>",
+							"<?php $this->text('REPLACE'); ?>",
+							"<?php $this->text('SKIP'); ?>",
+							"<?php $this->text('CANCEL'); ?>"],
+						"<?php $this->text('REMEMBER_DECISION'); ?>",
+						function (decision, remember) {
+							that._removeDialog();
+							if (decision == 0) {
+								if (remember) {
+									that._globalDirStrategy =
+										that._CONFLICT_STRATEGIES.COEXIST;
+								}
+								conflictContext.coexistDirs.push(conflict);
+								directoryConflictRoutine();
+							} else if (decision == 1) {
+								if (remember) {
+									that._globalDirStrategy =
+										that._CONFLICT_STRATEGIES.REPLACE;
+								}
+								conflictContext.replaceDirs.push(conflict);
+								directoryConflictRoutine();
+							} else if (decision == 2) {
+								if (remember) {
+									that._globalDirStrategy =
+										that._CONFLICT_STRATEGIES.SKIP;
+								}
+								conflictContext.skipDirs.push(conflict);
+								directoryConflictRoutine();
+							} else if (decision == 3) {
+								that._refresh();
+							}
+						}
+					);
+				} else {
+					that._globalDirStrategy = that._CONFLICT_STRATEGIES.NO_STRATEGY;
+					fileConflictRoutine();
+				}
+			};
+			directoryConflictRoutine();
+		},
+
+		// checks if there are unhandled conflicts for directories
+		// returns the conflict if any
+		_checkForDirectoryConflicts: function (contentList, target, context) {
+			fileLoop:
+			for (var i = 0; i < contentList.length; i++) {
+				var content = contentList[i];
+				// skip attachments
+				if (content.parent !== null) {
+					continue;
+				}
+				// the new location of the file
+				var relativeInternalName = content.internalName.substring(this._currentRegularPath.length);
+
+				// split into directory hierarchy
+				var split = relativeInternalName.split('/');
+				var currentDirectory = '';
+				var directories = [];
+				for (var j = 0; j < split.length - 1; j++) {
+					currentDirectory += split[j] + '/';
+					// add target directory to make it absolute again
+					directories.push(target + currentDirectory);
+				}
+
+				// search for same directories
+				directoryLoop:
+				for (var k = 1; k < directories.length; k++) {
+					var currentDir = directories[k];
+
+					for (var j = 0; j < this._persistedContent.length; j++) {
+						var persistedContent = this._persistedContent[j];
+						// skip attachments
+						if (persistedContent.parent !== null) {
+							continue;
+						}
+						// potential conflict found
+						if (persistedContent.internalName.startsWith(currentDir)) {
+							// check if strategy already given
+							if ($.inArray(currentDir, context.coexistDirs) != -1) {
+								continue directoryLoop; // only skip this directory
+							}
+							else if ($.inArray(currentDir, context.replaceDirs)  != -1 ||
+									$.inArray(currentDir, context.skipDirs)  != -1) {
+								continue fileLoop; // skip all sub directories
+							}
+							// check for global strategy coexist
+							else if (this._globalDirStrategy ==
+									this._CONFLICT_STRATEGIES.COEXIST) {
+								context.coexistDirs.push(currentDir);
+							}
+							// check for global strategy replace
+							else if (this._globalDirStrategy ==
+									this._CONFLICT_STRATEGIES.REPLACE) {
+								context.replaceDirs.push(currentDir);
+							}
+							// check for global strategy skip
+							else if (this._globalDirStrategy ==
+									this._CONFLICT_STRATEGIES.SKIP) {
+								context.skipDirs.push(currentDir);
+							} else {
+								// no strategy could be applied
+								return currentDir;
+							}
+						}
+					}
+				}
+			}
+			return null;
+		},
+
+		// checks if there are unhandled conflicts for files
+		// returns the conflict if any
+		_checkForFileConflicts: function (contentList, target, context) {
+			fileLoop:
+			for (var i = 0; i < contentList.length; i++) {
+				var content = contentList[i];
+				// skip attachments
+				if (content.parent !== null) {
+					continue;
+				}
+				// the new location of the file
+				var filePath = target + content.internalName.substring(this._currentRegularPath.length);
+
+				for (var j = 0; j < this._persistedContent.length; j++) {
+					var persistedContent = this._persistedContent[j];
+					// skip attachments
+					if (persistedContent.parent !== null) {
+						continue;
+					}
+					// potential conflict found
+					if (persistedContent.internalName == filePath) {
+						// check if strategy already given
+						if ($.inArray(filePath, context.coexistFiles) != -1 ||
+									$.inArray(filePath, context.replaceFiles)  != -1 ||
+									$.inArray(filePath, context.skipFiles)  != -1) {
+							continue fileLoop;
+						}
+						// check for global strategy coexist
+						else if (this._globalFileStrategy ==
+								this._CONFLICT_STRATEGIES.COEXIST) {
+							context.coexistFiles.push(filePath);
+						}
+						// check for global strategy replace
+						else if (this._globalFileStrategy ==
+								this._CONFLICT_STRATEGIES.REPLACE) {
+							context.replaceFiles.push(filePath);
+						}
+						// check for global strategy skip
+						else if (this._globalFileStrategy ==
+								this._CONFLICT_STRATEGIES.SKIP) {
+							context.skipFiles.push(filePath);
+						} else {
+							// check if entire directory is replaced anyway
+							for (var k = 0; k < context.replaceDirs.length; k++) {
+								if (filePath.startsWith(context.replaceDirs[k])) {
+									continue fileLoop;
+								}
+							}
+							// check if entire directory is skipped anyway
+							for (var k = 0; k < context.skipDirs.length; k++) {
+								if (filePath.startsWith(context.skipDirs[k])) {
+									continue fileLoop;
+								}
+							}
+							// no strategy could be applied
+							return filePath;
+						}
+					}
+				}
+			}
+			return null;
+		},
+
+		// splits up the conflictContext and contentList into content to be deleted and uploaded
+		_processCopyMove: function (contentList, target, conflictContext) {
+			// collect content to delete
+			// replaced directories
+			for (var i = 0; i < conflictContext.replaceDirs.length; i++) {
+				var dir = conflictContext.replaceDirs[i];
+				for (var j = 0; j < this._persistedContent.length; j++) {
+					var content = this._persistedContent[j];
+					// skip attachments
+					if (content.parent !== null) {
+						continue;
+					}
+					if (content.internalName.startsWith(dir)) {
+						this._contentToBeDeleted.push(content);
+					}
+				}
+			}
+			// replaced files
+			for (var i = 0; i < conflictContext.replaceFiles.length; i++) {
+				var replaceFile = conflictContext.replaceFiles[i];
+				for (var j = 0; j < this._persistedContent.length; j++) {
+					var content = this._persistedContent[j];
+					// skip attachments
+					if (content.parent !== null) {
+						continue;
+					}
+					if (content.internalName == replaceFile) {
+						this._contentToBeDeleted.push(content);
+					}
+				}
+			}
+
+			// add file list
+			fileLoop:
+			for (var i = 0; i < contentList.length; i++) {
+				var content = contentList[i];
+				// the new location of the file
+				var filePath = target + content.internalName.substring(this._currentRegularPath.length);
+
+				// file must not be in directory skip list
+				for (var j = 0; conflictContext.skipDirs.length; j++) {
+					var dir = conflictContext.skipDirs[j];
+					if (filePath.startsWith(dir)) {
+						continue fileLoop;
+					}
+				}
+				// file must not be in file skip list
+				for (var j = 0; conflictContext.skipFiles.length; j++) {
+					var skipFile = conflictContext.skipFiles[j];
+					if (filePath == skipFile) {
+						continue fileLoop;
+					}
+				}
+
+				// add file
+				this._contentToBeModified.push(content);
+				this._pathsForModification.push(filePath);
+			}
+
+			// submit
+			this._submitModifications();
+		},
+
 		// removes the dialog
 		_removeDialog: function () {
-			$('.dialog-box', this._getViewArea()).remove();
+			$('.dialog-box', this._getViewArea()).last().remove();
 		},
 
 		// show dialog
@@ -707,7 +1206,6 @@
 					)
 				);
 			};
-			options.append($('<button class="cancel">').text("<?php $this->text('CANCEL'); ?>"));
 			dialog.append(options);
 			this._getViewArea().append(dialog);
 		},
@@ -719,6 +1217,6 @@
 				that._redirect = true;
 				window.location.reload(); 
 			});
-		}
+		},
 	};
 </script>

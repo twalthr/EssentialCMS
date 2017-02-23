@@ -107,6 +107,41 @@ final class MediaOperations {
 			$detachmentPath, $mid);
 	}
 
+	public function copyMedia($mid, $copiedpath) {
+		return $this->db->impactQueryWithId('
+			INSERT INTO `Media`
+			(`group`, `parent`,`originalName`, `originalModified`, `internalName`, `description`,
+				`tags`, `checksum`, `size`, `externalId`, `options`, `lastChanged`, `externalLastChanged`)
+			SELECT `group`, `parent`,`originalName`, `originalModified`, ?, `description`,
+				`tags`, `checksum`, `size`, `externalId`, `options`, `lastChanged`, `externalLastChanged`
+			FROM `Media`
+			WHERE `mid`=?',
+			'si',
+			$copiedpath, $mid);
+	}
+
+	public function copyAttachment($mid, $parent) {
+		return $this->db->impactQueryWithId('
+			INSERT INTO `Media`
+			(`group`, `parent`,`originalName`, `originalModified`, `internalName`, `description`,
+				`tags`, `checksum`, `size`, `externalId`, `options`, `lastChanged`, `externalLastChanged`)
+			SELECT `group`, ?,`originalName`, `originalModified`, `internalName`, `description`,
+				`tags`, `checksum`, `size`, `externalId`, `options`, `lastChanged`, `externalLastChanged`
+			FROM `Media`
+			WHERE `mid`=?',
+			'ii',
+			$parent, $mid);
+	}
+
+	public function getAttachements($parent) {
+		return $this->db->valuesQuery('
+			SELECT `mid` AS `value`
+			FROM `Media`
+			WHERE `parent`=?',
+			'i',
+			$parent);
+	}
+
 }
 
 ?>

@@ -109,9 +109,16 @@ class MediaStore {
 	}
 
 	public function deleteMedia($mid) {
-		$result = $this->mediaOperations->deleteMedia($mid);
-		if ($result === false) {
+		// delete attachments
+		$attachments = $this->mediaOperations->getAttachements($mid);
+		if ($attachments === false) {
 			return 'UNKNOWN_ERROR';
+		}
+		foreach ($attachments as $attachment) {
+			$result = $this->deleteMedia($attachment['value']);
+			if ($result !== true) {
+				return $result;
+			}
 		}
 		// delete file(s)
 		$result = unlink($this->rawPath . '/' . $mid);
@@ -123,6 +130,11 @@ class MediaStore {
 		}
 		if ($result === false) {
 			return 'FILESYSTEM_ACCESS_ERROR';
+		}
+		// delete in media database
+		$result = $this->mediaOperations->deleteMedia($mid);
+		if ($result === false) {
+			return 'UNKNOWN_ERROR';
 		}
 		return true;
 	}
@@ -147,6 +159,63 @@ class MediaStore {
 		$result = $this->mediaOperations->detachMedia($mid, $detachmentPath);
 		if ($result === false) {
 			return 'UNKNOWN_ERROR';
+		}
+		return true;
+	}
+
+	public function copyMedia($mid, $copiedpath) {
+		$newMid = $this->mediaOperations->copyMedia($mid, $copiedpath);
+		if ($newMid === false) {
+			return 'UNKNOWN_ERROR';
+		}
+		// copy file(s)
+		$result = copy($this->rawPath . '/' . $mid, $this->rawPath . '/' . $newMid);
+		if (file_exists($this->thumbnailSmallPath . '/' . $mid)) {
+			$result = $result && copy(
+				$this->thumbnailSmallPath . '/' . $mid,
+				$this->thumbnailSmallPath . '/' . $newMid);
+		}
+		if (file_exists($this->thumbnailLargePath . '/' . $mid)) {
+			$result = $result && copy(
+				$this->thumbnailLargePath . '/' . $mid,
+				$this->thumbnailLargePath . '/' . $newMid);
+		}
+		if ($result === false) {
+			return 'FILESYSTEM_ACCESS_ERROR';
+		}
+		// copy attachments
+		$attachments = $this->mediaOperations->getAttachements($mid);
+		if ($attachments === false) {
+			return 'UNKNOWN_ERROR';
+		}
+		foreach ($attachments as $attachment) {
+			$result = $this->copyAttachment($attachment['value'], $newMid);
+			if ($result !== true) {
+				return $result;
+			}
+		}
+		return true;
+	}
+
+	public function copyAttachment($mid, $parent) {
+		$newMid = $this->mediaOperations->copyAttachment($mid, $parent);
+		if ($newMid === false) {
+			return 'UNKNOWN_ERROR';
+		}
+		// copy file(s)
+		$result = copy($this->rawPath . '/' . $mid, $this->rawPath . '/' . $newMid);
+		if (file_exists($this->thumbnailSmallPath . '/' . $mid)) {
+			$result = $result && copy(
+				$this->thumbnailSmallPath . '/' . $mid,
+				$this->thumbnailSmallPath . '/' . $newMid);
+		}
+		if (file_exists($this->thumbnailLargePath . '/' . $mid)) {
+			$result = $result && copy(
+				$this->thumbnailLargePath . '/' . $mid,
+				$this->thumbnailLargePath . '/' . $newMid);
+		}
+		if ($result === false) {
+			return 'FILESYSTEM_ACCESS_ERROR';
 		}
 		return true;
 	}

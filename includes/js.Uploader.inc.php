@@ -560,7 +560,7 @@
 				coexistFiles: [],
 				replaceFiles: [],
 				skipFiles: []
-			}
+			};
 
 			var fileConflictRoutine = function () {
 				var conflict = that._checkForFileConflicts(fileList, conflictContext);
@@ -679,16 +679,16 @@
 				// split into directory hierarchy
 				var split = fileDescriptor.path.split('/');
 				var currentDirectory = '';
-				var directories = []
+				var directories = [];
 				for (var j = 0; j < split.length - 1; j++) {
-					currentDirectory += split[j] + '/'
+					currentDirectory += split[j] + '/';
 					directories.push(currentDirectory);
 				}
 
 				// search for same directories
 				directoryLoop:
 				for (var k = 1; k < directories.length; k++) {
-					var currentDir = directories[k]
+					var currentDir = directories[k];
 
 					for (var j = 0; j < this._persistedContent.length; j++) {
 						// potential conflict found

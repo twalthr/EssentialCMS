@@ -219,5 +219,13 @@ class MediaStore {
 		}
 		return true;
 	}
+
+	public function exportMedia($mid, $newMediaGroup) {
+		$result = $this->mediaOperations->exportMedia($mid, $newMediaGroup);
+		if ($result === false) {
+			return 'UNKNOWN_ERROR';
+		}
+		return true;
+	}
 }
 ?>

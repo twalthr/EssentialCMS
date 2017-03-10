@@ -314,8 +314,7 @@ class AdminEditMediaGroupModule extends BasicModule {
 	private function handleEditMedia() {
 		$operation = Utils::getUnmodifiedStringOrEmpty('operation');
 		// check if locked
-		if (isset($this->mediaGroup)
-				&& Utils::isFlagged($this->mediaGroup['options'], MediaGroupOperations::LOCKED_OPTION)) {
+		if (Utils::isFlagged($this->mediaGroup['options'], MediaGroupOperations::LOCKED_OPTION)) {
 			$this->state = false;
 			$this->message = 'MEDIA_GROUP_LOCKED';
 			return;
@@ -447,31 +446,30 @@ class AdminEditMediaGroupModule extends BasicModule {
 					// normalize media
 					$uniqueMediumIds = array_unique(Utils::getValidFieldArray('media'));
 
-					// foreach medium
-					foreach ($uniqueMediumIds as $index => $mediumId) {
-						// check if medium exists
-						$medium = Utils::getColumnWithValue($this->media, 'mid', (int) $mediumId);
-						if ($medium === false) {
-							continue;
-						}
+					// do operation
+					switch ($operation) {
+						case 'copy':
+						case 'move':
+							// check if number of paths equal to number of media
+							// and check if valid path
+							if (!Utils::isValidFieldArray('path')) {
+								return;
+							}
+							$paths = Utils::getValidFieldArray('path');
+							if (count($paths) !== count($uniqueMediumIds)) {
+								return;
+							}
 
-						// do operation
-						switch ($operation) {
-							case 'copy':
-							case 'move':
-								// check if number of paths equal to number of media
-								// and check if valid path
-								if (!Utils::isValidFieldArray('path')) {
-									return;
-								}
-								$paths = Utils::getValidFieldArray('path');
-								if (count($paths) !== count($uniqueMediumIds) ||
-										!Utils::isValidPath($paths[$index])) {
-									return;
+							// foreach medium
+							foreach ($uniqueMediumIds as $index => $mediumId) {
+								// check if medium exists
+								$medium = Utils::getColumnWithValue($this->media, 'mid', (int) $mediumId);
+								if ($medium === false || !Utils::isValidPath($paths[$index])) {
+									continue;
 								}
 
-								// perform move
 								$result = true;
+								// perform move
 								if ($operation === 'move') {
 									// check if same path
 									if ($paths[$index] === $medium['internalName']) {
@@ -492,17 +490,27 @@ class AdminEditMediaGroupModule extends BasicModule {
 									$this->message = $result;
 									return;
 								}
-								break;
-							case 'attach':
-								if (!Utils::isValidFieldInt('attachTarget')) {
-									return;
-								}
-								$target = (int) Utils::getUnmodifiedStringOrEmpty('attachTarget');
+							}
+							break;
+						case 'attach':
+							if (!Utils::isValidFieldInt('attachTarget')) {
+								return;
+							}
+							$target = (int) Utils::getUnmodifiedStringOrEmpty('attachTarget');
+							// check if medium exists
+							$targetMedium = Utils::getColumnWithValue($this->media, 'mid', $target);
+							if ($targetMedium === false) {
+								return;
+							}
+
+							// foreach medium
+							foreach ($uniqueMediumIds as $mediumId) {
 								// check if medium exists
-								$targetMedium = Utils::getColumnWithValue($this->media, 'mid', $target);
-								if ($targetMedium === false) {
-									return;
+								$medium = Utils::getColumnWithValue($this->media, 'mid', (int) $mediumId);
+								if ($medium === false) {
+									continue;
 								}
+
 								// do not allow attachment to itself
 								if ($targetMedium['mid'] === $medium['mid']) {
 									continue;
@@ -535,8 +543,16 @@ class AdminEditMediaGroupModule extends BasicModule {
 									$this->message = $result;
 									return;
 								}
-								break;
-							case 'detach':
+							}
+							break;
+						case 'detach':
+							// foreach medium
+							foreach ($uniqueMediumIds as $mediumId) {
+								// check if medium exists
+								$medium = Utils::getColumnWithValue($this->media, 'mid', (int) $mediumId);
+								if ($medium === false) {
+									continue;
+								}
 								// check if medium has parent
 								if ($medium['parent'] === null) {
 									return;
@@ -553,8 +569,49 @@ class AdminEditMediaGroupModule extends BasicModule {
 									$this->message = $result;
 									return;
 								}
-								break;
-						}
+							}
+							break;
+						case 'export':
+							if (!Utils::isValidFieldInt('exportTarget')) {
+								return;
+							}
+							$target = (int) Utils::getUnmodifiedStringOrEmpty('exportTarget');
+							// no export to same media group
+							if ($target === $this->mediaGroup['mgid']) {
+								return;
+							}
+							$targetMediaGroup = $this->mediaGroupOperations->getMediaGroup($target);
+							if ($targetMediaGroup === false) {
+								$this->state = false;
+								$this->message = 'MEDIA_GROUP_NOT_FOUND';
+								return;
+							}
+							// check if locked
+							if (Utils::isFlagged($targetMediaGroup['options'],
+									MediaGroupOperations::LOCKED_OPTION)) {
+								$this->state = false;
+								$this->message = 'MEDIA_GROUP_LOCKED';
+								return;
+							}
+
+							// foreach medium
+							foreach ($uniqueMediumIds as $mediumId) {
+								// check if medium exists
+								$medium = Utils::getColumnWithValue($this->media, 'mid', (int) $mediumId);
+								if ($medium === false) {
+									continue;
+								}
+								$result = $this->mediaStore->exportMedia(
+									$medium['mid'],
+									$targetMediaGroup['mgid']);
+								if ($result !== true) {
+									$this->state = false;
+									$this->message = $result;
+									return;
+								}
+							}
+
+							break;
 					}
 				}
 

@@ -37,6 +37,8 @@
 		_pathsForModification: [],
 		// content to be deleted due to replacement or deletion
 		_contentToBeDeleted: [],
+		// target media group
+		_exportTarget: null,
 		// stratgy for file conflicts, chosen by user for all future files
 		_globalFileStrategy: 0,
 		// stratgy for directory conflicts, chosen by user for all future directories
@@ -233,8 +235,27 @@
 								'.copyMoveSelect, .newName, .copyConfirm');
 						})
 				);
-				buttons.append($('<button class="disableListIfClicked" disabled>')
-					.text("<?php $this->text('EXPORT'); ?>"));
+				buttons.append(
+					$('<button disabled>')
+						.text("<?php $this->text('EXPORT'); ?>")
+						.click(function () {
+							$('.mediaOperation').val('export');
+							var lightboxOpened = function() {
+								$('input:checked').trigger('change');
+								$('.dialog-window .selectMediaGroup').click(function() {
+									var mediaGroup = $('.dialog-window input[name="mediaGroup"]:checked');
+									that._exportTarget = mediaGroup.val();
+									that._contentToBeModified = that._selectedContent;
+									that._submitModifications();
+									closeLightbox();
+								});
+							};
+							openLightboxWithUrl(
+								'<?php echo $config->getPublicRoot(); ?>/admin/select-media-group-dialog',
+								true,
+								lightboxOpened);
+						})
+				);
 				buttons.append($('<button class="disableListIfClicked" disabled>')
 					.text("<?php $this->text('ATTACH'); ?>")
 					.click(function() {
@@ -480,6 +501,9 @@
 			for (var i = 0; i < this._contentToBeDeleted.length; i++) {
 				var content = this._contentToBeDeleted[i];
 				form.append($('<input type="hidden" name="deleteMedia[]">').val(content.mid));
+			}
+			if (this._exportTarget !== null) {
+				form.append($('<input type="hidden" name="exportTarget">').val(this._exportTarget));
 			}
 			form.submit();
 		},

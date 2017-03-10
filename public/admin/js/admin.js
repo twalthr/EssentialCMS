@@ -70,7 +70,7 @@ $(document).ready(function(){
 				closeLightbox();
 			});
 		};
-		openLightboxWithUrl(rootUrl + '/admin/select-page-dialog/' + idInput.val(),
+		openLightboxWithUrl(rootUrl + '/select-page-dialog/' + idInput.val(),
 			true,
 			lightboxOpened);
 	});

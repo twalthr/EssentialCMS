@@ -282,3 +282,5 @@ DETACH_QUESTION=Do really want to detach the selected items?
 MOVE_COPY_QUESTION=Please select a target directory.
 NEW_DIRECTORY=-- New directory --
 NEW_DIRECTORY_NAME=Unnamed Folder
+MEDIA_GROUP_SELECTION=Media Group Selection
+SELECT_MEDIA_GROUP=Please select a media group.

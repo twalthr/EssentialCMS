@@ -282,3 +282,5 @@ DETACH_QUESTION=Möchten Sie wirklich die ausgewählten Einträge abtrennen?
 MOVE_COPY_QUESTION=Bitte wählen Sie ein Zielverzeichnis aus.
 NEW_DIRECTORY=-- Neues Verzeichnis --
 NEW_DIRECTORY_NAME=Unbenannter Ordner
+MEDIA_GROUP_SELECTION=Mediengruppenauswahl
+SELECT_MEDIA_GROUP=Bitte wählen Sie eine Mediengruppe aus.

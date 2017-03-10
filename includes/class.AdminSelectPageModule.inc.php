@@ -53,7 +53,7 @@ class AdminSelectPageModule extends BasicModule {
 							</a>
 							<span class="rowAdditionalInfo">
 								<?php if (Utils::hasStringContent($page['externalId'])) : ?>
-									<?php echo Utils::escapeString($page['hoverTitle']); ?> | 
+									<?php echo Utils::escapeString($page['externalId']); ?> | 
 								<?php endif; ?>
 								<?php echo $page['pid']; ?> 
 							</span>

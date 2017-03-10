@@ -701,6 +701,14 @@ div.siteMap .subLevel>li {
 	margin-right: 20px;
 }
 
+.dialog-window section {
+	margin-bottom: 20px;
+}
+
+.dialog-window section:last-child {
+	margin-bottom: 0px;
+}
+
 .dialog-window p + .dialog-window .lightbox-close {
 	display: inline-block;
 }

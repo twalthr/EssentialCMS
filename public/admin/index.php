@@ -204,6 +204,12 @@ switch ($action) {
 			$parameters);
 		$controller->layoutLoggedInContent(3, null, null, $module);
 		break;
+	case 'select-media-group-dialog':
+		$controller->verifyLogin();
+		$module = new AdminSelectMediaGroupModule(
+			$controller->getMediaGroupOperations());
+		$controller->layoutDialog($module);
+		break;
 	default:
 		echo "Invalid command.";
 }

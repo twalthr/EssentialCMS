@@ -142,6 +142,14 @@ final class MediaOperations {
 			$parent);
 	}
 
+	public function exportMedia($mid, $newMediaGroup) {
+		return $this->db->impactQuery('
+			UPDATE `Media`
+			SET `group`=?
+			WHERE `mid`=?',
+			'ii',
+			$newMediaGroup, $mid);
+	}
 }
 
 ?>

@@ -907,7 +907,7 @@
 			var formdata = new FormData();
 			formdata.append('operationSpace', 'media');
 			formdata.append('operation', 'upload');
-			formdata.append('file', currentFileDesc.file, 'file');
+			formdata.append('file', currentFileDesc.file, currentFileDesc.name);
 			var that = this;
 			that._setDropAreaText(
 				"<?php $this->text('UPLOADING',

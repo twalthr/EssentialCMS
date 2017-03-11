@@ -1,0 +1,76 @@
+<?php
+
+abstract class MediaProperties {
+
+	const KEY_TYPE_GROUP = 'TYPE_GROUP';
+	const VALUE_TYPE_GROUP_TEXT = 'TEXT';
+	const VALUE_TYPE_GROUP_BINARY = 'BINARY';
+	const VALUE_TYPE_GROUP_IMAGE = 'IMAGE';
+	const VALUE_TYPE_GROUP_AUDIO = 'AUDIO';
+	const VALUE_TYPE_GROUP_VIDEO = 'VIDEO';
+	const VALUE_TYPE_GROUP_ARCHIVE = 'ARCHIVE';
+	const VALUE_TYPE_GROUP_CODE = 'CODE';
+	const VALUE_TYPE_GROUP_DOCUMENT = 'DOCUMENT';
+	const VALUE_TYPE_GROUP_APPLICATION = 'APPLICATION';
+	const VALUE_TYPE_GROUP_OTHER = 'OTHER';
+
+	// general
+	const KEY_TYPE = 'TYPE'; // contains file extension or Software name
+	const KEY_MIME_TYPE = 'MIME_TYPE';
+	const KEY_WIDTH = 'WIDTH';
+	const KEY_HEIGHT = 'HEIGHT';
+	const KEY_MANUFACTURER = 'MANUFACTURER';
+	const KEY_MODEL = 'MODEL';
+	const KEY_SOFTWARE = 'SOFTWARE';
+	const KEY_SOFTWARE_VERSION = 'SOFTWARE_VERSION';
+	const KEY_AUTHOR = 'AUTHOR';
+	const KEY_AUTHOR_ORGANIZATION = 'AUTHOR_ORGANIZATION';
+	const KEY_TITEL = 'TITLE';
+	const KEY_DESCRIPTION = 'DESCRIPTION';
+	const KEY_TAGS = 'TAGS';
+	const KEY_COPYRIGHT = 'COPYRIGHT';
+	const KEY_RATING = 'RATING';
+	const KEY_COMMENT = 'COMMENT';
+	const KEY_CREATED = 'CREATED';
+	const KEY_EDITED = 'EDITED';
+	const KEY_LINKED = 'LINKED';
+	const KEY_CONTAINED_PERSON = 'CONTAINED_PERSON'; // e.g. actors or people in image
+	const KEY_ORDER = 'ORDER'; // e.g. for songs
+
+	// video and audio
+	const KEY_VIDEO_TYPE = 'VIDEO_TYPE';
+	const VALUE_VIDEO_TYPE_SERIES = 'SERIES';
+	const VALUE_VIDEO_TYPE_MOVIE = 'MOVIE';
+	const VALUE_VIDEO_TYPE_VIDEO = 'VIDEO';
+	const KEY_AUDIO_TYPE = 'AUDIO_TYPE';
+	const VALUE_AUDIO_TYPE_SONG = 'SONG';
+	const VALUE_AUDIO_TYPE_BOOK = 'BOOK';
+	const VALUE_AUDIO_TYPE_AUDIO = 'AUDIO';
+	const KEY_GENRE = 'GENRE';
+	const KEY_YEAR = 'YEAR';
+	const KEY_DURATION = 'DURATION';
+	const KEY_LANGUAGE = 'LANGUAGE';
+	const KEY_SUBTITLE_LANGUAGE = 'SUBTITLE_LANGUAGE';
+	const KEY_AUDIO_LANGUAGE = 'AUDIO_LANGUAGE';
+	const KEY_AUDIO_CHANNELS = 'AUDIO_CANNELS';
+	const KEY_ALBUM = 'ALBUM';
+	const KEY_TEXT_CONTENT = 'TEXT_CONTENT'; // e.g. lyrics or subtitles
+
+	// documents and code
+	const KEY_DOCUMENT_TYPE = 'DOCUMENT_TYPE';
+	const VALUE_DOCUMENT_TYPE_BOOK = 'BOOK';
+	const VALUE_DOCUMENT_TYPE_EDITABLE= 'EDITABLE'; // e.g. word, power point document
+	const VALUE_DOCUMENT_TYPE_DOCUMENT = 'DOCUMENT'; // e.g. scanned invoice, contract
+	const KEY_PAGES = 'PAGES';
+	const KEY_PAGE_FORMAT = 'PAGE_FORMAT';
+	const KEY_FREQUENT_WORDS = 'FREQUENT_WORDS';
+	const KEY_WORDS = 'WORDS';
+	const KEY_CHARACTERS = 'CHARACTERS';
+	const KEY_LINES = 'LINES';
+	const KEY_PARAGRAPHS = 'PARAGRAPHS';
+	const KEY_HEADING = 'HEADING';
+	const KEY_API = 'API'; // e.g. classes and methods
+
+	// other
+	const KEY_OTHER = 'OTHER';
+}

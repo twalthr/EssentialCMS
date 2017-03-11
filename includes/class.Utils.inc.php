@@ -353,6 +353,14 @@ abstract class Utils {
 		}
 		return true;
 	}
+
+	public static function getFileExtension($fileName) {
+		if (!isset($fileName) || strlen($fileName) === 0) {
+			return '';
+		}
+		$split = explode('.', $fileName);
+		return strtolower($split[sizeof($split) - 1]);
+	}
 }
 
 ?>

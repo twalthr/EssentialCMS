@@ -10,6 +10,9 @@ class MediaStore {
 	private $thumbnailSmallPath;
 	private $thumbnailLargePath;
 
+	// media analyzer hub
+	private $mediaAnalyzerHub;
+
 	public function __construct(
 			$rawPath,
 			$thumbnailSmallPath,
@@ -19,9 +22,10 @@ class MediaStore {
 		$this->thumbnailSmallPath = $thumbnailSmallPath;
 		$this->thumbnailLargePath = $thumbnailLargePath;
 		$this->mediaOperations = $mediaOperations;
+		$this->mediaAnalyzerHub = new MediaAnalyzerHub();
 	}
 
-	public function storeTempMedia($mgid, $file) {
+	public function storeTempMedia($mgid, $file, $originalFileName) {
 		$result = true;
 		// create directories if they don't exist
 		if (!file_exists($this->rawPath)) {
@@ -50,6 +54,14 @@ class MediaStore {
 		if (!$result) {
 			return 'FILESYSTEM_ACCESS_ERROR';
 		}
+
+		// analyze media
+		$this->mediaAnalyzerHub->summarize(
+			$mid,
+			$originalFileName,
+			$this->rawPath . '/' . $mid,
+			$this->thumbnailSmallPath . '/' . $mid,
+			$this->thumbnailLargePath . '/' . $mid);
 
 		return $mid;
 	}

@@ -329,7 +329,9 @@ class AdminEditMediaGroupModule extends BasicModule {
 					return;
 				}
 				$mid = $this->mediaStore->storeTempMedia(
-					$this->mediaGroup['mgid'], $_FILES['file']['tmp_name']);
+					$this->mediaGroup['mgid'],
+					$_FILES['file']['tmp_name'],
+					$_FILES['file']['name']);
 				if (is_string($mid)) {
 					$this->state = false;
 					$this->message = $mid;
@@ -355,7 +357,9 @@ class AdminEditMediaGroupModule extends BasicModule {
 					$mid = 'PARAMETERS_INVALID';
 				} else {
 					$mid = $this->mediaStore->storeTempMedia(
-						$this->mediaGroup['mgid'], $_FILES['file']['tmp_name']);
+						$this->mediaGroup['mgid'],
+						$_FILES['file']['tmp_name'],
+						$_FILES['file']['name']);
 				}
 				$data = null;
 				// an error occured

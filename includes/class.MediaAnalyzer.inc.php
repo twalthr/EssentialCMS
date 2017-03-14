@@ -24,7 +24,7 @@ abstract class MediaAnalyzer {
 		return false;
 	}
 
-	public function mimeMatches($hexMagicNumber) {
+	public function mimeMatches($mime) {
 		return false;
 	}
 

@@ -6,6 +6,7 @@ class MediaAnalyzerHub {
 
 	public function __construct() {
 		$this->analyzers[] = new JpegAnalyzer([]);
+		$this->analyzers[] = new ImageAnalyzer([]);
 	}
 
 	public function summarize($mid, $originalFileName, $rawPath, $smallThumbnailPath, $largeThumbnailPath) {
@@ -39,7 +40,12 @@ class MediaAnalyzerHub {
 			$properties = array_merge($analyzer->extractProperties($rawPath));
 		}
 
-		echo "HELLO";
+		// filter empty properties
+
+		// check content of properties
+
+		echo var_dump($properties);
+		die();
 
 		// make properties unique
 
@@ -51,7 +57,7 @@ class MediaAnalyzerHub {
 		$handle = fopen($path, 'rb');
 		if ($handle) {
 			$fsize = filesize($path); 
-			$contents = fread($handle, min($fsize, 32)); // read first 32 bytes
+			$contents = fread($handle, min($fsize, 40)); // read first 40 bytes
 			fclose($handle);
 			$result = bin2hex($contents);
 		}

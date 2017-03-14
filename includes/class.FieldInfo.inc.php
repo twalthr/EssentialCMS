@@ -19,6 +19,8 @@ class FieldInfo {
 	const TYPE_ID = 8192;
 	const TYPE_EMAIL = 16384;
 	const TYPE_LOCALE = 32768;
+	const TYPE_DATE_TIME = 65536;
+	const TYPE_FLOAT = 131072;
 
 	private $key;
 	private $allowedTypes;
@@ -31,6 +33,22 @@ class FieldInfo {
 	private $additionalNames; // e.g. for type boolean = checkbox string, for type enum = values
 	private $defaultType;
 	private $defaultContent;
+
+	public static function create($array) {
+		return new FieldInfo(
+			array_key_exists('key') ? $array['key'] : null,
+			array_key_exists('types') ? $array['types'] : null,
+			array_key_exists('name') ? $array['name'] : null,
+			array_key_exists('array') ? $array['array'] : null,
+			array_key_exists('required') ? $array['required'] : null,
+			array_key_exists('large') ? $array['large'] : null,
+			array_key_exists('min') ? $array['min'] : null,
+			array_key_exists('max') ? $array['max'] : null,
+			array_key_exists('values') ? $array['values'] : null,
+			array_key_exists('defaultType') ? $array['defaultType'] : null,
+			array_key_exists('defaultContent') ? $array['defaultContent'] : null
+			);
+	}
 
 	public function __construct(
 		$key,

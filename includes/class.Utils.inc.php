@@ -16,7 +16,7 @@ abstract class Utils {
 	}
 
 	public static function hasStringContent($str) {
-		return isset($str) && !(trim($str) === '');
+		return isset($str) && !(trim((string) $str) === '');
 	}
 
 	public static function stringStartsWith($haystack, $needle) {

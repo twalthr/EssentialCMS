@@ -50,8 +50,6 @@ class JpegAnalyzer extends MediaAnalyzer {
 		// if 'FNumber' is set we can assume that this is a photo
 		if (isset($exif['FNumber']) && Utils::hasStringContent($exif['FNumber'])) {
 			$props[] = [MediaProperties::KEY_IMAGE_TYPE, MediaProperties::VALUE_IMAGE_TYPE_PHOTO];
-		} else {
-			$props[] = [MediaProperties::KEY_IMAGE_TYPE, MediaProperties::VALUE_IMAGE_TYPE_IMAGE];
 		}
 
 		if (isset($exif['Make'])) {

@@ -2,6 +2,11 @@
 
 abstract class Utils {
 
+	public static function requireLibrary($name) {
+		global $ROOT_DIRECTORY;
+		require_once $ROOT_DIRECTORY . '/libs/' . $name . '/'. $name . '.php';
+	}
+
 	public static function readFirstLine($str) {
 		return strtok($str, "\n");
 	}

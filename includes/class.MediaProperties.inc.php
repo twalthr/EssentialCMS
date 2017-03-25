@@ -44,6 +44,14 @@ abstract class MediaProperties {
 
 	const KEY_DEVICE = 'device'; // e.g. camera or scanner information
 
+	const KEY_AUTHOR = 'author';
+
+	const KEY_AUTHOR_ORGANIZATION = 'authororganization';
+
+	const KEY_TITLE = 'title';
+
+	const KEY_DESCRIPTION = 'description';
+
 	// --------------------------------------------------------------------------------------------
 	// Document and image properties
 	// --------------------------------------------------------------------------------------------
@@ -66,6 +74,27 @@ abstract class MediaProperties {
 	const VALUE_IMAGE_TYPE_IMAGE = 0;
 	const VALUE_IMAGE_TYPE_PHOTO = 1;
 	const VALUE_IMAGE_TYPE_GRAPHIC = 2;
+
+	const KEY_DOCUMENT_TYPE = 'documenttype';
+	const VALUE_DOCUMENT_TYPE_BOOK = 0;
+	const VALUE_DOCUMENT_TYPE_EDITABLE = 1; // e.g. word, power point document
+	const VALUE_DOCUMENT_TYPE_DOCUMENT = 2; // e.g. scanned invoice, contract
+
+	const KEY_PAGE_COUNT = 'pagecount';
+
+	const KEY_PAGE_FORMAT = 'pageformat';
+
+	const KEY_FREQUENT_WORDS = 'frequentwords';
+
+	const KEY_WORD_COUNT = 'wordcount';
+
+	const KEY_LINE_COUNT = 'linecount';
+
+	const KEY_PARAGRAPH_COUNT = 'paragraphcount';
+
+	const KEY_CHARACTER_COUNT = 'charactercount';
+
+	const KEY_HEADING = 'heading';
 
 	// --------------------------------------------------------------------------------------------
 	// Other properties
@@ -166,6 +195,17 @@ abstract class MediaProperties {
 			'name' => 'DEVICE',
 			'max' => 256]);
 
+		$props[KEY_AUTHOR] = FieldInfo::create([
+			'key' => KEY_AUTHOR,
+			'types' => FieldInfo::TYPE_PLAIN,
+			'name' => 'AUTHOR',
+			'max' => 256]);
+
+		$props[KEY_AUTHOR_ORGANIZATION] = FieldInfo::create([
+			'key' => KEY_AUTHOR_ORGANIZATION,
+			'types' => FieldInfo::TYPE_PLAIN,
+			'name' => 'AUTHOR_ORGANIZATION',
+			'max' => 256]);
 
 		$props[KEY_ORIENTATION] = FieldInfo::create([
 			'key' => KEY_ORIENTATION,
@@ -181,6 +221,17 @@ abstract class MediaProperties {
 				'HORIZONTAL_270',
 				'NONE_270']
 			]);
+
+		$props[KEY_TITLE] = FieldInfo::create([
+			'key' => KEY_TITLE,
+			'types' => FieldInfo::TYPE_PLAIN,
+			'name' => 'TITLE',
+			'max' => 512]);
+
+		$props[KEY_DESCRIPTION] = FieldInfo::create([
+			'key' => KEY_DESCRIPTION,
+			'types' => FieldInfo::TYPE_PLAIN,
+			'name' => 'DESCRIPTION']);
 
 		$props[KEY_RESOLUTION] = FieldInfo::create([
 			'key' => KEY_RESOLUTION,
@@ -204,6 +255,58 @@ abstract class MediaProperties {
 				'GRAPHIC']
 			]);
 
+		$props[KEY_DOCUMENT_TYPE] = FieldInfo::create([
+			'key' => KEY_DOCUMENT_TYPE,
+			'types' => FieldInfo::TYPE_ENUM,
+			'name' => 'DOCUMENT_TYPE',
+			'values' => [
+				'BOOK',
+				'EDITABLE',
+				'DOCUMENT']
+			]);
+
+		$props[KEY_PAGE_COUNT] = FieldInfo::create([
+			'key' => KEY_PAGE_COUNT,
+			'types' => FieldInfo::TYPE_INT,
+			'name' => 'PAGE_COUNT',
+			'min' => 0]);
+
+		$props[KEY_PAGE_FORMAT] = FieldInfo::create([
+			'key' => KEY_PAGE_FORMAT,
+			'types' => FieldInfo::TYPE_PLAIN,
+			'name' => 'PAGE_FORMAT',
+			'max' => 256]);
+
+		$props[KEY_FREQUENT_WORDS] = FieldInfo::create([
+			'key' => KEY_FREQUENT_WORDS,
+			'types' => FieldInfo::TYPE_INT,
+			'name' => 'FREQUENT_WORDS',
+			'min' => 0]);
+
+		$props[KEY_WORD_COUNT] = FieldInfo::create([
+			'key' => KEY_WORD_COUNT,
+			'types' => FieldInfo::TYPE_INT,
+			'name' => 'WORD_COUNT',
+			'min' => 0]);
+
+		$props[KEY_LINE_COUNT] = FieldInfo::create([
+			'key' => KEY_LINE_COUNT,
+			'types' => FieldInfo::TYPE_INT,
+			'name' => 'LINE_COUNT',
+			'min' => 0]);
+
+		$props[KEY_PARAGRAPH_COUNT] = FieldInfo::create([
+			'key' => KEY_PARAGRAPH_COUNT,
+			'types' => FieldInfo::TYPE_INT,
+			'name' => 'PARAGRAPH_COUNT',
+			'min' => 0]);
+
+		$props[KEY_HEADING] = FieldInfo::create([
+			'key' => KEY_HEADING,
+			'types' => FieldInfo::TYPE_PLAIN,
+			'name' => 'HEADING',
+			'max' => 256,
+			'array' => true]);
 
 		$props[KEY_OTHER] = FieldInfo::create([
 			'key' => KEY_OTHER,
@@ -212,13 +315,7 @@ abstract class MediaProperties {
 			'array' => true]);
 	}
 
-
-
 	// general
-	const FIELD_AUTHOR = 'AUTHOR';
-	const FIELD_AUTHOR_ORGANIZATION = 'AUTHOR_ORGANIZATION';
-	const FIELD_TITEL = 'TITLE';
-	const FIELD_DESCRIPTION = 'DESCRIPTION';
 	const FIELD_TAGS = 'TAGS';
 	const FIELD_COPYRIGHT = 'COPYRIGHT';
 	const FIELD_RATING = 'RATING';
@@ -247,17 +344,5 @@ abstract class MediaProperties {
 	const FIELD_TEXT_CONTENT = 'TEXT_CONTENT'; // e.g. lyrics or subtitles
 
 	// documents, images and code
-	const FIELD_DOCUMENT_TYPE = 'DOCUMENT_TYPE';
-	const VALUE_DOCUMENT_TYPE_BOOK = 'BOOK';
-	const VALUE_DOCUMENT_TYPE_EDITABLE= 'EDITABLE'; // e.g. word, power point document
-	const VALUE_DOCUMENT_TYPE_DOCUMENT = 'DOCUMENT'; // e.g. scanned invoice, contract
-	const FIELD_PAGES = 'PAGES';
-	const FIELD_PAGE_FORMAT = 'PAGE_FORMAT';
-	const FIELD_FREQUENT_WORDS = 'FREQUENT_WORDS';
-	const FIELD_WORDS = 'WORDS';
-	const FIELD_CHARACTERS = 'CHARACTERS';
-	const FIELD_LINES = 'LINES';
-	const FIELD_PARAGRAPHS = 'PARAGRAPHS';
-	const FIELD_HEADING = 'HEADING';
 	const FIELD_API = 'API'; // e.g. classes and methods
 }

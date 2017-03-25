@@ -2,9 +2,9 @@
 
 abstract class MediaAnalyzer {
 
-	private $cmsVersion;
-	private $name;
-	private $config;
+	protected $cmsVersion;
+	protected $name;
+	protected $config;
 
 	public function __construct($cmsVersion, $name, $config) {
 		$this->cmsVersion = $cmsVersion;

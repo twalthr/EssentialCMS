@@ -90,7 +90,7 @@ class Text_LanguageDetect
      *
      * @var string
      */
-    protected $_data_dir = dirname ( __FILE__ ) . DIRECTORY_SEPARATOR . 'data';
+    protected $_data_dir = '@data_dir@';
 
     /**
      * The trigram data for comparison
@@ -201,7 +201,7 @@ class Text_LanguageDetect
         } else {
             // assume this was just unpacked somewhere
             // try the local working directory if otherwise
-            return __DIR__ . '/../data/' . $fname;
+            return __DIR__ . '/data/' . $fname; // MODIFIED BY twalthr
         }
     }
 

@@ -7,6 +7,20 @@ abstract class Utils {
 		require_once $ROOT_DIRECTORY . '/libs/' . $name . '/'. $name . '.php';
 	}
 
+	public static function loadFact($name) {
+		global $ROOT_DIRECTORY;
+		return file_get_contents($ROOT_DIRECTORY . '/facts/' . $name);
+	}
+
+	public static function configOrDefault($config, $key, $default) {
+		if (isset($config[$key])) {
+			$value = $config[$key];
+			settype($value, gettype($default));
+			return $value;
+		}
+		return $default;
+	}
+
 	public static function readFirstLine($str) {
 		return strtok($str, "\n");
 	}

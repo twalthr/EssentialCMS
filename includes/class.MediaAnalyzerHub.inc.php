@@ -7,6 +7,7 @@ class MediaAnalyzerHub {
 	public function __construct() {
 		$this->analyzers[] = new JpegAnalyzer([]);
 		$this->analyzers[] = new ImageAnalyzer([]);
+		$this->analyzers[] = new PdfAnalyzer([]);
 	}
 
 	public function summarize($mid, $originalFileName, $rawPath, $smallThumbnailPath, $largeThumbnailPath) {

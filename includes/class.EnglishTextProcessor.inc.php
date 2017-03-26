@@ -1,5 +1,7 @@
 <?php
 
+// v1: FEATURE COMPLETE
+
 class EnglishTextProcessor extends TextProcessor {
 
 	private $stopwords;
@@ -46,24 +48,32 @@ class EnglishTextProcessor extends TextProcessor {
 
 	public function normalizeToken($token) {
 		// combine words with hyphens, apostrophes etc.
-		$token = preg_replace('/[[:punct:]]+/', '', $token);
+		$token = preg_replace('/[[:punct:]„”‚‘’»«]+/', '', $token);
 		// remove numbers from tokens
-		$token = preg_replace('/[[:digit:]]+/', '', $token);
+		$token = preg_replace('/^[[:digit:]]+$/', '', $token);
 		// lower case
 		$token = strtolower($token);
 		return $this->basicStemming($token);
 	}
 
 	public function filterToken($token) {
-		return mb_strlen($token) > 1 && !array_key_exists($token, $this->stopwords);
+		return mb_strlen($token) > 1 &&
+			!array_key_exists($token, $this->stopwords);
 	}
 
 	public function outputToken($token) {
-		
+		// remove leading/trailing space or punctuation marks
+		// keep - within strings
+		return preg_replace(
+			'/(^[[:space:][:punct:]„”‚‘’»«]+)|
+			([[:space:][:punct:]„”‚‘’»«]+$)|
+			((?![-])[[:punct:]„”‚‘’»«]+)/',
+			'',
+			$token);
 	}
 
 	public function close() {
-		$this->stopwords = null;
+		unset($this->stopwords);
 	}
 
 	private function basicStemming($str) {

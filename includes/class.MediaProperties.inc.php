@@ -279,9 +279,9 @@ abstract class MediaProperties {
 
 		$props[KEY_FREQUENT_WORDS] = FieldInfo::create([
 			'key' => KEY_FREQUENT_WORDS,
-			'types' => FieldInfo::TYPE_INT,
+			'types' => FieldInfo::TYPE_TAGS,
 			'name' => 'FREQUENT_WORDS',
-			'min' => 0]);
+			'max' => 2048]);
 
 		$props[KEY_WORD_COUNT] = FieldInfo::create([
 			'key' => KEY_WORD_COUNT,

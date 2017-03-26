@@ -8,7 +8,7 @@ class FieldInfo {
 	const TYPE_MARKDOWN = 4;
 	const TYPE_IMAGE = 8;
 	const TYPE_FILE = 16;
-	const TYPE_TAG = 32;
+	const TYPE_TAGS = 32;
 	const TYPE_INT = 64;
 	const TYPE_BOOLEAN = 128;
 	const TYPE_ENUM = 256;
@@ -316,7 +316,7 @@ class FieldInfo {
 					return 'FIELD_CONTAINS_LINEBREAKS';
 				}
 				break;
-			case FieldInfo::TYPE_TAG:
+			case FieldInfo::TYPE_TAGS:
 				// check required
 				if ($this->required === true && $length === 0) {
 					return 'FIELD_IS_REQUIRED';
@@ -329,10 +329,7 @@ class FieldInfo {
 				if ($this->maxContentLength !== null && $length > $this->maxContentLength) {
 					return 'FIELD_TOO_LONG';
 				}
-				// check if string contains whitespace
-				if (preg_match('/\s/', $trimmedContent)) {
-					return 'FIELD_CONTAINS_WHITESPACE';
-				}
+				// TODO more validation
 				break;
 			case FieldInfo::TYPE_INT:
 			case FieldInfo::TYPE_PAGE:
@@ -431,7 +428,7 @@ class FieldInfo {
 			case FieldInfo::TYPE_HTML:
 			case FieldInfo::TYPE_MARKDOWN:
 				return $trimmedContent;
-			case FieldInfo::TYPE_TAG:
+			case FieldInfo::TYPE_TAGS:
 				break;
 			case FieldInfo::TYPE_INT:
 			case FieldInfo::TYPE_PAGE:
@@ -656,7 +653,7 @@ class FieldInfo {
 				break;
 			case FieldInfo::TYPE_FILE:
 				break;
-			case FieldInfo::TYPE_TAG:
+			case FieldInfo::TYPE_TAGS:
 				break;
 			case FieldInfo::TYPE_INT:
 				break;
@@ -702,7 +699,7 @@ class FieldInfo {
 			FieldInfo::TYPE_MARKDOWN =>'TYPE_MARKDOWN',
 			FieldInfo::TYPE_IMAGE =>'TYPE_IMAGE',
 			FieldInfo::TYPE_FILE =>'TYPE_FILE',
-			FieldInfo::TYPE_TAG =>'TYPE_TAG',
+			FieldInfo::TYPE_TAGS =>'TYPE_TAGS',
 			FieldInfo::TYPE_INT =>'TYPE_INT',
 			FieldInfo::TYPE_BOOLEAN =>'TYPE_BOOLEAN',
 			FieldInfo::TYPE_ENUM =>'TYPE_ENUM',

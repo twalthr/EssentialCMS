@@ -71,10 +71,12 @@ class PdfAnalyzer extends DocumentAnalyzer {
 		// save memory
 		unset($pdf);
 
+		// determine frequent words
 		$words = $this->generateFrequentWords($text);
+		if (sizeof($words) > 0) {
+			$props[] = [MediaProperties::KEY_FREQUENT_WORDS, implode(', ', $words)];
+		}
 
-
-		$props[] = ['text', var_dump($words)];
 		return $props;
 	}
 }

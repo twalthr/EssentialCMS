@@ -1,5 +1,7 @@
 <?php
 
+// v1: FEATURE COMPLETE
+
 abstract class DocumentAnalyzer extends MediaAnalyzer {
 
 	private $processors = [];
@@ -51,6 +53,8 @@ abstract class DocumentAnalyzer extends MediaAnalyzer {
 
 		// process tokens
 		foreach ($tokens as $token) {
+			// remove references
+			$token = preg_replace('/[\[<].*[\]>]/', '', $token);
 			// filter empty tokens
 			if (strlen($token) === 0) {
 				continue;
@@ -59,21 +63,30 @@ abstract class DocumentAnalyzer extends MediaAnalyzer {
 			if (filter_var($token, FILTER_VALIDATE_URL) !== false) {
 				continue;
 			}
-			// normalize
-			$normalized = $processor->normalizeToken($token);
-			// filter e.g. stopwords
-			if (!$processor->filterToken($normalized)) {
+			// remove emails
+			if (filter_var($token, FILTER_VALIDATE_EMAIL) !== false) {
 				continue;
 			}
-			// add to normalized tokens
-			$normalizedTokens[] = [$normalized, $token];
+			// split into subtokens
+			$subtokens = preg_split('/(?![-])[[:punct:]]+/', $token);
+			foreach ($subtokens as $subtoken) {
+				// filter strange subtokens with numbers in between
+				if (preg_match('/([^-][0-9])|([0-9][^-])/', $subtoken)) {
+					continue;
+				}
+				// normalize
+				$normalized = $processor->normalizeToken($subtoken);
+				// filter e.g. stopwords
+				if (!$processor->filterToken($normalized)) {
+					continue;
+				}
+				// add to normalized tokens
+				$normalizedTokens[] = [$normalized, $subtoken];
+			}
 		}
 
 		// save memory
 		unset($tokens);
-
-		// close processor
-		$processor->close();
 
 		// create histogram
 		// "normalizedword(s)" => [count, original word(s)]
@@ -122,6 +135,9 @@ abstract class DocumentAnalyzer extends MediaAnalyzer {
 			}
 		}
 
+		// save memory
+		unset($normalizedTokens);
+
 		// sort according to count and length of normalized token
 		uasort($histogram, function(&$a, &$b) {
 			$order = $b[0] - $a[0];
@@ -144,11 +160,24 @@ abstract class DocumentAnalyzer extends MediaAnalyzer {
 		$topCountFactor = Utils::configOrDefault($this->config, 'document-analyzer.topcountfactor', 0.2);
 		$topCount = min(sizeof($histogram) * $topCountFactor, 40);
 
-		$result = array_slice($histogram, 0, $topCount);
+		$topHistogram = array_slice($histogram, 0, $topCount);
 
-		echo var_dump($result);
+		// save memory
+		unset($histogram);
 
+		// generate output result
+		$result = [];
+		foreach ($topHistogram as $value) {
+			$oToken = $value[2];
+			$outToken = $processor->outputToken($oToken);
+			if ($outToken !== '') {
+				$result[] = $outToken;
+			} 
+		}
 
+		// close processor
+		$processor->close();
 
+		return $result;
 	}
 }

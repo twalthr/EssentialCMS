@@ -259,16 +259,7 @@ class AdminEditMediaGroupModule extends BasicModule {
 		}
 
 		// normalize tags
-		$split = preg_split("/[,#]+/", Utils::getValidFieldString('tags'));
-		$normalized = [];
-		foreach ($split as $value) {
-			$trimmed = trim($value);
-			if (strlen($trimmed) > 0) {
-				$normalized[] = $trimmed;
-			}
-		}
-		$imploded = implode(', ', array_unique($normalized));
-		$updateColumns['tags'] = $imploded;
+		$updateColumns['tags'] = Utils::normalizeTags(Utils::getValidFieldString('tags'));
 
 		$result = false;
 		// create media group

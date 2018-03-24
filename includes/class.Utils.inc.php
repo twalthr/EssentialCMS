@@ -2,9 +2,22 @@
 
 abstract class Utils {
 
-	public static function requireLibrary($name) {
+	public static function ignoreErrors($callable) {
+		set_error_handler(function() {
+			// do nothing
+		});
+		$returnValue = $callable();
+		restore_error_handler();
+		return $returnValue;
+	}
+
+	public static function requireLibrary($name, $file) {
 		global $ROOT_DIRECTORY;
-		require_once $ROOT_DIRECTORY . '/libs/' . $name . '/'. $name . '.php';
+		$oldDir = getcwd();
+		$newDir = $ROOT_DIRECTORY . '/libs/' . $name . '/dist';
+		chdir($newDir);
+		require_once $newDir . '/' . $file;
+		chdir($oldDir);
 	}
 
 	public static function loadFact($name) {
@@ -379,6 +392,18 @@ abstract class Utils {
 		}
 		$split = explode('.', $fileName);
 		return strtolower($split[sizeof($split) - 1]);
+	}
+
+	public static function normalizeTags($str) {
+		$split = preg_split("/[,#]+/", $str);
+		$normalized = [];
+		foreach ($split as $value) {
+			$trimmed = trim($value);
+			if (strlen($trimmed) > 0) {
+				$normalized[] = $trimmed;
+			}
+		}
+		return implode(', ', array_unique($normalized));
 	}
 }
 

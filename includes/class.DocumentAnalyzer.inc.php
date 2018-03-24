@@ -22,7 +22,7 @@ abstract class DocumentAnalyzer extends MediaAnalyzer {
 			return [];
 		}
 
-		Utils::requireLibrary('Text_LanguageDetect');
+		Utils::requireLibrary('Text_LanguageDetect', 'Text/LanguageDetect.php');
 
 		$detector = new Text_LanguageDetect();
 		$detector->setNameMode(2);

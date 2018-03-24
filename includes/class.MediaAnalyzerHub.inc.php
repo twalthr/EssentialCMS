@@ -8,6 +8,9 @@ class MediaAnalyzerHub {
 		$this->analyzers[] = new JpegAnalyzer([]);
 		$this->analyzers[] = new ImageAnalyzer([]);
 		$this->analyzers[] = new PdfAnalyzer([]);
+		$this->analyzers[] = new PptxAnalyzer([]);
+		$this->analyzers[] = new DocxAnalyzer([]);
+		$this->analyzers[] = new XlsxAnalyzer([]);
 	}
 
 	public function summarize($mid, $originalFileName, $rawPath, $smallThumbnailPath, $largeThumbnailPath) {
@@ -42,6 +45,14 @@ class MediaAnalyzerHub {
 		}
 
 		// filter empty properties
+
+		// trim array elements and make arrays unique
+
+		// substr strings accordinly
+
+		// remove control characters and escape
+
+		// remove duplicate properties
 
 		// check content of properties
 

@@ -1,5 +1,7 @@
 <?php
 
+// v1: FEATURE COMPLETE
+
 class PdfAnalyzer extends DocumentAnalyzer {
 
 	public function __construct($config) {
@@ -23,7 +25,7 @@ class PdfAnalyzer extends DocumentAnalyzer {
 		global $MAX_RUNTIME_STOP_FACTOR;
 		$props = [];
 
-		Utils::requireLibrary('PdfToText');
+		Utils::requireLibrary('PdfToText', 'PdfToText.phpclass');
 
 		$pdf = new PdfToText();
 		$pdf->MaxExecutionTime = $MAX_RUNTIME - $MAX_RUNTIME * $MAX_RUNTIME_STOP_FACTOR;
@@ -46,7 +48,7 @@ class PdfAnalyzer extends DocumentAnalyzer {
 		$props[] = [MediaProperties::KEY_TYPE, 'PDF'];
 		$props[] = [MediaProperties::KEY_MIME_TYPE, 'application/pdf'];
 
-		$props[] = [MediaProperties::KEY_AUTHOR, $pdf->Author];
+		$props[] = [MediaProperties::KEY_AUTHOR, array_unique(explode(';', $pdf->Author))];
 
 		$created = strtotime($pdf->CreationDate);
 		if ($created !== false && $created > 0) {

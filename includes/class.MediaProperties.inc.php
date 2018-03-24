@@ -52,6 +52,10 @@ abstract class MediaProperties {
 
 	const KEY_DESCRIPTION = 'description';
 
+	const KEY_REVISION = 'revision';
+
+	const KEY_TAGS = 'tags';
+
 	// --------------------------------------------------------------------------------------------
 	// Document and image properties
 	// --------------------------------------------------------------------------------------------
@@ -199,7 +203,8 @@ abstract class MediaProperties {
 			'key' => KEY_AUTHOR,
 			'types' => FieldInfo::TYPE_PLAIN,
 			'name' => 'AUTHOR',
-			'max' => 256]);
+			'max' => 256,
+			'array' => true]);
 
 		$props[KEY_AUTHOR_ORGANIZATION] = FieldInfo::create([
 			'key' => KEY_AUTHOR_ORGANIZATION,
@@ -232,6 +237,18 @@ abstract class MediaProperties {
 			'key' => KEY_DESCRIPTION,
 			'types' => FieldInfo::TYPE_PLAIN,
 			'name' => 'DESCRIPTION']);
+
+		$props[KEY_REVISION] = FieldInfo::create([
+			'key' => KEY_REVISION,
+			'types' => FieldInfo::TYPE_PLAIN,
+			'name' => 'REVISION',
+			'max' => 512]);
+
+		$props[KEY_TAGS] = FieldInfo::create([
+			'key' => KEY_TAGS,
+			'types' => FieldInfo::TYPE_TAGS,
+			'name' => 'TAGS',
+			'max' => 2048]);
 
 		$props[KEY_RESOLUTION] = FieldInfo::create([
 			'key' => KEY_RESOLUTION,
@@ -301,6 +318,12 @@ abstract class MediaProperties {
 			'name' => 'PARAGRAPH_COUNT',
 			'min' => 0]);
 
+		$props[KEY_CHARACTER_COUNT] = FieldInfo::create([
+			'key' => KEY_CHARACTER_COUNT,
+			'types' => FieldInfo::TYPE_INT,
+			'name' => 'CHARACTER_COUNT',
+			'min' => 0]);
+
 		$props[KEY_HEADING] = FieldInfo::create([
 			'key' => KEY_HEADING,
 			'types' => FieldInfo::TYPE_PLAIN,
@@ -316,7 +339,6 @@ abstract class MediaProperties {
 	}
 
 	// general
-	const FIELD_TAGS = 'TAGS';
 	const FIELD_COPYRIGHT = 'COPYRIGHT';
 	const FIELD_RATING = 'RATING';
 	const FIELD_COMMENT = 'COMMENT';

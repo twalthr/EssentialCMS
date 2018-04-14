@@ -405,6 +405,13 @@ abstract class Utils {
 		}
 		return implode(', ', array_unique($normalized));
 	}
+
+	public static function findLongestString($array) {
+		usort($array, function($a, $b) {
+			return strlen($b) - strlen($a);
+		});
+		return $array[0];
+	}
 }
 
 ?>

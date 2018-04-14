@@ -122,20 +122,20 @@ class OfficeAnalyzer extends DocumentAnalyzer {
 			}
 
 			// hidden slides
-			if (isset($p->HiddenSlides)) {
+			if (Utils::hasStringContent($p->HiddenSlides)) {
 				$props[] = [MediaProperties::KEY_OTHER, 'HiddenSlides=' . (string) $p->HiddenSlides];
 			}
 			// notes
-			if (isset($p->Notes)) {
+			if (Utils::hasStringContent($p->Notes)) {
 				$props[] = [MediaProperties::KEY_OTHER, 'Notes=' . (string) $p->Notes];
 			}
 			// presentation format
-			if (isset($p->PresentationFormat)) {
+			if (Utils::hasStringContent($p->PresentationFormat)) {
 				$props[] = [MediaProperties::KEY_OTHER,
 					'PresentationFormat=' . (string) $p->PresentationFormat];
 			}
 			// total time
-			if (isset($p->TotalTime)) {
+			if (Utils::hasStringContent($p->TotalTime)) {
 				$props[] = [MediaProperties::KEY_OTHER, 'TotalTime=' . (string) $p->TotalTime];
 			}
 		}

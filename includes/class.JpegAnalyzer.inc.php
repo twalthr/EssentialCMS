@@ -20,7 +20,7 @@ class JpegAnalyzer extends MediaAnalyzer {
 		return Utils::stringStartsWith($mime, 'image/jpeg');
 	}
 
-	public function extractProperties($src) {
+	public function extractProperties($src, $ext) {
 		$props = [];
 
 		// basic check and information

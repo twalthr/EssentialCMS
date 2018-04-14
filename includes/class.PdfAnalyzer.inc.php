@@ -20,7 +20,7 @@ class PdfAnalyzer extends DocumentAnalyzer {
 		return $mime === 'application/pdf';
 	}
 
-	public function extractProperties($src) {
+	public function extractProperties($src, $ext) {
 		global $MAX_RUNTIME;
 		global $MAX_RUNTIME_STOP_FACTOR;
 		$props = [];

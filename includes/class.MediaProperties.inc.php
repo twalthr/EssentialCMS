@@ -56,6 +56,10 @@ abstract class MediaProperties {
 
 	const KEY_TAGS = 'tags';
 
+	const KEY_PART = 'part'; // starts at 1
+
+	const KEY_PARTS = 'parts';
+
 	// --------------------------------------------------------------------------------------------
 	// Document and image properties
 	// --------------------------------------------------------------------------------------------
@@ -99,6 +103,26 @@ abstract class MediaProperties {
 	const KEY_CHARACTER_COUNT = 'charactercount';
 
 	const KEY_HEADING = 'heading';
+
+	// --------------------------------------------------------------------------------------------
+	// Audio and video properties
+	// --------------------------------------------------------------------------------------------
+
+	const KEY_DURATION = 'duration';
+
+	const KEY_AUDIO_CODEC = 'audiocodec';
+
+	const KEY_VIDEO_CODEC = 'videocodec';
+
+	const KEY_BITRATE = 'bitrate'; // audio + video
+
+	const KEY_AUDIO_CHANNELS = 'audiochannels';
+
+	const KEY_ALBUM = 'album';
+
+	const KEY_GENRE = 'genre';
+
+	const KEY_RELEASE_YEAR = 'releaseyear';
 
 	// --------------------------------------------------------------------------------------------
 	// Other properties
@@ -250,6 +274,18 @@ abstract class MediaProperties {
 			'name' => 'TAGS',
 			'max' => 2048]);
 
+		$props[KEY_PART] = FieldInfo::create([
+			'key' => KEY_PART,
+			'types' => FieldInfo::TYPE_INT,
+			'name' => 'PART',
+			'min' => 1]);
+
+		$props[KEY_PARTS] = FieldInfo::create([
+			'key' => KEY_PARTS,
+			'types' => FieldInfo::TYPE_INT,
+			'name' => 'PARTS',
+			'min' => 1]);
+
 		$props[KEY_RESOLUTION] = FieldInfo::create([
 			'key' => KEY_RESOLUTION,
 			'types' => FieldInfo::TYPE_INT,
@@ -331,6 +367,53 @@ abstract class MediaProperties {
 			'max' => 256,
 			'array' => true]);
 
+		$props[KEY_DURATION] = FieldInfo::create([
+			'key' => KEY_DURATION,
+			'types' => FieldInfo::TYPE_DURATION,
+			'name' => 'DURATION']);
+
+		$props[KEY_AUDIO_CODEC] = FieldInfo::create([
+			'key' => KEY_AUDIO_CODEC,
+			'types' => FieldInfo::TYPE_PLAIN,
+			'name' => 'AUDIO_CODEC',
+			'max' => 256]);
+
+		$props[KEY_VIDEO_CODEC] = FieldInfo::create([
+			'key' => KEY_VIDEO_CODEC,
+			'types' => FieldInfo::TYPE_PLAIN,
+			'name' => 'VIDEO_CODEC',
+			'max' => 256]);
+
+		$props[KEY_BITRATE] = FieldInfo::create([
+			'key' => KEY_BITRATE,
+			'types' => FieldInfo::TYPE_INT,
+			'name' => 'BITRATE',
+			'min' => 0]);
+
+		$props[KEY_AUDIO_CHANNELS] = FieldInfo::create([
+			'key' => KEY_AUDIO_CHANNELS,
+			'types' => FieldInfo::TYPE_INT,
+			'name' => 'AUDIO_CHANNELS',
+			'min' => 0]);
+
+		$props[KEY_ALBUM] = FieldInfo::create([
+			'key' => KEY_ALBUM,
+			'types' => FieldInfo::TYPE_PLAIN,
+			'name' => 'ALBUM',
+			'max' => 256]);
+
+		$props[KEY_GENRE] = FieldInfo::create([
+			'key' => KEY_GENRE,
+			'types' => FieldInfo::TYPE_PLAIN,
+			'name' => 'GENRE',
+			'max' => 256]);
+
+		$props[KEY_RELEASE_YEAR] = FieldInfo::create([
+			'key' => KEY_RELEASE_YEAR,
+			'types' => FieldInfo::TYPE_INT,
+			'name' => 'RELEASE_YEAR',
+			'min' => 0]);
+
 		$props[KEY_OTHER] = FieldInfo::create([
 			'key' => KEY_OTHER,
 			'types' => FieldInfo::TYPE_PLAIN,
@@ -355,14 +438,10 @@ abstract class MediaProperties {
 	const VALUE_AUDIO_TYPE_SONG = 'SONG';
 	const VALUE_AUDIO_TYPE_BOOK = 'BOOK';
 	const VALUE_AUDIO_TYPE_AUDIO = 'AUDIO';
-	const FIELD_GENRE = 'GENRE';
 	const FIELD_YEAR = 'YEAR';
-	const FIELD_DURATION = 'DURATION';
 	const FIELD_LANGUAGE = 'LANGUAGE';
 	const FIELD_SUBTITLE_LANGUAGE = 'SUBTITLE_LANGUAGE';
 	const FIELD_AUDIO_LANGUAGE = 'AUDIO_LANGUAGE';
-	const FIELD_AUDIO_CHANNELS = 'AUDIO_CANNELS';
-	const FIELD_ALBUM = 'ALBUM';
 	const FIELD_TEXT_CONTENT = 'TEXT_CONTENT'; // e.g. lyrics or subtitles
 
 	// documents, images and code

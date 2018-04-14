@@ -37,7 +37,7 @@ abstract class MediaAnalyzer {
 		return false;
 	}
 
-	public function extractProperties($src) {
+	public function extractProperties($src, $ext) {
 		return [];
 	}
 }

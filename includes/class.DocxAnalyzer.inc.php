@@ -12,7 +12,7 @@ class DocxAnalyzer extends OfficeAnalyzer {
 		return $extension === 'docx';
 	}
 
-	public function extractProperties($src) {
+	public function extractProperties($src, $ext) {
 		$props = [];
 
 		// check for word document
@@ -110,6 +110,11 @@ class DocxAnalyzer extends OfficeAnalyzer {
 		foreach ($documentStrings as $documentString) {
 			$text = $text . ' ' . $documentString->textContent;
 		}
+
+		// save memory
+		unset($document);
+		unset($documentDom);
+		unset($documentStrings);
 
 		// determine frequent words
 		$words = $this->generateFrequentWords($text);

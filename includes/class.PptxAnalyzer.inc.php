@@ -12,7 +12,7 @@ class PptxAnalyzer extends OfficeAnalyzer {
 		return $extension === 'pptx';
 	}
 
-	public function extractProperties($src) {
+	public function extractProperties($src, $ext) {
 		$props = [];
 
 		// check for presentation

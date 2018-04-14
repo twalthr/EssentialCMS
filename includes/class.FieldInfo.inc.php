@@ -21,6 +21,7 @@ class FieldInfo {
 	const TYPE_LOCALE = 32768;
 	const TYPE_DATE_TIME = 65536;
 	const TYPE_FLOAT = 131072;
+	const TYPE_DURATION = 262144; // in seconds with microseconds (double)
 
 	private $key;
 	private $allowedTypes;
@@ -380,6 +381,15 @@ class FieldInfo {
 			case FieldInfo::TYPE_LOCALE:
 				return 'NOT_YET_IMPLEMENTED';
 				break;
+			case FieldInfo::TYPE_DATE_TIME:
+				return 'NOT_YET_IMPLEMENTED';
+				break;
+			case FieldInfo::TYPE_FLOAT:
+				return 'NOT_YET_IMPLEMENTED';
+				break;
+			case FieldInfo::TYPE_DURATION:
+				return 'NOT_YET_IMPLEMENTED'; // e.g. never negative
+				break;
 		}
 		return true;
 	}
@@ -450,6 +460,12 @@ class FieldInfo {
 			case FieldInfo::TYPE_EMAIL:
 				break;
 			case FieldInfo::TYPE_LOCALE:
+				break;
+			case FieldInfo::TYPE_DATE_TIME:
+				break;
+			case FieldInfo::TYPE_FLOAT:
+				break;
+			case FieldInfo::TYPE_DURATION:
 				break;
 		}
 		return $trimmedContent;
@@ -681,6 +697,12 @@ class FieldInfo {
 				break;
 			case FieldInfo::TYPE_LOCALE:
 				break;
+			case FieldInfo::TYPE_DATE_TIME:
+				break;
+			case FieldInfo::TYPE_FLOAT:
+				break;
+			case FieldInfo::TYPE_DURATION:
+				break;
 		}
 	}
 
@@ -709,7 +731,10 @@ class FieldInfo {
 			FieldInfo::TYPE_PAGE =>'TYPE_PAGE',
 			FieldInfo::TYPE_ID =>'TYPE_ID',
 			FieldInfo::TYPE_EMAIL =>'TYPE_EMAIL',
-			FieldInfo::TYPE_LOCALE =>'TYPE_LOCALE'
+			FieldInfo::TYPE_LOCALE =>'TYPE_LOCALE',
+			FieldInfo::TYPE_DATE_TIME =>'TYPE_DATE_TIME',
+			FieldInfo::TYPE_FLOAT =>'TYPE_FLOAT',
+			FieldInfo::TYPE_DURATION =>'TYPE_DURATION'
 		];
 	}
 

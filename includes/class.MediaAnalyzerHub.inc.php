@@ -11,6 +11,7 @@ class MediaAnalyzerHub {
 		$this->analyzers[] = new PptxAnalyzer([]);
 		$this->analyzers[] = new DocxAnalyzer([]);
 		$this->analyzers[] = new XlsxAnalyzer([]);
+		$this->analyzers[] = new Id3Analyzer([]);
 	}
 
 	public function summarize($mid, $originalFileName, $rawPath, $smallThumbnailPath, $largeThumbnailPath) {
@@ -41,7 +42,7 @@ class MediaAnalyzerHub {
 		// extract properties
 		$properties = [];
 		foreach ($matchingAnalyzers as $analyzer) {
-			$properties = array_merge($analyzer->extractProperties($rawPath));
+			$properties = array_merge($analyzer->extractProperties($rawPath, $ext));
 		}
 
 		// filter empty properties

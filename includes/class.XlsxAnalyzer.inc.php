@@ -12,7 +12,7 @@ class XlsxAnalyzer extends OfficeAnalyzer {
 		return $extension === 'xlsx';
 	}
 
-	public function extractProperties($src) {
+	public function extractProperties($src, $ext) {
 		$props = [];
 
 		// check for excel document
@@ -66,6 +66,11 @@ class XlsxAnalyzer extends OfficeAnalyzer {
 		foreach ($strings as $string) {
 			$text = $text . ' ' . $string->textContent;
 		}
+
+		// save memory
+		unset($sharedStrings);
+		unset($sharedStringsDom);
+		unset($strings);
 
 		// determine frequent words
 		$words = $this->generateFrequentWords($text);

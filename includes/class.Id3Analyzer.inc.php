@@ -1,5 +1,7 @@
 <?php
 
+// v1: FEATURE COMPLETE
+
 class Id3Analyzer extends MediaAnalyzer {
 
 	public function __construct($config) {
@@ -91,17 +93,17 @@ class Id3Analyzer extends MediaAnalyzer {
 			$props[] = [MediaProperties::KEY_TYPE_GROUP, MediaProperties::VALUE_TYPE_GROUP_VIDEO];
 
 			// video codec
-			if (isset($info['video']['codec'])) {
-				$props[] = [MediaProperties::KEY_VIDEO_CODEC, $info['video']['codec']];
-			} else if (isset($info['video']['fourcc_lookup'])) {
+			if ($this->hasContent($info['video']['fourcc_lookup'])) {
 				$props[] = [MediaProperties::KEY_VIDEO_CODEC, $info['video']['fourcc_lookup']];
-			} else if (isset($info['video']['fourcc'])) {
+			} else if ($this->hasContent($info['video']['codec'])) {
+				$props[] = [MediaProperties::KEY_VIDEO_CODEC, $info['video']['codec']];
+			} else if ($this->hasContent($info['video']['fourcc'])) {
 				$props[] = [MediaProperties::KEY_VIDEO_CODEC, $info['video']['fourcc']];
-			} else if (isset($info['video']['encoder'])) {
+			} else if ($this->hasContent($info['video']['encoder'])) {
 				$props[] = [MediaProperties::KEY_VIDEO_CODEC, $info['video']['encoder']];
-			} else if (isset($info['video']['dataformat'])) {
+			} else if ($this->hasContent($info['video']['dataformat'])) {
 				$props[] = [MediaProperties::KEY_VIDEO_CODEC, $info['video']['dataformat']];
-			} else if (isset($info['fileformat'])) {
+			} else if ($this->hasContent($info['fileformat'])) {
 				$props[] = [MediaProperties::KEY_VIDEO_CODEC, $info['fileformat']];
 			}
 		} else {
@@ -109,11 +111,11 @@ class Id3Analyzer extends MediaAnalyzer {
 		}
 
 		// audio codec
-		if (isset($info['audio']['codec'])) {
+		if ($this->hasContent($info['audio']['codec'])) {
 			$props[] = [MediaProperties::KEY_AUDIO_CODEC, $info['audio']['codec']];
-		} else if (isset($info['audio']['dataformat'])) {
+		} else if ($this->hasContent($info['audio']['dataformat'])) {
 			$props[] = [MediaProperties::KEY_AUDIO_CODEC, $info['audio']['dataformat']];
-		} else if (isset($info['fileformat'])) {
+		} else if ($this->hasContent($info['fileformat'])) {
 			$props[] = [MediaProperties::KEY_AUDIO_CODEC, $info['fileformat']];
 		}
 
@@ -131,19 +133,41 @@ class Id3Analyzer extends MediaAnalyzer {
 		$props[] = [MediaProperties::KEY_DURATION, $info['playtime_seconds']];
 
 		// resolution
-		if (isset($info['video']['resolution_x'])) {
+		if ($this->hasContent($info['video']['resolution_x'])) {
 			$props[] = [MediaProperties::KEY_WIDTH, $info['video']['resolution_x']];
-		} else if (isset($info['matroska']['tracks']['tracks'][0]['PixelWidth'])) {
+		} else if ($this->hasContent($info['matroska']['tracks']['tracks'][0]['PixelWidth'])) {
 			$props[] = [MediaProperties::KEY_WIDTH, $info['matroska']['tracks']['tracks'][0]['PixelWidth']];
-		} else if (isset($info['mpeg']['video']['framesize_horizontal'])) {
+		} else if ($this->hasContent($info['mpeg']['video']['framesize_horizontal'])) {
 			$props[] = [MediaProperties::KEY_WIDTH, $info['mpeg']['video']['framesize_horizontal']];
 		}
-		if (isset($info['video']['resolution_y'])) {
+		if ($this->hasContent($info['video']['resolution_y'])) {
 			$props[] = [MediaProperties::KEY_HEIGHT, $info['video']['resolution_y']];
-		} else if (isset($info['matroska']['tracks']['tracks'][0]['PixelHeight'])) {
-			$props[] = [MediaProperties::KEY_HEIGHT, $info['matroska']['tracks']['tracks'][0]['PixelHeight']];
-		} else if (isset($info['mpeg']['video']['framesize_vertical'])) {
+		} else if ($this->hasContent($info['matroska']['tracks']['tracks'][0]['PixelHeight'])) {
+			$props[] = [MediaProperties::KEY_HEIGHT,
+				$info['matroska']['tracks']['tracks'][0]['PixelHeight']];
+		} else if ($this->hasContent($info['mpeg']['video']['framesize_vertical'])) {
 			$props[] = [MediaProperties::KEY_HEIGHT, $info['mpeg']['video']['framesize_vertical']];
+		}
+
+		// orientation
+		if (isset($info['video']['rotate'])) {
+			switch ($info['video']['rotate']) {
+				case 0:
+					$props[] = [MediaProperties::KEY_ORIENTATION, 0];
+					break;
+				case 90:
+					$props[] = [MediaProperties::KEY_ORIENTATION, 5];
+					break;
+				case 180:
+					$props[] = [MediaProperties::KEY_ORIENTATION, 2];
+					break;
+				case 270:
+					$props[] = [MediaProperties::KEY_ORIENTATION, 7];
+					break;
+				default:
+					// do nothing
+					break;
+			}
 		}
 
 		// bitrate
@@ -158,55 +182,189 @@ class Id3Analyzer extends MediaAnalyzer {
 
 		// album
 		if (isset($info['comments']['album'])) {
-			$props[] = [MediaProperties::KEY_ALBUM, $info['comments']['album']];
+			$props[] = [MediaProperties::KEY_ALBUM, Utils::findLongestString($info['comments']['album'])];
 		}
 
 		// author
-		if (isset($info['comments']['artist'])) {
-			$props[] = [MediaProperties::KEY_AUTHOR, $info['comments']['artist']];
-		} else if (isset($info['comments']['author'])) {
-			$props[] = [MediaProperties::KEY_AUTHOR, $info['comments']['author']];
-		} else if (isset($info['asf']['comments']['artist'])) {
-			$props[] = [MediaProperties::KEY_AUTHOR, $info['asf']['comments']['artist']];
+		if ($this->hasContent($info['comments']['artist'])) {
+			$props[] = [MediaProperties::KEY_AUTHOR, Utils::findLongestString($info['comments']['artist'])];
+		} else if ($this->hasContent($info['comments']['author'])) {
+			$props[] = [MediaProperties::KEY_AUTHOR, Utils::findLongestString($info['comments']['author'])];
+		} else if ($this->hasContent($info['asf']['comments']['artist'])) {
+			$props[] = [MediaProperties::KEY_AUTHOR,
+				Utils::findLongestString($info['asf']['comments']['artist'])];
+		}
+
+		// organization
+		if ($this->hasContent($info['comments']['publisher'])) {
+			$props[] = [MediaProperties::KEY_AUTHOR_ORGANIZATION,
+				Utils::findLongestString($info['comments']['publisher'])];
+		} else if ($this->hasContent($info['comments']['contentdistributor'])) {
+			$props[] = [MediaProperties::KEY_AUTHOR_ORGANIZATION,
+				Utils::findLongestString($info['comments']['contentdistributor'])];
 		}
 
 		// genre
-		if (isset($info['comments']['genre'])) {
-			$props[] = [MediaProperties::KEY_GENRE, $info['comments']['genre']];
-		} else if (isset($info['asf']['comments']['genre'])) {
-			$props[] = [MediaProperties::KEY_GENRE, $info['asf']['comments']['genre']];
+		if ($this->hasContent($info['comments']['genre'])) {
+			$props[] = [MediaProperties::KEY_GENRE, Utils::findLongestString($info['comments']['genre'])];
+		} else if ($this->hasContent($info['asf']['comments']['genre'])) {
+			$props[] = [MediaProperties::KEY_GENRE,
+				Utils::findLongestString($info['asf']['comments']['genre'])];
 		}
 
 		// title
-		if (isset($info['comments']['title'])) {
-			if (is_array($info['comments']['title'])) {
-				if (count($info['comments']['title']) > 0) {
-					$props[] = [MediaProperties::KEY_TITLE, Utils::findLongestString($info['comments']['title'])];
-				}
-			} else {
-				$props[] = [MediaProperties::KEY_TITLE, $info['comments']['title']];
-			}
-		} else if (isset($info['comments']['subject'])) {
-			$props[] = [MediaProperties::KEY_TITLE, $info['comments']['subject']];
-		} else if (isset($info['asf']['comments']['title'])) {
-			$props[] = [MediaProperties::KEY_TITLE, $info['asf']['comments']['title']];
+		if ($this->hasContent($info['comments']['title'])) {
+			$props[] = [MediaProperties::KEY_TITLE, Utils::findLongestString($info['comments']['title'])];
+		} else if ($this->hasContent($info['comments']['subject'])) {
+			$props[] = [MediaProperties::KEY_TITLE, Utils::findLongestString($info['comments']['subject'])];
+		} else if ($this->hasContent($info['asf']['comments']['title'])) {
+			$props[] = [MediaProperties::KEY_TITLE,
+				Utils::findLongestString($info['asf']['comments']['title'])];
 		}
 
 		// release year
-		if (isset($info['comments']['year'])) {
-			$props[] = [MediaProperties::KEY_RELEASE_YEAR, $info['comments']['year']];
-		} else if (isset($info['comments']['date_release'])) {
-			$props[] = [MediaProperties::KEY_RELEASE_YEAR, (int) $info['comments']['date_release']];
-		} else if (isset($info['comments']['date'])) {
-			$props[] = [MediaProperties::KEY_RELEASE_YEAR, (int) $info['comments']['date']];
-		} else if (isset($info['comments']['creationdate'])) {
-			$props[] = [MediaProperties::KEY_RELEASE_YEAR, (int) $info['comments']['creationdate']];
+		if ($this->hasContent($info['comments']['year'])) {
+			$props[] = [MediaProperties::KEY_RELEASE_YEAR,
+				Utils::findLongestString($info['comments']['year'])];
+		} else if ($this->hasContent($info['comments']['date_release'])) {
+			$props[] = [MediaProperties::KEY_RELEASE_YEAR,
+				(int) Utils::findLongestString($info['comments']['date_release'])];
+		} else if ($this->hasContent($info['comments']['date'])) {
+			$props[] = [MediaProperties::KEY_RELEASE_YEAR,
+				(int) Utils::findLongestString($info['comments']['date'])];
 		}
 
 		// part number
+		if ($this->hasContent($info['comments']['track_number'])) {
+			// might be e.g. "1/22"
+			$split = explode('/', Utils::findLongestString($info['comments']['track_number']));
+			if (count($split) == 1 && ((int) $split[0]) > 0) {
+				$props[] = [MediaProperties::KEY_PART, $split[0]];
+			} else if (count($split) == 2 && ((int) $split[0]) > 0 && ((int) $split[1]) > 0) {
+				$props[] = [MediaProperties::KEY_PART, $split[0]];
+				$props[] = [MediaProperties::KEY_PARTS, $split[1]];
+			}
+		} else if ($this->hasContent($info['comments']['track'])) {
+			$props[] = [MediaProperties::KEY_PART, Utils::findLongestString($info['comments']['track'])];
+		} else if ($this->hasContent($info['comments']['part_number'])) {
+			$props[] = [MediaProperties::KEY_PART, Utils::findLongestString($info['comments']['part_number'])];
+		} else if ($this->hasContent($info['comments']['tracknumber'])) {
+			$props[] = [MediaProperties::KEY_PART, Utils::findLongestString($info['comments']['tracknumber'])];
+		}
 
+		// parts
+		if (isset($info['comments']['total_parts'])) {
+			$props[] = [MediaProperties::KEY_PARTS,
+				Utils::findLongestString($info['comments']['total_parts'])];
+		}
 
-		// track number/part number, urls, software, language, comment, lyrics
+		// software
+		if ($this->hasContent($info['comments']['encoder'])) {
+			$props[] = [MediaProperties::KEY_SOFTWARE,
+				Utils::findLongestString($info['comments']['encoder'])];
+		} else if ($this->hasContent($info['comments']['software'])) {
+			$props[] = [MediaProperties::KEY_SOFTWARE,
+				Utils::findLongestString($info['comments']['software'])];
+		} else if ($this->hasContent($info['comments']['writingapp'])) {
+			$props[] = [MediaProperties::KEY_SOFTWARE,
+				Utils::findLongestString($info['comments']['writingapp'])];
+		} else if ($this->hasContent($info['comments']['toolname'])) {
+			$tool = Utils::findLongestString($info['comments']['toolname']);
+			if (isset($info['comments']['toolversion'])) {
+				$tool = $tool . ' ' . Utils::findLongestString($info['comments']['toolversion']);
+			}
+			$props[] = [MediaProperties::KEY_SOFTWARE, $tool];
+		} else if ($this->hasContent($info['comments']['encoded_by'])) {
+			$props[] = [MediaProperties::KEY_SOFTWARE,
+				Utils::findLongestString($info['comments']['encoded_by'])];
+		} else if ($this->hasContent($info['comments']['encodedby'])) {
+			$props[] = [MediaProperties::KEY_SOFTWARE,
+				Utils::findLongestString($info['comments']['encodedby'])];
+		}
+
+		// lyrics
+		if (isset($info['comments']['unsynchronised_lyric'])) {
+			$props[] = [MediaProperties::KEY_TEXT_CONTENT,
+				Utils::findLongestString($info['comments']['unsynchronised_lyric'])];
+		}
+
+		// language
+		if (isset($info['comments']['language'])) {
+			$lang = Utils::findLongestString($info['comments']['language']);
+			if ($lang !== 'Undetermined') {
+				$props[] = [MediaProperties::KEY_LANGUAGE, $lang];
+			}
+		}
+
+		// copyright
+		if (isset($info['comments']['copyright'])) {
+			$props[] = [MediaProperties::KEY_COPYRIGHT,
+				Utils::findLongestString($info['comments']['copyright'])];
+		}
+
+		// urls
+		$urls = [];
+		if (isset($info['comments']['url']) && is_array($info['comments']['url'])) {
+			$this->addUrls($info['comments']['url'], $urls);
+		}
+		if (isset($info['comments']['url_station']) && is_array($info['comments']['url_station'])) {
+			$this->addUrls($info['comments']['url_station'], $urls);
+		}
+		if (isset($info['comments']['url_publisher']) && is_array($info['comments']['url_publisher'])) {
+			$this->addUrls($info['comments']['url_publisher'], $urls);
+		}
+		$props[] = [MediaProperties::KEY_LINKED, $urls];
+
+		// Apple specific tags
+
+		// manufacturer
+		if (isset($info['comments']['make'])) {
+			$props[] = [MediaProperties::KEY_MANUFACTURER,
+				Utils::findLongestString($info['comments']['make'])];
+		}
+
+		// model
+		if (isset($info['comments']['model'])) {
+			$props[] = [MediaProperties::KEY_MODEL,
+				Utils::findLongestString($info['comments']['model'])];
+		}
+
+		// creation date
+		$this->addDateTime($info['comments'], 'creationdate', MediaProperties::KEY_CREATED, $props);
+
+		// GPS
+		if (isset($info['comments']['gps_latitude']) && isset($info['comments']['gps_longitude'])) {
+			$props[] = [MediaProperties::KEY_POSITION_LAT,
+				Utils::findLongestString($info['comments']['gps_latitude'])];
+			$props[] = [MediaProperties::KEY_POSITION_LON,
+				Utils::findLongestString($info['comments']['gps_longitude'])];
+		}
+		if (isset($info['comments']['gps_altitude'])) {
+			$props[] = [MediaProperties::KEY_POSITION_ALT,
+				Utils::findLongestString($info['comments']['gps_altitude'])];
+		}
+
+		// comments
+		if (isset($info['comments']['comment'])) {
+			$props[] = [MediaProperties::KEY_COMMENT, Utils::findLongestString($info['comments']['comment'])];
+		}
+
+		// other audio
+		if (isset($info['audio'])) {
+			foreach ($info['audio'] as $key => $value) {
+				$this->addOtherProperty($info['audio'], $key, $props);
+			}
+		}
+		// other video
+		if (isset($info['video'])) {
+			foreach ($info['video'] as $key => $value) {
+				$this->addOtherProperty($info['video'], $key, $props);
+			}
+		}
+		// other comments
+		foreach ($info['comments'] as $key => $value) {
+			$this->addOtherProperty($info['comments'], $key, $props);
+		}
 
 		return $props;
 	}
@@ -236,5 +394,23 @@ class Id3Analyzer extends MediaAnalyzer {
 			return true;
 		}
 		return false;
+	}
+
+	private function hasContent(&$element) {
+		if (isset($element)) {
+			$value = Utils::findLongestString($element);
+			return Utils::hasStringContent($value);
+		}
+	}
+
+	private function addUrls(&$elements, &$urls) {
+		foreach ($elements as $value) {
+			if (Utils::stringStartsWith($value, 'http://') ||
+					Utils::stringStartsWith($value, 'https://')) {
+				$urls[] = $value;
+			} else if (Utils::stringStartsWith($value, 'www.')) {
+				$urls[] = 'http://' . $value;
+			}
+		}
 	}
 }

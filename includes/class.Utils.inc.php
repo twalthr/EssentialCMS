@@ -47,7 +47,7 @@ abstract class Utils {
 		die();
 	}
 
-	public static function hasStringContent($str) {
+	public static function hasStringContent(&$str) { // & => forward for isset
 		return isset($str) && !(trim((string) $str) === '');
 	}
 
@@ -407,8 +407,14 @@ abstract class Utils {
 	}
 
 	public static function findLongestString($array) {
+		if (!is_array($array)) {
+			return $array;
+		}
+		if (count($array) == 1) {
+			return $array[0];
+		}
 		usort($array, function($a, $b) {
-			return strlen($b) - strlen($a);
+			return strlen((string) $b) - strlen((string) $a);
 		});
 		return $array[0];
 	}

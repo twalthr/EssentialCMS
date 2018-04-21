@@ -23,6 +23,12 @@ class ImageAnalyzer extends MediaAnalyzer {
 
 		$props[] = [MediaProperties::KEY_TYPE_GROUP, MediaProperties::VALUE_TYPE_GROUP_IMAGE];
 		$props[] = [MediaProperties::KEY_MIME_TYPE, $basic['mime']];
+
+		// name type
+		if (strlen($ext) >= 2) {
+			$props[] = [MediaProperties::KEY_TYPE, strtoupper($ext)];
+		}
+
 		if ($basic[0] > 0) {
 			$props[] = [MediaProperties::KEY_WIDTH, $basic[0]];
 		}
@@ -32,14 +38,5 @@ class ImageAnalyzer extends MediaAnalyzer {
 		$this->addOtherProperty($basic, 'channels', $props);
 		$this->addOtherProperty($basic, 'bits', $props);
 		return $props;
-	}
-
-	private function addOtherProperty(&$values, $key, &$props) {
-		if (isset($values[$key])) {
-			$value = $values[$key];
-			if (Utils::hasStringContent($value)) {
-				$props[] = [MediaProperties::KEY_OTHER, $key . '=' . $value];
-			}
-		}
 	}
 }

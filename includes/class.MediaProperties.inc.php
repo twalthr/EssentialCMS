@@ -42,7 +42,7 @@ abstract class MediaProperties {
 
 	const KEY_POSITION_ALT = 'positionalt';
 
-	const KEY_DEVICE = 'device'; // e.g. camera or scanner information
+	const KEY_DEVICE = 'device'; // e.g. camera (e.g. front camera of iPhone) or scanner information
 
 	const KEY_AUTHOR = 'author';
 
@@ -59,6 +59,18 @@ abstract class MediaProperties {
 	const KEY_PART = 'part'; // starts at 1
 
 	const KEY_PARTS = 'parts';
+
+	const KEY_TEXT_CONTENT = 'textcontent'; // e.g. lyrics or subtitles
+
+	const KEY_LANGUAGE = 'language';
+
+	const KEY_COPYRIGHT = 'copyright';
+
+	const KEY_LINKED = 'linked';
+
+	const KEY_COMMENT = 'comment';
+
+	const KEY_CONTAINED_PERSON = 'contained_person';
 
 	// --------------------------------------------------------------------------------------------
 	// Document and image properties
@@ -108,7 +120,7 @@ abstract class MediaProperties {
 	// Audio and video properties
 	// --------------------------------------------------------------------------------------------
 
-	const KEY_DURATION = 'duration';
+	const KEY_DURATION = 'duration'; // in seconds
 
 	const KEY_AUDIO_CODEC = 'audiocodec';
 
@@ -286,6 +298,41 @@ abstract class MediaProperties {
 			'name' => 'PARTS',
 			'min' => 1]);
 
+		$props[KEY_TEXT_CONTENT] = FieldInfo::create([
+			'key' => KEY_TEXT_CONTENT,
+			'types' => FieldInfo::TYPE_PLAIN,
+			'name' => 'TEXT_CONTENT']);
+
+		$props[KEY_LANGUAGE] = FieldInfo::create([
+			'key' => KEY_LANGUAGE,
+			'types' => FieldInfo::TYPE_PLAIN,
+			'name' => 'LANGUAGE',
+			'max' => 256]);
+
+		$props[KEY_COPYRIGHT] = FieldInfo::create([
+			'key' => KEY_COPYRIGHT,
+			'types' => FieldInfo::TYPE_PLAIN,
+			'name' => 'COPYRIGHT']);
+
+		$props[KEY_LINKED] = FieldInfo::create([
+			'key' => KEY_LINKED,
+			'types' => FieldInfo::TYPE_PLAIN,
+			'name' => 'LINKED',
+			'max' => 2048,
+			'array' => true]);
+
+		$props[KEY_COMMENT] = FieldInfo::create([
+			'key' => KEY_COMMENT,
+			'types' => FieldInfo::TYPE_PLAIN,
+			'name' => 'COMMENT']);
+
+		$props[KEY_CONTAINED_PERSON] = FieldInfo::create([
+			'key' => KEY_CONTAINED_PERSON,
+			'types' => FieldInfo::TYPE_PLAIN,
+			'name' => 'CONTAINED_PERSON',
+			'max' => 256,
+			'array' => true]);
+
 		$props[KEY_RESOLUTION] = FieldInfo::create([
 			'key' => KEY_RESOLUTION,
 			'types' => FieldInfo::TYPE_INT,
@@ -364,7 +411,7 @@ abstract class MediaProperties {
 			'key' => KEY_HEADING,
 			'types' => FieldInfo::TYPE_PLAIN,
 			'name' => 'HEADING',
-			'max' => 256,
+			'max' => 512,
 			'array' => true]);
 
 		$props[KEY_DURATION] = FieldInfo::create([
@@ -422,12 +469,7 @@ abstract class MediaProperties {
 	}
 
 	// general
-	const FIELD_COPYRIGHT = 'COPYRIGHT';
 	const FIELD_RATING = 'RATING';
-	const FIELD_COMMENT = 'COMMENT';
-	const FIELD_LINKED = 'LINKED';
-	const FIELD_CONTAINED_PERSON = 'CONTAINED_PERSON'; // e.g. actors or people in image
-	const FIELD_ORDER = 'ORDER'; // e.g. for songs
 
 	// video and audio
 	const FIELD_VIDEO_TYPE = 'VIDEO_TYPE';
@@ -438,11 +480,8 @@ abstract class MediaProperties {
 	const VALUE_AUDIO_TYPE_SONG = 'SONG';
 	const VALUE_AUDIO_TYPE_BOOK = 'BOOK';
 	const VALUE_AUDIO_TYPE_AUDIO = 'AUDIO';
-	const FIELD_YEAR = 'YEAR';
-	const FIELD_LANGUAGE = 'LANGUAGE';
 	const FIELD_SUBTITLE_LANGUAGE = 'SUBTITLE_LANGUAGE';
 	const FIELD_AUDIO_LANGUAGE = 'AUDIO_LANGUAGE';
-	const FIELD_TEXT_CONTENT = 'TEXT_CONTENT'; // e.g. lyrics or subtitles
 
 	// documents, images and code
 	const FIELD_API = 'API'; // e.g. classes and methods

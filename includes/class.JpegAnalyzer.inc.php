@@ -114,35 +114,6 @@ class JpegAnalyzer extends MediaAnalyzer {
 		return $props;
 	}
 
-	private function addOtherProperty(&$values, $key, &$props) {
-		if (isset($values[$key])) {
-			$value = $this->stringifyArray($values[$key]);
-			if (Utils::hasStringContent($value)) {
-				$props[] = [MediaProperties::KEY_OTHER, $key . '=' . $value];
-			}
-		}
-	}
-
-	private function addDateTime(&$values, $key, $propsKey, &$props) {
-		if (isset($values[$key]) && Utils::hasStringContent($values[$key])) {
-			$parsed = date_parse($values[$key]);
-			if ($parsed !== false &&
-					$parsed['warning_count'] === 0 &&
-					$parsed['error_count'] === 0 &&
-					$parsed['year'] !== false &&
-					$parsed['month'] !== false &&
-					$parsed['day'] !== false &&
-					$parsed['hour'] !== false &&
-					$parsed['minute'] !== false &&
-					$parsed['second'] !== false) {
-				$props[] = [$propsKey, $parsed['year'] . '-' . $parsed['month'] . '-' . $parsed['day'] . ' ' .
-					$parsed['hour'] . ':' . $parsed['minute'] . ':' . $parsed['second']];
-				return true;
-			}
-		}
-		return false;
-	}
-
 	// convert GPS coordinates
 	// source: http://stackoverflow.com/a/2572991
 	private function getGps($exifCoord, $hemi) {
@@ -167,22 +138,5 @@ class JpegAnalyzer extends MediaAnalyzer {
 		}
 
 		return floatval($parts[0]) / floatval($parts[1]);
-	}
-
-	private function stringifyArray($array) {
-		$result = '';
-		if (is_array($array)) {
-			$result .= '[';
-			foreach ($array as $key => $value) {
-				$result .= $key . '=' . $this->stringifyArray($value) . ', ';
-			}
-			$result = rtrim($result, ', ');
-			$result .= ']';
-		} else {
-			// remove illegal characters
-			// source: http://stackoverflow.com/a/1176923
-			$result .= preg_replace('/[\x00-\x1F\x7F]/u', '', $array);
-		}
-		return $result;
 	}
 }

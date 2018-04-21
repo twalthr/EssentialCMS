@@ -42,7 +42,7 @@ class MediaAnalyzerHub {
 		// extract properties
 		$properties = [];
 		foreach ($matchingAnalyzers as $analyzer) {
-			$properties = array_merge($analyzer->extractProperties($rawPath, $ext));
+			$properties = array_merge($properties, $analyzer->extractProperties($rawPath, $ext));
 		}
 
 		// filter empty properties
@@ -56,6 +56,8 @@ class MediaAnalyzerHub {
 		// remove duplicate properties
 
 		// check content of properties
+
+		// merge other properties and array values
 
 		echo var_dump($properties);
 		die();

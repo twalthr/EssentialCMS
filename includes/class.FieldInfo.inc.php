@@ -200,6 +200,25 @@ class FieldInfo {
 		}
 	}
 
+	// tries to make content valid e.g. for generated content
+	public function normalize($typeAndContent, $unique = false) {
+		if ($this->isArray()) {
+			
+		}
+		switch ($type) {
+			case FieldInfo::TYPE_PLAIN:
+			case FieldInfo::TYPE_HTML:
+			case FieldInfo::TYPE_MARKDOWN:
+				// trim strings accordingly
+				$newContent = trim($content);
+				if ($this->isLargeContent())) {
+					$newContent = str_replace(array("\r", "\n"), '', $buffer);
+				}
+				$newContent = substr($newContent, 0, $this->maxContentLength);
+				return $newContent;
+		}
+	}
+
 	// --------------------------------------------------------------------------------------------
 	// Validate field for administration
 	// --------------------------------------------------------------------------------------------

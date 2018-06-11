@@ -29,27 +29,60 @@ class MediaAnalyzerHub {
 		}
 
 		foreach ($this->analyzers as $analyzer) {
-			// check for at least one match
-			if ($analyzer->nameMatches($originalFileName) ||
-					$analyzer->extensionMatches($ext) ||
-					$analyzer->magicNumberMatches($magicNumber) ||
-					$analyzer->mimeMatches($mime) ||
-					$analyzer->textContentMatches($content)) {
-				$matchingAnalyzers[] = $analyzer;
+			// continue even with exceptions
+			try {
+				// check for at least one match
+				if ($analyzer->nameMatches($originalFileName) ||
+						$analyzer->extensionMatches($ext) ||
+						$analyzer->magicNumberMatches($magicNumber) ||
+						$analyzer->mimeMatches($mime) ||
+						$analyzer->textContentMatches($content)) {
+					$matchingAnalyzers[] = $analyzer;
+				}
+			} catch (Exception $e) {
+				logWarning('Analyzer "match" step has a bug.', $e);
 			}
 		}
 
 		// extract properties
 		$properties = [];
 		foreach ($matchingAnalyzers as $analyzer) {
-			$properties = array_merge($properties, $analyzer->extractProperties($rawPath, $ext));
+			// continue even with exceptions
+			try {
+				$properties = array_merge($properties, $analyzer->extractProperties($rawPath, $ext));
+			} catch (Exception $e) {
+				logWarning('Analyzer "extract" step has a bug.', $e);
+			}
 		}
 
-		// filter empty properties
+		$fieldInfo = MediaProperties::getFieldInfo();
 
-		// trim array elements and make arrays unique
+		$normalizedProperties = [];
+		foreach ($properties as $kv) {
+			$key = $kv[0];
+			$value = $kv[1];
+			$field = $fieldInfo[$key];
 
-		// substr strings accordinly
+			// filter empty properties
+			if (!Utils::hasStringContent($value)) {
+				continue;
+			}
+
+			$allowedTypes = $field->getAllowedTypesArray();
+
+			// trim strings accordingly
+			if (in_array(FieldInfo::TYPE_PLAIN, $allowedTypes)) {
+
+			}
+
+			// trim array elements and make arrays unique
+		}
+
+		
+
+		
+
+		
 
 		// remove control characters and escape
 

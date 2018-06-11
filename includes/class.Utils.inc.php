@@ -418,6 +418,10 @@ abstract class Utils {
 		});
 		return $array[0];
 	}
+
+	public static function nestedUnique($array) {
+		return array_map('unserialize', array_unique(array_map('serialize', $array)));
+	}
 }
 
 ?>

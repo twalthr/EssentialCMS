@@ -2,6 +2,9 @@
 
 abstract class MediaProperties {
 
+	// Note: All property fields should only have one type in order to perform 
+	// normalization after analyzation.
+
 	// --------------------------------------------------------------------------------------------
 	// General properties
 	// --------------------------------------------------------------------------------------------
@@ -272,6 +275,7 @@ abstract class MediaProperties {
 		$props[KEY_DESCRIPTION] = FieldInfo::create([
 			'key' => KEY_DESCRIPTION,
 			'types' => FieldInfo::TYPE_PLAIN,
+			'large' => true,
 			'name' => 'DESCRIPTION']);
 
 		$props[KEY_REVISION] = FieldInfo::create([
@@ -301,6 +305,7 @@ abstract class MediaProperties {
 		$props[KEY_TEXT_CONTENT] = FieldInfo::create([
 			'key' => KEY_TEXT_CONTENT,
 			'types' => FieldInfo::TYPE_PLAIN,
+			'large' => true,
 			'name' => 'TEXT_CONTENT']);
 
 		$props[KEY_LANGUAGE] = FieldInfo::create([
@@ -312,6 +317,7 @@ abstract class MediaProperties {
 		$props[KEY_COPYRIGHT] = FieldInfo::create([
 			'key' => KEY_COPYRIGHT,
 			'types' => FieldInfo::TYPE_PLAIN,
+			'large' => true,
 			'name' => 'COPYRIGHT']);
 
 		$props[KEY_LINKED] = FieldInfo::create([
@@ -324,6 +330,7 @@ abstract class MediaProperties {
 		$props[KEY_COMMENT] = FieldInfo::create([
 			'key' => KEY_COMMENT,
 			'types' => FieldInfo::TYPE_PLAIN,
+			'large' => true,
 			'name' => 'COMMENT']);
 
 		$props[KEY_CONTAINED_PERSON] = FieldInfo::create([
@@ -466,6 +473,8 @@ abstract class MediaProperties {
 			'types' => FieldInfo::TYPE_PLAIN,
 			'name' => 'OTHER',
 			'array' => true]);
+
+		return $props;
 	}
 
 	// general

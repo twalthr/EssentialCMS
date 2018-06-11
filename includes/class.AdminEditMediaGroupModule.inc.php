@@ -65,7 +65,8 @@ class AdminEditMediaGroupModule extends BasicModule {
 		}
 
 		// show success message for newly created media group
-		if (!isset($this->state) && count($parameters) > 1 && $parameters[1] === '.success') {
+		if (!isset($this->state) && isset($parameters) && count($parameters) > 1 &&
+				$parameters[1] === '.success') {
 			$this->state = true;
 			$this->message = 'MEDIA_GROUP_CREATED';
 		}
@@ -344,7 +345,7 @@ class AdminEditMediaGroupModule extends BasicModule {
 
 			case 'upload':
 				$mid = null;
-				if (!array_key_exists('file', $_FILES) || count($_FILES['file']['tmp_name']) <= 0) {
+				if (!isset($_FILES['file']['tmp_name']) || strlen($_FILES['file']['tmp_name']) <= 0) {
 					$mid = 'PARAMETERS_INVALID';
 				} else {
 					$mid = $this->mediaStore->storeTempMedia(

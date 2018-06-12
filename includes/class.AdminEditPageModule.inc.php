@@ -421,12 +421,14 @@ class AdminEditPageModule extends BasicModule {
 
 	private function printModuleListAsSelect($section) {
 		echo '<select name="operationTarget" class="hidden moduleTarget">';
-		$i = 0;
-		foreach ($this->modulesBySection[$section] as $module) {
-			echo '<option value="' . $i . '">';
-			echo Utils::escapeString(RichModule::getLocalizedModuleInfo($module['definitionId'])['name']);
-			echo '</option>';
-			$i++;
+		if (array_key_exists($section, $this->modulesBySection)) {
+			$i = 0;
+			foreach ($this->modulesBySection[$section] as $module) {
+				echo '<option value="' . $i . '">';
+				echo Utils::escapeString(RichModule::getLocalizedModuleInfo($module['definitionId'])['name']);
+				echo '</option>';
+				$i++;
+			}
 		}
 		echo '</select>';
 	}

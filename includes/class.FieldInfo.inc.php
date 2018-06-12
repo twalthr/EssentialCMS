@@ -18,7 +18,7 @@ class FieldInfo {
 	const TYPE_PAGE = 4096;
 	const TYPE_ID = 8192;
 	const TYPE_EMAIL = 16384;
-	const TYPE_LOCALE = 32768;
+	const TYPE_LOCALE = 32768; // e.g. de-DE, de, deu, ger
 	const TYPE_DATE_TIME = 65536;
 	const TYPE_FLOAT = 131072;
 	const TYPE_DURATION = 262144; // in seconds with microseconds (double)
@@ -29,25 +29,25 @@ class FieldInfo {
 	private $array;
 	private $required;
 	private $largeContent;
-	private $minContentLength;
-	private $maxContentLength;
+	private $minContentLength; // multibyte character length or maximum value
+	private $maxContentLength; // multibyte character length or minimum value
 	private $additionalNames; // e.g. for type boolean = checkbox string, for type enum = values
 	private $defaultType;
 	private $defaultContent;
 
 	public static function create($array) {
 		return new FieldInfo(
-			array_key_exists('key') ? $array['key'] : null,
-			array_key_exists('types') ? $array['types'] : null,
-			array_key_exists('name') ? $array['name'] : null,
-			array_key_exists('array') ? $array['array'] : null,
-			array_key_exists('required') ? $array['required'] : null,
-			array_key_exists('large') ? $array['large'] : null,
-			array_key_exists('min') ? $array['min'] : null,
-			array_key_exists('max') ? $array['max'] : null,
-			array_key_exists('values') ? $array['values'] : null,
-			array_key_exists('defaultType') ? $array['defaultType'] : null,
-			array_key_exists('defaultContent') ? $array['defaultContent'] : null
+			array_key_exists('key', $array) ? $array['key'] : null,
+			array_key_exists('types', $array) ? $array['types'] : null,
+			array_key_exists('name', $array) ? $array['name'] : null,
+			array_key_exists('array', $array) ? $array['array'] : null,
+			array_key_exists('required', $array) ? $array['required'] : null,
+			array_key_exists('large', $array) ? $array['large'] : null,
+			array_key_exists('min', $array) ? $array['min'] : null,
+			array_key_exists('max', $array) ? $array['max'] : null,
+			array_key_exists('values', $array) ? $array['values'] : null,
+			array_key_exists('defaultType', $array) ? $array['defaultType'] : null,
+			array_key_exists('defaultContent', $array) ? $array['defaultContent'] : null
 			);
 	}
 
@@ -200,23 +200,92 @@ class FieldInfo {
 		}
 	}
 
+	// --------------------------------------------------------------------------------------------
+	// Normalization for generated field content
+	// --------------------------------------------------------------------------------------------
+
 	// tries to make content valid e.g. for generated content
 	public function normalize($typeAndContent, $unique = false) {
+		// array
 		if ($this->isArray()) {
-			
-		}
-		switch ($type) {
-			case FieldInfo::TYPE_PLAIN:
-			case FieldInfo::TYPE_HTML:
-			case FieldInfo::TYPE_MARKDOWN:
-				// trim strings accordingly
-				$newContent = trim($content);
-				if ($this->isLargeContent())) {
-					$newContent = str_replace(array("\r", "\n"), '', $buffer);
+			// convert elements of array
+			$newTypeAndContent = [];
+			foreach ($typeAndContent as $element) {
+				$normalized = $this->normalizeElement($element);
+				if (isset($normalized)) {
+					$newTypeAndContent[] = $normalized;
 				}
-				$newContent = substr($newContent, 0, $this->maxContentLength);
-				return $newContent;
+			}
+			// skip empty arrays
+			if (count($newTypeAndContent) === 0) {
+				return null;
+			}
+			// make array elements unique
+			if ($unique === true) {
+				$newTypeAndContent = Utils::arrayNestedUnique($newTypeAndContent);
+			}
+
+			return $newTypeAndContent;
 		}
+		// element
+		return $this->normalizeElement($element);
+	}
+
+	private function normalizeElement($typeAndContent) {
+		$type = $typeAndContent['type'];
+		$content = (string) $typeAndContent['content'];
+		// check for correct type
+		if (!in_array($type, $this->getAllowedTypesArray(), true)) {
+			return null;
+		}
+		// normalize string
+		if ($this->isLargeContent()) {
+			$content = str_replace(array("\r", "\n"), '', $buffer);
+		}
+		$content = preg_replace('/[[:space:][:cntrl:]]+/', ' ', $content);
+		$content = trim($content);
+
+		// perform type specific normalization
+		switch ($type) {
+			case FieldInfo::TYPE_PLAIN: // markdown or html cannot be reduced
+				$contentLength = mb_strlen($content);
+				// enfore maximum length
+				if (isset($this->maxContentLength) && $contentLength > $this->maxContentLength) {
+					$content = mb_substr($content, 0, $this->maxContentLength - 1);
+					$content = $content . '…'; // indicate substring
+				}
+				break;
+			case FieldInfo::TYPE_TAGS:
+				$content = Utils::normalizeTags($content);
+				// enfore maximum length
+				if (isset($this->maxContentLength)) {
+					$split = explode(', ', $content);
+					$content = '';
+					$currentLength = 0;
+					foreach ($split as $tag) {
+						$tagLength = mb_strlen($tag);
+						if ($currentLength + 2 + $tagLength > $this->maxContentLength) {
+							break;
+						}
+						$content = $content . ', ' . $tag;
+						$currentLength += 2 + $tagLength;
+					}
+				}
+				break;
+			default:
+				break; // do nothing
+		}
+
+		// skip empty content
+		if ($content === '') {
+			return null;
+		}
+
+		// perform final validation
+		if ($this->isValidContentForType($type, $content) === true) {
+			return $content;
+		}
+		return null;
 	}
 
 	// --------------------------------------------------------------------------------------------
@@ -312,7 +381,7 @@ class FieldInfo {
 
 	private function isValidContentForType($type, $trimmedContent) {
 		// check value
-		$length = strlen($trimmedContent);
+		$length = mb_strlen($trimmedContent);
 		switch ($type) {
 			case FieldInfo::TYPE_PLAIN:
 			case FieldInfo::TYPE_HTML:
@@ -444,7 +513,7 @@ class FieldInfo {
 			$postTypeAndContent['content'] = $this->transformContentForType(
 				$postTypeAndContent['type'],
 				$postTypeAndContent['content']);
-			return [ $postTypeAndContent ];
+			return [$postTypeAndContent];
 		}
 	}
 

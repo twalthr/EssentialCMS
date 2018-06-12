@@ -40,12 +40,12 @@ $CMS_URL = 'https://github.com/twalthr/EssentialCMS';
 
 // set default error message
 function logInfo($message, $e = null) {
-	log(false, $message, $e);
+	logEvent(false, $message, $e);
 }
 function logWarning($message, $e = null) {
-	log(true, $message, $e);
+	logEvent(true, $message, $e);
 }
-function log($warning, $message, $e = null) {
+function logEvent($warning, $message, $e = null) {
 	global $DEBUG, $TR;
 	if ($DEBUG && $warning) {
 		die("Warning: " . $message . "\n" . $e);
@@ -55,7 +55,7 @@ function log($warning, $message, $e = null) {
 	}
 	// in the future this might be written to a file
 	else {
-		echo $TR->translate('INTERNAL_SERVER_ERROR'));
+		echo $TR->translate('INTERNAL_SERVER_ERROR');
 	}
 }
 

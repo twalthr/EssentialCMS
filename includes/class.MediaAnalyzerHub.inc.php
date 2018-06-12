@@ -55,47 +55,52 @@ class MediaAnalyzerHub {
 			}
 		}
 
+		// reverse extracted properties because latter ones have priority if valid
+		$properties = array_reverse($properties);
+
+		// get all fields information
 		$fieldInfo = MediaProperties::getFieldInfo();
 
-		$normalizedProperties = [];
+		$validProperties = [];
 		foreach ($properties as $kv) {
 			$key = $kv[0];
 			$value = $kv[1];
 			$field = $fieldInfo[$key];
+			// media properties must only have one type
+			$type = $field->getAllowedTypesArray()[0];
 
-			// filter empty properties
-			if (!Utils::hasStringContent($value)) {
+			// skip duplicate properties
+			if (array_key_exists($key, $seenProperties)) {
 				continue;
 			}
 
-			$allowedTypes = $field->getAllowedTypesArray();
-
-			// trim strings accordingly
-			if (in_array(FieldInfo::TYPE_PLAIN, $allowedTypes)) {
-
+			// convert to type and content format
+			$typeAndContent = [];
+			// convert array
+			if ($field->isArray() && is_array($value)) {
+				foreach ($value as $element) {
+					$typeAndContent[] = ['type' => $type, 'content' => $element];
+				}
+			}
+			// skip unsupported arrays
+			else if (is_array($value)) {
+				continue;
+			}
+			// convert singleton
+			else {
+				$typeAndContent[] = ['type' => $type, 'content' => $value];
 			}
 
-			// trim array elements and make arrays unique
+			$normalized = $field->normalize($typeAndContent, true);
+			// skip invalid contents
+			if ($normalized === null) {
+				continue;
+			}
+			$validProperties[$key] = $normalized;
 		}
 
-		
-
-		
-
-		
-
-		// remove control characters and escape
-
-		// remove duplicate properties
-
-		// check content of properties
-
-		// merge other properties and array values
-
-		echo var_dump($properties);
+		echo var_dump($validProperties);
 		die();
-
-		// make properties unique
 
 		// create thumbnails
 	}

@@ -29,8 +29,8 @@ class FieldInfo {
 	private $array;
 	private $required;
 	private $largeContent;
-	private $minContentLength; // multibyte character length or maximum value
-	private $maxContentLength; // multibyte character length or minimum value
+	private $minContentLength; // multibyte character length or maximum value/'2017-12-12 13:20:11'
+	private $maxContentLength; // multibyte character length or minimum value/'2017-12-12 13:20:11'
 	private $additionalNames; // e.g. for type boolean = checkbox string, for type enum = values
 	private $defaultType;
 	private $defaultContent;
@@ -93,13 +93,42 @@ class FieldInfo {
 			throw new Exception("Required can only be boolean or null.");
 		}
 		if (isset($this->largeContent) && !is_bool($this->largeContent)) {
-			throw new Exception("LargeContent can only be boolean or null.");
+			throw new Exception("Large content can only be boolean or null.");
 		}
-		if (isset($this->minContentLength) && !is_int($this->minContentLength)) {
-			throw new Exception("MinContentLength can only be int or null.");
+		if ($this->allowedTypes & FieldInfo::TYPE_DATE_TIME) {
+			// format is '2017-12-12 13:20:11'
+			if (isset($this->minContentLength) && !is_string($this->minContentLength)) {
+				throw new Exception("Minimum content length can only be string or null.");
+			}
+			if (isset($this->maxContentLength) && !is_string($this->maxContentLength)) {
+				throw new Exception("Maximum content length can only be string or null.");
+			}
+		} else {
+			if (isset($this->minContentLength) && !is_int($this->minContentLength)) {
+				throw new Exception("Minimum content length can only be int or null.");
+			}
+			if (isset($this->maxContentLength) && !is_int($this->maxContentLength)) {
+				throw new Exception("Maximum content length can only be int or null.");
+			}
 		}
-		if (isset($this->maxContentLength) && !is_int($this->maxContentLength)) {
-			throw new Exception("MaxContentLength can only be int or null.");
+		if (isset($this->defaultType) && !($this->allowedTypes & $this->defaultType)) {
+			throw new Exception("Default type must be in allowed types.");
+		}
+		if ($this->allowedTypes & FieldInfo::TYPE_ENUM) {
+			if (!isset($this->additionalNames) || !is_array($this->additionalNames) ||
+					empty($this->additionalNames)) {
+				throw new Exception("Enum must declare possible values.");
+			}
+			if (!$this->isArray() && isset($this->defaultContent) &&
+					!array_key_exists($this->defaultContent, $this->additionalNames)) {
+				throw new Exception("Invalid enum default value.");
+			}
+		}
+		if ($this->isArray()) {
+			if ((isset($this->defaultType) && !is_array($this->defaultType)) ||
+					(isset($this->defaultContent) && !is_array($this->defaultContent))) {
+				throw new Exception("Default type and content needs to be an array for array types.");
+			}
 		}
 	}
 
@@ -428,11 +457,11 @@ class FieldInfo {
 					return 'FIELD_IS_REQUIRED';
 				}
 				// check min length
-				if ($this->minContentLength !== null && $length < $this->minContentLength) {
+				if (isset($this->minContentLength) && $length < $this->minContentLength) {
 					return 'FIELD_TOO_SHORT';
 				}
 				// check max length
-				if ($this->maxContentLength !== null && $length > $this->maxContentLength) {
+				if (isset($this->maxContentLength) && $length > $this->maxContentLength) {
 					return 'FIELD_TOO_LONG';
 				}
 				// TODO more validation
@@ -454,11 +483,11 @@ class FieldInfo {
 					return 'FIELD_IS_REQUIRED';
 				}
 				// check min length
-				if ($this->minContentLength !== null && ((int) $trimmedContent) < $this->minContentLength) {
+				if (isset($this->minContentLength) && ((int) $trimmedContent) < $this->minContentLength) {
 					return 'FIELD_TOO_SMALL';
 				}
 				// check max length
-				if ($this->maxContentLength !== null && ((int) $trimmedContent) > $this->maxContentLength) {
+				if (isset($this->maxContentLength) && ((int) $trimmedContent) > $this->maxContentLength) {
 					return 'FIELD_TOO_LARGE';
 				}
 				break;
@@ -466,7 +495,14 @@ class FieldInfo {
 				return 'NOT_YET_IMPLEMENTED';
 				break;
 			case FieldInfo::TYPE_ENUM:
-				return 'NOT_YET_IMPLEMENTED';
+				// check required
+				if ($length === 0 && $this->required === true) {
+					return 'FIELD_IS_REQUIRED';
+				} else {
+					if (!array_key_exists($trimmedContent, $this->additionalNames)) {
+						return 'FIELD_INVALID_TYPE';
+					}
+				}
 				break;
 			case FieldInfo::TYPE_DATE:
 				return 'NOT_YET_IMPLEMENTED';
@@ -567,7 +603,7 @@ class FieldInfo {
 			case FieldInfo::TYPE_LOCALE:
 				break;
 			case FieldInfo::TYPE_DATE_TIME:
-				break;
+				return str_replace('T', ' ', $trimmedContent);
 			case FieldInfo::TYPE_FLOAT:
 				break;
 			case FieldInfo::TYPE_DURATION:
@@ -757,8 +793,10 @@ class FieldInfo {
 	}
 
 	private function printPostField($moduleDefinition, $type, $value, $disabled, $uniqueId) {
-		UiUtils::printHiddenTypeInput($this->generateTypeName($uniqueId) . ($this->isArray() ? '[]' : ''),
-			$type, $disabled);
+		UiUtils::printHiddenTypeInput(
+			$this->generateTypeName($uniqueId) . ($this->isArray() ? '[]' : ''),
+			$type,
+			$disabled);
 		switch ($type) {
 			case FieldInfo::TYPE_PLAIN:
 			case FieldInfo::TYPE_HTML:
@@ -777,10 +815,21 @@ class FieldInfo {
 			case FieldInfo::TYPE_TAGS:
 				break;
 			case FieldInfo::TYPE_INT:
+				UiUtils::printIntInput(
+					$this,
+					$value,
+					$disabled,
+					$uniqueId);
 				break;
 			case FieldInfo::TYPE_BOOLEAN:
 				break;
 			case FieldInfo::TYPE_ENUM:
+				UiUtils::printEnumSelection(
+					$moduleDefinition,
+					$this,
+					$value,
+					$disabled,
+					$uniqueId);
 				break;
 			case FieldInfo::TYPE_DATE:
 				break;
@@ -803,6 +852,11 @@ class FieldInfo {
 			case FieldInfo::TYPE_LOCALE:
 				break;
 			case FieldInfo::TYPE_DATE_TIME:
+				UiUtils::printDateTimeInput(
+					$this,
+					$value,
+					$disabled,
+					$uniqueId);
 				break;
 			case FieldInfo::TYPE_FLOAT:
 				break;

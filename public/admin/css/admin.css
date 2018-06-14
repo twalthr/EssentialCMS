@@ -258,7 +258,8 @@ input[type='submit']:disabled, button:disabled, select:disabled {
 	cursor: default;
 }
 
-input[type='text'], input[type='password'], input[type='email'], textarea {
+input[type='text'], input[type='password'], input[type='email'], input[type='number'],
+		input[type='datetime-local'], textarea {
 	background-color: #FFFFFF;
 	line-height: 23px;
 	color: #494949;
@@ -270,12 +271,14 @@ input[type='text'], input[type='password'], input[type='email'], textarea {
 	box-sizing: border-box;
 }
 
-input[type='text']:disabled, input[type='password']:disabled, input[type='email']:disabled, textarea:disabled {
+input[type='text']:disabled, input[type='password']:disabled, input[type='email']:disabled,
+		input[type='number']:disabled, input[type='datetime-local']:disabled, textarea:disabled {
 	background-color: #EAEAEA;
 	border: 1px solid #DCDCDC;
 }
 
-input[type='text'].large, input[type='password'].large, input[type='email'].large, textarea.large {
+input[type='text'].large, input[type='password'].large, input[type='email'].large,
+		input[type='number'].large, input[type='datetime-local'].large, textarea.large {
 	width: 100%;
 } 
 
@@ -285,12 +288,14 @@ input::after {
 	visibility: hidden;
 }
 
-input[type='text']:hover, input[type='password']:hover, input[type='email']:hover, select:hover,
+input[type='text']:hover, input[type='password']:hover, input[type='email']:hover,
+		input[type='number']:hover, input[type='datetime-local']:hover, select:hover,
 		textarea:hover {
 	border: 1px solid #B5B4B4;
 }
 
-input[type='text']:focus, input[type='password']:focus, input[type='email']:focus, select:focus,
+input[type='text']:focus, input[type='password']:focus, input[type='email']:focus,
+		input[type='number']:focus, input[type='datetime-local']:focus, select:focus,
 		textarea:focus {
 	border: 1px solid #B5B4B4;
 	color: #000000;
@@ -305,6 +310,12 @@ select {
 	border: 1px solid #DCDCDC;
 	margin-bottom: 20px;
 	width: 200px;
+	font-weight: 600;
+	color: #2A2A2A;
+}
+
+select:hover {
+	cursor: pointer;
 }
 
 label {

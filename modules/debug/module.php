@@ -82,6 +82,66 @@ class DebugModule extends RichModule {
 			'FIELD_6' // name
 			);
 
+		// enum
+		$config[] = new FieldInfo(
+			'field7', // key
+			FieldInfo::TYPE_ENUM | FieldInfo::TYPE_PLAIN, // allowedTypes
+			'FIELD_7', // name
+			true, // array
+			true, // required
+			null, // largeContent
+			null, // minContentLength
+			null, // maxContentLength
+			['OTHER' => 'MY_OTHER_FIELD', 'APPLICATION' => 'MY_APPLICATION_FIELD'], // additionalNames
+			[FieldInfo::TYPE_PLAIN, FieldInfo::TYPE_ENUM], // defaultType
+			['hello', 'OTHER'] // defaultContent
+			);
+
+		// enum
+		$config[] = new FieldInfo(
+			'field7', // key
+			FieldInfo::TYPE_ENUM, // allowedTypes
+			'FIELD_7', // name
+			false, // array
+			true, // required
+			null, // largeContent
+			null, // minContentLength
+			null, // maxContentLength
+			['OTHER' => 'MY_OTHER_FIELD', 'APPLICATION' => 'MY_APPLICATION_FIELD'], // additionalNames
+			FieldInfo::TYPE_ENUM, // defaultType
+			'APPLICATION' // defaultContent
+			);
+
+		// int
+		$config[] = new FieldInfo(
+			'field8', // key
+			FieldInfo::TYPE_INT, // allowedTypes
+			'FIELD_8', // name
+			false, // array
+			true, // required
+			null, // largeContent
+			3, // minContentLength
+			10, // maxContentLength
+			null, // additionalNames
+			FieldInfo::TYPE_INT, // defaultType
+			7 // defaultContent
+			);
+
+		// date time
+		$config[] = new FieldInfo(
+			'field9', // key
+			FieldInfo::TYPE_DATE_TIME, // allowedTypes
+			'FIELD_9', // name
+			false, // array
+			true, // required
+			null, // largeContent
+			'2018-01-01 12:30:00', // minContentLength
+			'2018-06-01 12:30:00', // maxContentLength
+			null, // additionalNames
+			FieldInfo::TYPE_DATE_TIME, // defaultType
+			'2018-03-01 12:30:00' // defaultContent
+			);
+
 		return $config;
 	}
 

@@ -142,11 +142,13 @@ class OfficeAnalyzer extends DocumentAnalyzer {
 	}
 
 	public function loadXml($src, $path) {
-		return Utils::ignoreErrors(function() use ($src, $path){
+		try {
 			return simplexml_load_file(
 				'zip://' . $src . '#' . $path,
 				'SimpleXMLElement',
 				LIBXML_NOWARNING);
-		});
+		} catch (Exception $e) {
+			return false;
+		}
 	}
 }

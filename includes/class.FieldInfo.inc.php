@@ -228,21 +228,24 @@ class FieldInfo {
 			return $newTypeAndContent;
 		}
 		// element
-		return $this->normalizeElement($element);
+		return $this->normalizeElement($typeAndContent);
 	}
 
 	private function normalizeElement($typeAndContent) {
 		$type = $typeAndContent['type'];
 		$content = (string) $typeAndContent['content'];
+		$content = mb_convert_encoding($content, 'UTF-8');
 		// check for correct type
 		if (!in_array($type, $this->getAllowedTypesArray(), true)) {
 			return null;
 		}
 		// normalize string
 		if ($this->isLargeContent()) {
-			$content = str_replace(array("\r", "\n"), '', $buffer);
+			$content = str_replace(array("\r", "\n"), '', $content);
 		}
-		$content = preg_replace('/[[:space:][:cntrl:]]+/', ' ', $content);
+		$content = preg_replace('/[[:space:][:cntrl:]]+/u', ' ', $content);
+		// clear strings that only contain punctuation characters
+		$content = preg_replace('/^[[:punct:]]+$/u', '', $content);
 		$content = trim($content);
 
 		// perform type specific normalization
@@ -263,12 +266,26 @@ class FieldInfo {
 					$content = '';
 					$currentLength = 0;
 					foreach ($split as $tag) {
+						// normalize tag
+						// clear strings that only contain punctuation characters
+						$tag = preg_replace('/^[[:punct:]]+$/u', '', $tag);
+						$tag = trim($tag);
+
 						$tagLength = mb_strlen($tag);
-						if ($currentLength + 2 + $tagLength > $this->maxContentLength) {
-							break;
+						// skip empty tags
+						if ($tagLength === 0) {
+							continue;
 						}
-						$content = $content . ', ' . $tag;
-						$currentLength += 2 + $tagLength;
+						// reconstruct content
+						if ($currentLength === 0 && $tagLength <= $this->maxContentLength) {
+							$content = $tag;
+							$currentLength += $tagLength;
+						} else if ($currentLength + 2 + $tagLength <= $this->maxContentLength) {
+							$content = $content . ', ' . $tag;
+							$currentLength += 2 + $tagLength;
+						} else {
+							break; // max length reached
+						}
 					}
 				}
 				break;

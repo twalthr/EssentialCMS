@@ -90,15 +90,10 @@ class DocxAnalyzer extends OfficeAnalyzer {
 						foreach ($texts as $text) {
 							$headerText = $headerText . $text->textContent;
 						}
-						// normalize title
-						if (Utils::hasStringContent($headerText)) {
-							$titles[] = trim(preg_replace('/[[:space:][:cntrl:]]+/', ' ', $headerText));
-						}
+						$titles[] = $headerText;
 					}
 				}
 			}
-			// normalize titles
-			$titles = array_unique($titles);
 			if (sizeof($titles) > 0) {
 				$props[] = [MediaProperties::KEY_HEADING, $titles];
 			}

@@ -89,9 +89,7 @@ abstract class MediaAnalyzer {
 		} else if (is_bool($array)) {
 			$result .= ($array) ? 'true' : 'false';
 		} else {
-			// remove illegal characters
-			// source: http://stackoverflow.com/a/1176923
-			$result .= preg_replace('/[\x00-\x1F\x7F]/u', '', (string) $array);
+			$result .= (string) $array;
 		}
 		return $result;
 	}

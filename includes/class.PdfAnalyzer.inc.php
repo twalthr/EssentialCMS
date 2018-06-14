@@ -48,7 +48,10 @@ class PdfAnalyzer extends DocumentAnalyzer {
 		$props[] = [MediaProperties::KEY_TYPE, 'PDF'];
 		$props[] = [MediaProperties::KEY_MIME_TYPE, 'application/pdf'];
 
-		$props[] = [MediaProperties::KEY_AUTHOR, array_unique(explode(';', $pdf->Author))];
+		// skip PDF authors created by Office
+		if (strpos($pdf->Author, 'Microsoft') === false) {
+			$props[] = [MediaProperties::KEY_AUTHOR, explode(';', $pdf->Author)];
+		}
 
 		$created = strtotime($pdf->CreationDate);
 		if ($created !== false && $created > 0) {

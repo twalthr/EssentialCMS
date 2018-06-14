@@ -2,15 +2,6 @@
 
 abstract class Utils {
 
-	public static function ignoreErrors($callable) {
-		set_error_handler(function() {
-			// do nothing
-		});
-		$returnValue = $callable();
-		restore_error_handler();
-		return $returnValue;
-	}
-
 	public static function requireLibrary($name, $file) {
 		global $ROOT_DIRECTORY;
 		$oldDir = getcwd();
@@ -420,9 +411,9 @@ abstract class Utils {
 	}
 
 	public static function arrayNestedUnique($array) {
-		$serialized = array_map('serialize', $input);
+		$serialized = array_map('serialize', $array);
 		$unique = array_unique($serialized);
-		return array_intersect_key($input, $unique);
+		return array_intersect_key($array, $unique);
 	}
 }
 

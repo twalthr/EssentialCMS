@@ -5,8 +5,8 @@ class MediaAnalyzerHub {
 	private $analyzers = [];
 
 	public function __construct() {
+		$this->analyzers[] = new ImageAnalyzer([]); // generic analyzers first!
 		$this->analyzers[] = new JpegAnalyzer([]);
-		$this->analyzers[] = new ImageAnalyzer([]);
 		$this->analyzers[] = new PdfAnalyzer([]);
 		$this->analyzers[] = new PptxAnalyzer([]);
 		$this->analyzers[] = new DocxAnalyzer([]);
@@ -69,26 +69,31 @@ class MediaAnalyzerHub {
 			// media properties must only have one type
 			$type = $field->getAllowedTypesArray()[0];
 
-			// skip duplicate properties
-			if (array_key_exists($key, $seenProperties)) {
+			// skip duplicate properties but merge 'other' properties
+			if ($key !== MediaProperties::KEY_OTHER && array_key_exists($key, $validProperties)) {
 				continue;
 			}
 
 			// convert to type and content format
-			$typeAndContent = [];
+			$typeAndContent = null;
 			// convert array
 			if ($field->isArray() && is_array($value)) {
+				$typeAndContent = [];
 				foreach ($value as $element) {
 					$typeAndContent[] = ['type' => $type, 'content' => $element];
 				}
+			}
+			// convert singleton
+			else if ($field->isArray()) {
+				$typeAndContent = [['type' => $type, 'content' => $value]];
 			}
 			// skip unsupported arrays
 			else if (is_array($value)) {
 				continue;
 			}
-			// convert singleton
+			// convert non-array
 			else {
-				$typeAndContent[] = ['type' => $type, 'content' => $value];
+				$typeAndContent = ['type' => $type, 'content' => $value];
 			}
 
 			$normalized = $field->normalize($typeAndContent, true);
@@ -96,7 +101,13 @@ class MediaAnalyzerHub {
 			if ($normalized === null) {
 				continue;
 			}
-			$validProperties[$key] = $normalized;
+
+			// merge 'other' properties
+			if ($key === MediaProperties::KEY_OTHER && array_key_exists($key, $validProperties)) {
+				$validProperties[$key] = array_merge($normalized, $validProperties[$key]);
+			} else {
+				$validProperties[$key] = $normalized;
+			}
 		}
 
 		echo var_dump($validProperties);

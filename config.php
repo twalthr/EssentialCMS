@@ -62,6 +62,9 @@ function logEvent($warning, $message, $e = null) {
 // convert errors into exceptions
 function globalErrorHandler($errno, $errstr, $errfile, $errline) {
 	global $TR;
+	if (error_reporting() === 0) {
+		return;
+	}
 	$message = $TR->translate('INTERNAL_SERVER_ERROR') . "\n" .
 		'Code: ' . $errno . "\n" .
 		'Message: ' . $errstr . "\n" .

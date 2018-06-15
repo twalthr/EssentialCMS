@@ -32,13 +32,11 @@ abstract class BasicModule {
 	}
 
 	public function text($id, ...$args) {
-		global $TR;
-		echo $TR->translate($id, ...$args);
+		echo Translator::get()->translate($id, ...$args);
 	}
 
 	public function textString($id, ...$args) {
-		global $TR;
-		return $TR->translate($id, ...$args);
+		return Translator::get()->translate($id, ...$args);
 	}
 }
 

@@ -33,10 +33,12 @@ spl_autoload_register(function ($class) {
 $INCLUDE_DIRECTORY = $ROOT_DIRECTORY . '/includes';
 
 // constants
-$TR = new Translator($DEFAULT_LANGUAGE, $DEFAULT_COUNTRY, $LANGUAGE_SWITCHING);
 $CMS_VERSION = 1;
 $CMS_FULLNAME = 'EssentialCMS v' . $CMS_VERSION;
 $CMS_URL = 'https://github.com/twalthr/EssentialCMS';
+
+// initialize translator
+Translator::set(new Translator($DEFAULT_LANGUAGE, $DEFAULT_COUNTRY, $LANGUAGE_SWITCHING));
 
 // set default error message
 function logInfo($message, $e = null) {
@@ -46,7 +48,7 @@ function logWarning($message, $e = null) {
 	logEvent(true, $message, $e);
 }
 function logEvent($warning, $message, $e = null) {
-	global $DEBUG, $TR;
+	global $DEBUG;
 	if ($DEBUG && $warning) {
 		die("Warning: " . $message . "\n" . $e);
 	}
@@ -55,17 +57,16 @@ function logEvent($warning, $message, $e = null) {
 	}
 	// in the future this might be written to a file
 	else {
-		echo $TR->translate('INTERNAL_SERVER_ERROR');
+		echo Translator::get()->translate('INTERNAL_SERVER_ERROR');
 	}
 }
 
 // convert errors into exceptions
 function globalErrorHandler($errno, $errstr, $errfile, $errline) {
-	global $TR;
 	if (error_reporting() === 0) {
 		return;
 	}
-	$message = $TR->translate('INTERNAL_SERVER_ERROR') . "\n" .
+	$message = Translator::get()->translate('INTERNAL_SERVER_ERROR') . "\n" .
 		'Code: ' . $errno . "\n" .
 		'Message: ' . $errstr . "\n" .
 		'File: ' . $errfile . "\n" .

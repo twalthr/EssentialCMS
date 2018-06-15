@@ -315,6 +315,7 @@ abstract class Utils {
 		}
 	}
 
+	// modifies keys!
 	public static function sortArray(&$array, $fields) {
 		usort($array,
 			function ($a, $b) use (&$fields) {

@@ -60,7 +60,7 @@ abstract class UiUtils {
 		}
 	}
 
-	public static function printPageSelection($moduleDefinition, $field, $value, $disabled, $uniqueId) {
+	public static function printPageSelection($field, $value, $disabled, $uniqueId) {
 		$postFieldName = $field->generateContentName($uniqueId) . ($field->isArray() ? '[]' : '');
 		echo '<div class="inputWithOption">';
 		echo '	<input type="hidden" name="' . $postFieldName . '" class="pageSelectionId"';
@@ -78,12 +78,12 @@ abstract class UiUtils {
 			echo ' id="' . $postFieldName . '"';
 		}
 		echo '>';
-		$moduleDefinition->text('SELECT');
+		echo Translator::get()->translate('SELECT');
 		echo '	</button>';
 		echo '</div>';
 	}
 
-	public static function printEnumSelection($moduleDefinition, $field, $value, $disabled, $uniqueId) {
+	public static function printEnumSelection($field, $value, $disabled, $uniqueId) {
 		$postFieldName = $field->generateContentName($uniqueId) . ($field->isArray() ? '[]' : '');
 		echo '<select name="' . $postFieldName . '" class="large ' .
 			FieldInfo::translateTypeToString(FieldInfo::TYPE_ENUM) . '"';
@@ -98,7 +98,7 @@ abstract class UiUtils {
 		}
 		echo '>';
 		echo '<option>';
-		$moduleDefinition->text('PLEASE_SELECT');
+		echo Translator::get()->translate('PLEASE_SELECT');
 		echo '</option>';
 		foreach ($field->getAdditionalNames() as $key => $name) {
 			echo '<option value="' . $key . '"';
@@ -106,7 +106,7 @@ abstract class UiUtils {
 				echo ' selected';
 			}
 			echo '>';
-			$moduleDefinition->text($name);
+			echo Translator::get()->translate($name);
 			echo '</option>';
 		}
 		echo '</select>';
@@ -163,6 +163,62 @@ abstract class UiUtils {
 			echo ' id="' . $postFieldName . '"';
 		}
 		echo ' />';
+	}
+
+	public static function printFloatInput($field, $value, $disabled, $uniqueId) {
+		$postFieldName = $field->generateContentName($uniqueId) . ($field->isArray() ? '[]' : '');
+		echo '<input name="' . $postFieldName . '" type="text" '.
+			'pattern="[+-]?[0-9]+([\.,][0-9]+)?" title="42.01   42,01   -42" class="large ' .
+			FieldInfo::translateTypeToString(FieldInfo::TYPE_FLOAT) . '"';
+		echo ' value="';
+		echo Utils::escapeString($value);
+		echo '"';
+		if ($field->isRequired() === true) {
+			echo ' required';
+		}
+		if ($disabled === true) {
+			echo ' disabled';
+		}
+		if (!$field->isArray()) {
+			echo ' id="' . $postFieldName . '"';
+		}
+		echo ' />';
+	}
+
+	public static function printLocaleSelection($field, $value, $disabled, $uniqueId) {
+		$postFieldName = $field->generateContentName($uniqueId) . ($field->isArray() ? '[]' : '');
+		echo '<select name="' . $postFieldName . '" class="large ' .
+			FieldInfo::translateTypeToString(FieldInfo::TYPE_LOCALE) . '"';
+		if (!$field->isArray()) {
+			echo ' id="' . $postFieldName . '"';
+		}
+		if ($field->isRequired() === true) {
+			echo ' required';
+		}
+		if ($disabled === true) {
+			echo ' disabled';
+		}
+		echo '>';
+		echo '<option>';
+		echo Translator::get()->translate('PLEASE_SELECT');
+		echo '</option>';
+		$locales = Translator::get()->translateLocaleList(true);
+		// modifies keys
+		Utils::sortArray($locales, ['translated', 'original']);
+		foreach ($locales as $locale) {
+			echo '<option value="' . $locale['locale'] . '"';
+			if ($locale['locale'] === $value) {
+				echo ' selected';
+			}
+			echo '>';
+			if (isset($locale['original'])) {
+				echo $locale['translated'] . ' [' . $locale['original'] .']';
+			} else {
+				echo $locale['translated'];
+			}
+			echo '</option>';
+		}
+		echo '</select>';
 	}
 
 }

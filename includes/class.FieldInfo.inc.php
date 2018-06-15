@@ -97,10 +97,12 @@ class FieldInfo {
 		}
 		if ($this->allowedTypes & FieldInfo::TYPE_DATE_TIME) {
 			// format is '2017-12-12 13:20:11'
-			if (isset($this->minContentLength) && !is_string($this->minContentLength)) {
+			if (isset($this->minContentLength) && (!is_string($this->minContentLength) ||
+					strtotime($this->minContentLength) === false)) {
 				throw new Exception("Minimum content length can only be string or null.");
 			}
-			if (isset($this->maxContentLength) && !is_string($this->maxContentLength)) {
+			if (isset($this->maxContentLength) && (!is_string($this->maxContentLength) ||
+					strtotime($this->minContentLength) === false)) {
 				throw new Exception("Maximum content length can only be string or null.");
 			}
 		} else {
@@ -318,6 +320,16 @@ class FieldInfo {
 					}
 				}
 				break;
+			case FieldInfo::TYPE_LOCALE:
+				$locale = locale_parse($content);
+				if (isset($locale)) {
+					if (isset($locale['language']) && isset($locale['region'])) {
+						$content = $locale['language'] . '_' . $locale['region'];
+					} else if (isset($locale['language'])) {
+						$content = $locale['language'];
+					}
+				}
+				break;
 			default:
 				break; // do nothing
 		}
@@ -432,25 +444,6 @@ class FieldInfo {
 			case FieldInfo::TYPE_PLAIN:
 			case FieldInfo::TYPE_HTML:
 			case FieldInfo::TYPE_MARKDOWN:
-				// check required
-				if ($this->required === true && $length === 0) {
-					return 'FIELD_IS_REQUIRED';
-				}
-				// check min length
-				if ($this->minContentLength !== null && $length < $this->minContentLength) {
-					return 'FIELD_TOO_SHORT';
-				}
-				// check max length
-				if ($this->maxContentLength !== null && $length > $this->maxContentLength) {
-					return 'FIELD_TOO_LONG';
-				}
-				// check largeness
-				if ($this->largeContent !== true 
-						&& !(strpos($trimmedContent, "\r") === false
-								&& strpos($trimmedContent, "\n") === false)) {
-					return 'FIELD_CONTAINS_LINEBREAKS';
-				}
-				break;
 			case FieldInfo::TYPE_TAGS:
 				// check required
 				if ($this->required === true && $length === 0) {
@@ -464,31 +457,31 @@ class FieldInfo {
 				if (isset($this->maxContentLength) && $length > $this->maxContentLength) {
 					return 'FIELD_TOO_LONG';
 				}
-				// TODO more validation
+				// check largeness
+				if ($this->largeContent !== true 
+						&& !(strpos($trimmedContent, "\r") === false
+								&& strpos($trimmedContent, "\n") === false)) {
+					return 'FIELD_CONTAINS_LINEBREAKS';
+				}
 				break;
 			case FieldInfo::TYPE_INT:
 			case FieldInfo::TYPE_PAGE:
 			case FieldInfo::TYPE_IMAGE:
 			case FieldInfo::TYPE_FILE:
-				// check for valid int
-				$validInt = true;
-				if (filter_var($trimmedContent, FILTER_VALIDATE_INT) === false) {
-					$validInt = false;
-				}
-				if ($validInt === false && $length > 0) {
-					return 'FIELD_INVALID_TYPE';
-				}
 				// check required
-				if ($this->required === true && $validInt === false) {
+				if ($this->required === true && $length === 0) {
 					return 'FIELD_IS_REQUIRED';
-				}
-				// check min length
-				if (isset($this->minContentLength) && ((int) $trimmedContent) < $this->minContentLength) {
-					return 'FIELD_TOO_SMALL';
-				}
-				// check max length
-				if (isset($this->maxContentLength) && ((int) $trimmedContent) > $this->maxContentLength) {
-					return 'FIELD_TOO_LARGE';
+				} else if ($length > 0) {
+					if (filter_var($trimmedContent, FILTER_VALIDATE_INT) === false) {
+						return 'FIELD_INVALID_TYPE';
+					}
+					$value = (int) $trimmedContent;
+					if (isset($this->minContentLength) && $value < $this->minContentLength) {
+						return 'FIELD_TOO_SMALL';
+					}
+					if (isset($this->maxContentLength) && $value > $this->maxContentLength) {
+						return 'FIELD_TOO_LARGE';
+					}
 				}
 				break;
 			case FieldInfo::TYPE_BOOLEAN:
@@ -496,12 +489,10 @@ class FieldInfo {
 				break;
 			case FieldInfo::TYPE_ENUM:
 				// check required
-				if ($length === 0 && $this->required === true) {
+				if ($this->required === true && $length === 0) {
 					return 'FIELD_IS_REQUIRED';
-				} else {
-					if (!array_key_exists($trimmedContent, $this->additionalNames)) {
-						return 'FIELD_INVALID_TYPE';
-					}
+				} else if ($length > 0 && !array_key_exists($trimmedContent, $this->additionalNames)) {
+					return 'FIELD_INVALID_TYPE';
 				}
 				break;
 			case FieldInfo::TYPE_DATE:
@@ -520,13 +511,50 @@ class FieldInfo {
 				return 'NOT_YET_IMPLEMENTED';
 				break;
 			case FieldInfo::TYPE_LOCALE:
-				return 'NOT_YET_IMPLEMENTED';
+				if ($this->required === true && $length === 0) {
+					return 'FIELD_IS_REQUIRED';
+				} else if ($length > 0) {
+					$locales = Translator::get()->translateLocaleList(true);
+					if (!array_key_exists($trimmedContent, $locales)) {
+						return 'FIELD_INVALID_TYPE';
+					}
+				}
 				break;
 			case FieldInfo::TYPE_DATE_TIME:
-				return 'NOT_YET_IMPLEMENTED';
+				$converted = str_replace('T', ' ', $trimmedContent);
+				// check required
+				if ($this->required === true && $length === 0) {
+					return 'FIELD_IS_REQUIRED';
+				} else if ($length > 0) {
+					if (!preg_match('/[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1]) '.
+							'(2[0-3]|[01][0-9]):[0-5][0-9]:[0-5][0-9]/', $converted)) {
+						return 'FIELD_INVALID_TYPE';
+					}
+					$timestamp = strtotime($converted);
+					if (isset($this->minContentLength) && $timestamp < strtotime($this->minContentLength)) {
+						return 'FIELD_TOO_SMALL';
+					}
+					if (isset($this->maxContentLength) && $timestamp > strtotime($this->maxContentLength)) {
+						return 'FIELD_TOO_LARGE';
+					}
+				}
 				break;
 			case FieldInfo::TYPE_FLOAT:
-				return 'NOT_YET_IMPLEMENTED';
+				// check required
+				if ($this->required === true && $length === 0) {
+					return 'FIELD_IS_REQUIRED';
+				} else if ($length > 0) {
+					if (filter_var($trimmedContent, FILTER_VALIDATE_FLOAT) === false) {
+						return 'FIELD_INVALID_TYPE';
+					}
+					$value = (float) $trimmedContent;
+					if (isset($this->minContentLength) && $value < $this->minContentLength) {
+						return 'FIELD_TOO_SMALL';
+					}
+					if (isset($this->maxContentLength) && $value > $this->maxContentLength) {
+						return 'FIELD_TOO_LARGE';
+					}
+				}
 				break;
 			case FieldInfo::TYPE_DURATION:
 				return 'NOT_YET_IMPLEMENTED'; // e.g. never negative
@@ -578,9 +606,10 @@ class FieldInfo {
 			case FieldInfo::TYPE_PLAIN:
 			case FieldInfo::TYPE_HTML:
 			case FieldInfo::TYPE_MARKDOWN:
+			case FieldInfo::TYPE_LOCALE:
 				return $trimmedContent;
 			case FieldInfo::TYPE_TAGS:
-				break;
+				return Utils::normalizeTags($trimmedContent);
 			case FieldInfo::TYPE_INT:
 			case FieldInfo::TYPE_PAGE:
 			case FieldInfo::TYPE_IMAGE:
@@ -600,12 +629,10 @@ class FieldInfo {
 				break;
 			case FieldInfo::TYPE_EMAIL:
 				break;
-			case FieldInfo::TYPE_LOCALE:
-				break;
 			case FieldInfo::TYPE_DATE_TIME:
 				return str_replace('T', ' ', $trimmedContent);
 			case FieldInfo::TYPE_FLOAT:
-				break;
+				return (float) $trimmedContent;
 			case FieldInfo::TYPE_DURATION:
 				break;
 		}
@@ -616,7 +643,7 @@ class FieldInfo {
 	// Visualize field for administration
 	// --------------------------------------------------------------------------------------------
 
-	public function printFieldWithLabel($moduleDefinition, $databaseTypeAndContent, $uniqueId) {
+	public function printFieldWithLabel($databaseTypeAndContent, $uniqueId) {
 		echo '<div class="richField">';
 		// print label (arrays have no for since a textfield might not be present)
 		if ($this->isArray()) {
@@ -625,7 +652,7 @@ class FieldInfo {
 		else {
 			echo '	<label for="' . $this->generateContentName($uniqueId) . '">';
 		}
-		$moduleDefinition->text($this->name);
+		echo Translator::get()->translate($this->name);
 		if ($this->required) {
 			echo '*';
 		}
@@ -672,18 +699,17 @@ class FieldInfo {
 			echo '<div class="array">';
 		}
 
-		$this->printFieldTypeAndContent($types, $currentTypeAndContent, $moduleDefinition, false, $uniqueId);
+		$this->printFieldTypeAndContent($types, $currentTypeAndContent, false, $uniqueId);
 
 		// add an 'add' button
 		if ($this->isArray()) {
 			echo '	<div class="arrayOptions">';
 			echo '		<button class="add">';
-			$moduleDefinition->text('ADD');
+			echo Translator::get()->translate('ADD');
 			echo '</button>';
 			// store a template for a new array element
 			echo '		<div class="template hidden">';
-			$this->printFieldTypeAndContent($types, $this->getDefaultTypeAndContent(),
-				$moduleDefinition, true, $uniqueId);
+			$this->printFieldTypeAndContent($types, $this->getDefaultTypeAndContent(), true, $uniqueId);
 			echo '		</div>'; // class="template hidden"
 			echo '	</div>'; // class="arrayOptions"
 			echo '</div>'; // class="array"
@@ -692,8 +718,7 @@ class FieldInfo {
 		echo '</div>'; // class="richField"
 	}
 
-	private function printFieldTypeAndContent($types, $typeAndContent, $moduleDefinition, $template,
-			$uniqueId) {
+	private function printFieldTypeAndContent($types, $typeAndContent, $template, $uniqueId) {
 		// print special HTML if only one type is supported
 		if (count($types) === 1) {
 			// do not print an array element if content is empty except for a template
@@ -705,18 +730,17 @@ class FieldInfo {
 					echo '<div class="arrayElement">';
 				}
 				$this->printPostField(
-					$moduleDefinition,
 					$types[0],
 					$typeAndContent[0]['content'],
 					$template,
 					$uniqueId);
 				echo '<span class="hint">';
-				$moduleDefinition->text(FieldInfo::translateTypeToString($types[0]));
+				echo Translator::get()->translate(FieldInfo::translateTypeToString($types[0]));
 				echo '</span>';
 				if ($this->isArray()) {
 					echo '	<div class="arrayElementOptions">';
 					echo '		<button class="remove">';
-					$moduleDefinition->text('REMOVE');
+					echo Translator::get()->translate('REMOVE');
 					echo '</button>';
 					echo '	</div>'; // class="arrayElementOptions"
 					echo '</div>'; // class="arrayElement"
@@ -748,7 +772,7 @@ class FieldInfo {
 						echo '		<li>';
 					}
 					echo '				<a>';
-					$moduleDefinition->text(FieldInfo::translateTypeToString($type));
+					echo Translator::get()->translate(FieldInfo::translateTypeToString($type));
 					echo '				</a>';
 					echo '			</li>';
 				}
@@ -760,7 +784,6 @@ class FieldInfo {
 					if ($type === $element['type']) {
 						echo '			<div class="tab">';
 						$this->printPostField(
-							$moduleDefinition,
 							$type,
 							$element['content'],
 							$template,
@@ -769,7 +792,6 @@ class FieldInfo {
 					else {
 						echo '			<div class="tab hidden">';
 						$this->printPostField(
-							$moduleDefinition,
 							$type,
 							null,
 							true,
@@ -783,7 +805,7 @@ class FieldInfo {
 				if ($this->isArray()) {
 					echo '	<div class="arrayElementOptions">';
 					echo '		<button class="remove">';
-					$moduleDefinition->text('REMOVE');
+					echo Translator::get()->translate('REMOVE');
 					echo '</button>';
 					echo '	</div>'; // class="arrayElementOptions"
 					echo '</div>'; // class="arrayElement"
@@ -792,7 +814,7 @@ class FieldInfo {
 		}
 	}
 
-	private function printPostField($moduleDefinition, $type, $value, $disabled, $uniqueId) {
+	private function printPostField($type, $value, $disabled, $uniqueId) {
 		UiUtils::printHiddenTypeInput(
 			$this->generateTypeName($uniqueId) . ($this->isArray() ? '[]' : ''),
 			$type,
@@ -801,6 +823,7 @@ class FieldInfo {
 			case FieldInfo::TYPE_PLAIN:
 			case FieldInfo::TYPE_HTML:
 			case FieldInfo::TYPE_MARKDOWN:
+			case FieldInfo::TYPE_TAGS:
 				UiUtils::printTextInput(
 					$this,
 					$type,
@@ -811,8 +834,6 @@ class FieldInfo {
 			case FieldInfo::TYPE_IMAGE:
 				break;
 			case FieldInfo::TYPE_FILE:
-				break;
-			case FieldInfo::TYPE_TAGS:
 				break;
 			case FieldInfo::TYPE_INT:
 				UiUtils::printIntInput(
@@ -825,7 +846,6 @@ class FieldInfo {
 				break;
 			case FieldInfo::TYPE_ENUM:
 				UiUtils::printEnumSelection(
-					$moduleDefinition,
 					$this,
 					$value,
 					$disabled,
@@ -839,7 +859,6 @@ class FieldInfo {
 				break;
 			case FieldInfo::TYPE_PAGE:
 				UiUtils::printPageSelection(
-					$moduleDefinition,
 					$this,
 					$value,
 					$disabled,
@@ -850,6 +869,11 @@ class FieldInfo {
 			case FieldInfo::TYPE_EMAIL:
 				break;
 			case FieldInfo::TYPE_LOCALE:
+				UiUtils::printLocaleSelection(
+						$this,
+						$value,
+						$disabled,
+						$uniqueId);
 				break;
 			case FieldInfo::TYPE_DATE_TIME:
 				UiUtils::printDateTimeInput(
@@ -859,7 +883,11 @@ class FieldInfo {
 					$uniqueId);
 				break;
 			case FieldInfo::TYPE_FLOAT:
-				break;
+				UiUtils::printFloatInput(
+					$this,
+					$value,
+					$disabled,
+					$uniqueId);
 			case FieldInfo::TYPE_DURATION:
 				break;
 		}

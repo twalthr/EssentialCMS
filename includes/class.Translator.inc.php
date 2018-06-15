@@ -1,10 +1,28 @@
 <?php
 
 class Translator {
+
 	private $currentLocale; // e.g. "en_US"
 	private $localeEnglishName;
 	private $localeLocaleName;
 	private $dict = array();
+
+	// --------------------------------------------------------------------------------------------
+
+	private static $instance;
+
+	public static function set($translator) {
+		self::$instance = $translator;
+	}
+
+	public static function get() {
+		if (!isset(self::$instance)) {
+			throw new Exception('No translator instance available.');
+		}
+		return self::$instance;
+	}
+
+	// --------------------------------------------------------------------------------------------
 
 	public function __construct($defaultLanguage, $defaultCountry, $languageSwitching) {
 		if ($languageSwitching === false) {
@@ -27,6 +45,42 @@ class Translator {
 			return sprintf(trim($this->dict[$id]), ...$args);
 		}
 		return $id;
+	}
+
+	public function translateLocaleList($withRegion) {
+		$locales = ResourceBundle::getLocales('');
+		if ($withRegion === false) {
+			foreach ($locales as $key => $value) {
+				if (strpos($value, '_') !== false) {
+					unset($locales[$key]);
+				}
+			}
+		}
+		$list = [];
+		foreach ($locales as $value) {
+			$translated = Locale::getDisplayName($value, $this->currentLocale);
+			$original = Locale::getDisplayName($value, $value);
+			if ($translated === $original) {
+				$original = null;
+			}
+			if (Utils::hasStringContent($translated) && Utils::hasStringContent($original)) {
+				$list[$value] = [
+					'locale' => $value,
+					'translated' => $translated,
+					'original' => $original];
+			} else if (Utils::hasStringContent($translated)) {
+				$list[$value] = [
+					'locale' => $value,
+					'translated' => $translated,
+					'original' => null];
+			} else if (Utils::hasStringContent($original)) {
+				$list[$value] = [
+					'locale' => $value,
+					'translated' => $original,
+					'original' => null];
+			}
+		}
+		return $list;
 	}
 
 	public function getSupportedLocaleFromDirectory($dir) {

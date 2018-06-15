@@ -166,10 +166,9 @@ class FieldGroupInfo {
 		return $value;
 	}
 
-	public function printFields($moduleDefinition, $fieldsContent, $uniqueId = '') {
+	public function printFields($fieldsContent, $uniqueId = '') {
 		foreach ($this->getFieldInfos() as $field) {
 			$field->printFieldWithLabel(
-				$moduleDefinition,
 				$this->getFieldContent($fieldsContent, $field->getKey()),
 				$this->getKey() . '_' . $uniqueId);
 		}

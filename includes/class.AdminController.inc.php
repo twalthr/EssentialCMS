@@ -389,20 +389,20 @@ class AdminController {
 	}
 
 	private function createMenuItems() {
-		global $PUBLIC_ROOT, $TR;
+		global $PUBLIC_ROOT;
 		$menuItems = array();
 		$menuItems[] = new MenuItem($PUBLIC_ROOT . '/admin/overview', null, false, 
-			$TR->translate('MENU_OVERVIEW'), null);
+			Translator::get()->translate('MENU_OVERVIEW'), null);
 		$menuItems[] = new MenuItem($PUBLIC_ROOT . '/admin/pages', null, false, 
-			$TR->translate('MENU_PAGES'), null);
+			Translator::get()->translate('MENU_PAGES'), null);
 		$menuItems[] = new MenuItem($PUBLIC_ROOT . '/admin/feedback', null, false, 
-			$TR->translate('MENU_FEEDBACK'), null);
+			Translator::get()->translate('MENU_FEEDBACK'), null);
 		$menuItems[] = new MenuItem($PUBLIC_ROOT . '/admin/media', null, false, 
-			$TR->translate('MENU_MEDIA'), null);
+			Translator::get()->translate('MENU_MEDIA'), null);
 		$menuItems[] = new MenuItem($PUBLIC_ROOT . '/admin/settings', null, false, 
-			$TR->translate('MENU_SETTINGS'), null);
+			Translator::get()->translate('MENU_SETTINGS'), null);
 		$menuItems[] = new MenuItem($PUBLIC_ROOT . '/admin/logout', null, false, 
-			$TR->translate('MENU_LOGOUT'), null);
+			Translator::get()->translate('MENU_LOGOUT'), null);
 		return $menuItems;
 	}
 

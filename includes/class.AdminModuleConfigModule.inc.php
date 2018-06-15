@@ -103,8 +103,7 @@ class AdminModuleConfigModule extends BasicModule {
 						<button id="cancelConfig"><?php $this->text('CANCEL'); ?></button>
 					</div>
 					<div class="fields">
-						<?php $this->moduleConfigFieldGroupInfo->printFields($this->moduleDefinition,
-							$this->moduleConfigFields); ?>
+						<?php $this->moduleConfigFieldGroupInfo->printFields($this->moduleConfigFields); ?>
 					</div>
 				</section>
 			</form>

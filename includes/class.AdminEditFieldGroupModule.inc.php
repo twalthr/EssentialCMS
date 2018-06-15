@@ -148,8 +148,7 @@ class AdminEditFieldGroupModule extends BasicModule {
 						<button id="cancel"><?php $this->text('CANCEL'); ?></button>
 					</div>
 					<div class="fields">
-						<?php $this->fieldGroupInfo->printFields($this->moduleDefinition,
-								$this->fieldsContent); ?>
+						<?php $this->fieldGroupInfo->printFields($this->fieldsContent); ?>
 					</div>
 				</section>
 			</form>

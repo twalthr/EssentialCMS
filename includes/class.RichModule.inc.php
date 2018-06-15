@@ -230,7 +230,6 @@ abstract class RichModule extends BasicModule {
 
 	public static function getLocalizedModuleInfo($moduleDefId) {
 		global $ROOT_DIRECTORY;
-		global $TR;
 		$module = [];
 		$module['definitionId'] = $moduleDefId;
 		$module['name'] = $moduleDefId;
@@ -239,7 +238,7 @@ abstract class RichModule extends BasicModule {
 		$localeDir = $ROOT_DIRECTORY . '/modules/' . $moduleDefId . '/locales';
 		if (file_exists($localeDir) && is_dir($localeDir)) {
 			// check of current locale is supported
-			$supportedLocale = $TR->getSupportedLocaleFromDirectory($localeDir);
+			$supportedLocale = Translator::get()->getSupportedLocaleFromDirectory($localeDir);
 			if ($supportedLocale !== false) {
 				$header = Translator::readHeaderFromLocaleFile($localeDir . '/' . 
 					$supportedLocale . '.locale');

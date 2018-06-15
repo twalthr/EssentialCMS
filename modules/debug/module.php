@@ -142,6 +142,51 @@ class DebugModule extends RichModule {
 			'2018-03-01 12:30:00' // defaultContent
 			);
 
+		// tags
+		$config[] = new FieldInfo(
+			'field10', // key
+			FieldInfo::TYPE_TAGS, // allowedTypes
+			'FIELD_10', // name
+			false, // array
+			true, // required
+			null, // largeContent
+			null, // minContentLength
+			null, // maxContentLength
+			null, // additionalNames
+			FieldInfo::TYPE_TAGS, // defaultType
+			'hello, world' // defaultContent
+			);
+
+		// float
+		$config[] = new FieldInfo(
+			'field11', // key
+			FieldInfo::TYPE_FLOAT, // allowedTypes
+			'FIELD_11', // name
+			false, // array
+			true, // required
+			null, // largeContent
+			3, // minContentLength
+			10, // maxContentLength
+			null, // additionalNames
+			FieldInfo::TYPE_FLOAT, // defaultType
+			7.0 // defaultContent
+			);
+
+		// locale
+		$config[] = new FieldInfo(
+			'field12', // key
+			FieldInfo::TYPE_LOCALE, // allowedTypes
+			'FIELD_12', // name
+			false, // array
+			true, // required
+			null, // largeContent
+			null, // minContentLength
+			null, // maxContentLength
+			null, // additionalNames
+			FieldInfo::TYPE_LOCALE, // defaultType
+			'de' // defaultContent
+			);
+
 		return $config;
 	}
 

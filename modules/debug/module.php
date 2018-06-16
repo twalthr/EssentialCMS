@@ -187,6 +187,21 @@ class DebugModule extends RichModule {
 			'de' // defaultContent
 			);
 
+		// duration
+		$config[] = new FieldInfo(
+			'field13', // key
+			FieldInfo::TYPE_DURATION, // allowedTypes
+			'FIELD_13', // name
+			false, // array
+			true, // required
+			null, // largeContent
+			1, // minContentLength
+			10, // maxContentLength
+			null, // additionalNames
+			FieldInfo::TYPE_DURATION, // defaultType
+			'0000-00-00 12:30:00' // defaultContent
+			);
+
 		return $config;
 	}
 

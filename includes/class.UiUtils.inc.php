@@ -221,6 +221,28 @@ abstract class UiUtils {
 		echo '</select>';
 	}
 
+	public static function printDurationInput($field, $value, $disabled, $uniqueId) {
+		$postFieldName = $field->generateContentName($uniqueId) . ($field->isArray() ? '[]' : '');
+		// we use 10 as maximum number to fit into every integer
+		echo '<input name="' . $postFieldName . '" type="text" '.
+			'pattern="([0-9]{1,10})-([0-9]{1,10})-([0-9]{1,10}) ([0-9]{1,10}):([0-9]{1,10}):([0-9]{1,10})([\.,][0-9]{1,3})?" '.
+			'title="0000-00-00 02:15:42.999   0000-00-00 00:00:500" class="large ' .
+			FieldInfo::translateTypeToString(FieldInfo::TYPE_DURATION) . '"';
+		echo ' value="';
+		echo Utils::escapeString($value);
+		echo '"';
+		if ($field->isRequired() === true) {
+			echo ' required';
+		}
+		if ($disabled === true) {
+			echo ' disabled';
+		}
+		if (!$field->isArray()) {
+			echo ' id="' . $postFieldName . '"';
+		}
+		echo ' />';
+	}
+
 }
 
 ?>

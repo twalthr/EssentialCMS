@@ -18,10 +18,10 @@ class FieldInfo {
 	const TYPE_PAGE = 4096;
 	const TYPE_ID = 8192;
 	const TYPE_EMAIL = 16384;
-	const TYPE_LOCALE = 32768; // e.g. de-DE, de, deu, ger
+	const TYPE_LOCALE = 32768; // e.g. de-DE
 	const TYPE_DATE_TIME = 65536;
 	const TYPE_FLOAT = 131072;
-	const TYPE_DURATION = 262144; // in seconds with microseconds (double)
+	const TYPE_DURATION = 262144; // e.g. 2017-12-12 13:20:11.001
 
 	private $key;
 	private $allowedTypes;
@@ -321,7 +321,7 @@ class FieldInfo {
 				}
 				break;
 			case FieldInfo::TYPE_LOCALE:
-				$locale = locale_parse($content);
+				$locale = Locale::parseLocale($content);
 				if (isset($locale)) {
 					if (isset($locale['language']) && isset($locale['region'])) {
 						$content = $locale['language'] . '_' . $locale['region'];
@@ -330,6 +330,14 @@ class FieldInfo {
 					}
 				}
 				break;
+			case FieldInfo::TYPE_DURATION:
+				// check for a float (seconds with decimal part)
+				if (is_numeric($content)) {
+					$converted = (float) $content;
+					$seconds = floor($converted);
+					$millis = (int) (($converted - $seconds) * 1000);
+					$content = Utils::normalizeDuration(0, 0, 0, 0, 0, $seconds, $millis);
+				}
 			default:
 				break; // do nothing
 		}
@@ -526,8 +534,8 @@ class FieldInfo {
 				if ($this->required === true && $length === 0) {
 					return 'FIELD_IS_REQUIRED';
 				} else if ($length > 0) {
-					if (!preg_match('/[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1]) '.
-							'(2[0-3]|[01][0-9]):[0-5][0-9]:[0-5][0-9]/', $converted)) {
+					if (!preg_match('/^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1]) '.
+							'(2[0-3]|[01][0-9]):[0-5][0-9]:[0-5][0-9]$/', $converted)) {
 						return 'FIELD_INVALID_TYPE';
 					}
 					$timestamp = strtotime($converted);
@@ -557,7 +565,16 @@ class FieldInfo {
 				}
 				break;
 			case FieldInfo::TYPE_DURATION:
-				return 'NOT_YET_IMPLEMENTED'; // e.g. never negative
+				// check required
+				if ($this->required === true && $length === 0) {
+					return 'FIELD_IS_REQUIRED';
+				} else if ($length > 0) {
+					if (!preg_match('/^([0-9]{1,10})-([0-9]{1,10})-([0-9]{1,10}) '.
+							'([0-9]{1,10}):([0-9]{1,10}):([0-9]{1,10})([\.,][0-9]{1,3})?$/',
+							$trimmedContent)) {
+						return 'FIELD_INVALID_TYPE';
+					}
+				}
 				break;
 		}
 		return true;
@@ -634,7 +651,19 @@ class FieldInfo {
 			case FieldInfo::TYPE_FLOAT:
 				return (float) $trimmedContent;
 			case FieldInfo::TYPE_DURATION:
-				break;
+				// extract parts
+				$split = preg_split('/[-: ,\.]/', $trimmedContent);
+				$yearPart = (int) $split[0];
+				$monthPart = (int) $split[1];
+				$dayPart = (int) $split[2];
+				$hourPart = (int) $split[3];
+				$minutePart = (int) $split[4];
+				$secondPart = (int) $split[5];
+				$milliPart = (isset($split[6]))? (int) $split[6] : 0;
+
+				// normalize
+				return Utils::normalizeDuration($yearPart, $monthPart, $dayPart,
+					$hourPart, $minutePart, $secondPart, $milliPart);
 		}
 		return $trimmedContent;
 	}
@@ -888,7 +917,13 @@ class FieldInfo {
 					$value,
 					$disabled,
 					$uniqueId);
+				break;
 			case FieldInfo::TYPE_DURATION:
+				UiUtils::printDurationInput(
+						$this,
+						$value,
+						$disabled,
+						$uniqueId);
 				break;
 		}
 	}

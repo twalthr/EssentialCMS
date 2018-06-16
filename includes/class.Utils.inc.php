@@ -398,6 +398,31 @@ abstract class Utils {
 		return implode(', ', array_unique($normalized));
 	}
 
+	public static function normalizeDuration($yearPart, $monthPart, $dayPart,
+			$hourPart, $minutePart, $secondPart, $milliPart) {
+		$milliPart = substr((string) $milliPart, 0, 3); // extract first 3 digits
+		// convert overflows to next part (day part cannot overflow)
+		$overflow = (int) ($secondPart / 60);
+		$secondPart = $secondPart % 60;
+
+		$minutePart = $minutePart + $overflow;
+		$overflow = (int) ($minutePart / 60);
+		$minutePart = $minutePart % 60;
+
+		$hourPart = $hourPart + $overflow;
+		$overflow = (int) ($hourPart / 24);
+		$hourPart = $hourPart % 24;
+
+		$dayPart = $dayPart + $overflow;
+		return str_pad($yearPart, 4, '0', STR_PAD_LEFT) . '-' .
+			str_pad($monthPart, 2, '0', STR_PAD_LEFT) . '-' .
+			str_pad($dayPart, 2, '0', STR_PAD_LEFT) . ' ' .
+			str_pad($hourPart, 2, '0', STR_PAD_LEFT) . ':' .
+			str_pad($minutePart, 2, '0', STR_PAD_LEFT) . ':' .
+			str_pad($secondPart, 2, '0', STR_PAD_LEFT) . '.' .
+			str_pad($milliPart, 3, '0', STR_PAD_RIGHT);
+	}
+
 	public static function findLongestString($array) {
 		if (!is_array($array)) {
 			return $array;

@@ -2,6 +2,15 @@
 
 abstract class UiUtils {
 
+	private static $uniqueCounter;
+
+	public static function getAndInc() {
+		if (!isset(self::$uniqueCounter)) {
+			self::$uniqueCounter = 0;
+		}
+		return self::$uniqueCounter++;
+	}
+
 	public static function printHiddenTypeInput($postField, $type, $disabled) {
 		echo '<input name="' . $postField . '" type="hidden" value="' . 
 			FieldInfo::translateTypeToString($type) . '"';
@@ -114,7 +123,7 @@ abstract class UiUtils {
 
 	public static function printIntInput($field, $value, $disabled, $uniqueId) {
 		$postFieldName = $field->generateContentName($uniqueId) . ($field->isArray() ? '[]' : '');
-		echo '<input name="' . $postFieldName . '" type="number" step="1" class="large ' .
+		echo '<input name="' . $postFieldName . '" type="number" step="1" class="' .
 			FieldInfo::translateTypeToString(FieldInfo::TYPE_INT) . '"';
 		echo ' value="';
 		echo Utils::escapeString($value);
@@ -168,7 +177,7 @@ abstract class UiUtils {
 	public static function printFloatInput($field, $value, $disabled, $uniqueId) {
 		$postFieldName = $field->generateContentName($uniqueId) . ($field->isArray() ? '[]' : '');
 		echo '<input name="' . $postFieldName . '" type="text" '.
-			'pattern="[+-]?[0-9]+([\.,][0-9]+)?" title="42.01   42,01   -42" class="large ' .
+			'pattern="[+-]?[0-9]+([\.,][0-9]+)?" title="42.01   42,01   -42" class="' .
 			FieldInfo::translateTypeToString(FieldInfo::TYPE_FLOAT) . '"';
 		echo ' value="';
 		echo Utils::escapeString($value);
@@ -241,6 +250,37 @@ abstract class UiUtils {
 			echo ' id="' . $postFieldName . '"';
 		}
 		echo ' />';
+	}
+
+	public static function printCheckbox($field, $value, $disabled, $uniqueId) {
+		$postFieldName = $field->generateContentName($uniqueId) . ($field->isArray() ? '[]' : '');
+		echo '<div class="checkboxWrapper">';
+		echo '<input name="' . $postFieldName . '" type="checkbox" class="' .
+			FieldInfo::translateTypeToString(FieldInfo::TYPE_BOOLEAN) . '"';
+		echo ' value="1"';
+		if ($value === '1') {
+			echo ' checked';
+		}
+		if ($disabled === true) {
+			echo ' disabled';
+		}
+		if ($field->isArray()) {
+			$checkboxId = self::getAndInc();
+			echo ' id="' . $postFieldName . '_' . $checkboxId. '"';
+		} else {
+			echo ' id="' . $postFieldName . '"';
+		}
+		echo ' />';
+		if ($field->isArray()) {
+			echo '<label for="' . $postFieldName . '_' . $checkboxId . '" class="checkbox">';
+		} else {
+			echo '<label for="' . $postFieldName . '" class="checkbox">';
+		}
+		$label = Translator::get()->translate($field->getAdditionalNames());
+		echo $label;
+		echo '</label>';
+		echo $label;
+		echo '</div>';
 	}
 
 }

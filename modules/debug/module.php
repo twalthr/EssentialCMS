@@ -202,6 +202,21 @@ class DebugModule extends RichModule {
 			'0000-00-00 12:30:00' // defaultContent
 			);
 
+		// boolean
+		$config[] = new FieldInfo(
+			'field14', // key
+			FieldInfo::TYPE_BOOLEAN, // allowedTypes
+			'FIELD_14', // name
+			false, // array
+			true, // required
+			null, // largeContent
+			null, // minContentLength
+			null, // maxContentLength
+			"Dhis is a test.", // additionalNames
+			FieldInfo::TYPE_BOOLEAN, // defaultType
+			'1' // defaultContent
+			);
+
 		return $config;
 	}
 

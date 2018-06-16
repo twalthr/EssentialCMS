@@ -493,7 +493,14 @@ class FieldInfo {
 				}
 				break;
 			case FieldInfo::TYPE_BOOLEAN:
-				return 'NOT_YET_IMPLEMENTED';
+				// check required
+				if ($this->required === true && $length === 0) {
+					return 'FIELD_IS_REQUIRED';
+				} else if ($length > 0) {
+					if ($trimmedContent !== '1') {
+						return 'FIELD_INVALID_TYPE';
+					}
+				}
 				break;
 			case FieldInfo::TYPE_ENUM:
 				// check required
@@ -633,7 +640,10 @@ class FieldInfo {
 			case FieldInfo::TYPE_FILE:
 				return (int) $trimmedContent;
 			case FieldInfo::TYPE_BOOLEAN:
-				break;
+				if ($trimmedContent === '1') {
+					return true;
+				}
+				return false;
 			case FieldInfo::TYPE_ENUM:
 				break;
 			case FieldInfo::TYPE_DATE:
@@ -872,6 +882,11 @@ class FieldInfo {
 					$uniqueId);
 				break;
 			case FieldInfo::TYPE_BOOLEAN:
+				UiUtils::printCheckbox(
+						$this,
+						$value,
+						$disabled,
+						$uniqueId);
 				break;
 			case FieldInfo::TYPE_ENUM:
 				UiUtils::printEnumSelection(

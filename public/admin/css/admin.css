@@ -772,6 +772,11 @@ div.siteMap .subLevel>li {
 	margin-bottom: -47px;
 }
 
+.fields .richField .checkboxWrapper label.checkbox {
+	/* Fixes weird margin of checkboxes */
+	margin-right: 9px !important;
+}
+
 /* --------------------------------------------------------------------------------------------- */
 /*                                    Admin Changelog                                            */
 /* --------------------------------------------------------------------------------------------- */

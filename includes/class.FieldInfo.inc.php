@@ -22,6 +22,8 @@ class FieldInfo {
 	const TYPE_DATE_TIME = 65536;
 	const TYPE_FLOAT = 131072;
 	const TYPE_DURATION = 262144; // e.g. 2017-12-12 13:20:11.001
+	const TYPE_RANGE = 524288;
+	const TYPE_ENCRYPTED = 1048576;
 
 	private $key;
 	private $allowedTypes;
@@ -31,7 +33,8 @@ class FieldInfo {
 	private $largeContent;
 	private $minContentLength; // multibyte character length or maximum value/'2017-12-12 13:20:11'
 	private $maxContentLength; // multibyte character length or minimum value/'2017-12-12 13:20:11'
-	private $additionalNames; // e.g. for type boolean = checkbox string, for type enum = values
+	// e.g. for type boolean = checkbox string, for type enum = values, for type range = step size
+	private $auxiliaryInfo;
 	private $defaultType;
 	private $defaultContent;
 
@@ -45,7 +48,7 @@ class FieldInfo {
 			array_key_exists('large', $array) ? $array['large'] : null,
 			array_key_exists('min', $array) ? $array['min'] : null,
 			array_key_exists('max', $array) ? $array['max'] : null,
-			array_key_exists('values', $array) ? $array['values'] : null,
+			array_key_exists('auxiliaryInfo', $array) ? $array['auxiliaryInfo'] : null,
 			array_key_exists('defaultType', $array) ? $array['defaultType'] : null,
 			array_key_exists('defaultContent', $array) ? $array['defaultContent'] : null
 			);
@@ -60,10 +63,10 @@ class FieldInfo {
 		$largeContent = null,
 		$minContentLength = null,
 		$maxContentLength = null,
-		$additionalNames = null,
+		$auxiliaryInfo = null,
 		$defaultType = null,
 		$defaultContent = null) {
-		
+
 		$this->key = $key;
 		$this->allowedTypes = $allowedTypes;
 		$this->name = $name;
@@ -72,7 +75,7 @@ class FieldInfo {
 		$this->largeContent = $largeContent;
 		$this->minContentLength = $minContentLength;
 		$this->maxContentLength = $maxContentLength;
-		$this->additionalNames = $additionalNames;
+		$this->auxiliaryInfo = $auxiliaryInfo;
 		$this->defaultType = $defaultType;
 		$this->defaultContent = $defaultContent;
 
@@ -117,12 +120,12 @@ class FieldInfo {
 			throw new Exception("Default type must be in allowed types.");
 		}
 		if ($this->allowedTypes & FieldInfo::TYPE_ENUM) {
-			if (!isset($this->additionalNames) || !is_array($this->additionalNames) ||
-					empty($this->additionalNames)) {
+			if (!isset($this->auxiliaryInfo) || !is_array($this->auxiliaryInfo) ||
+					empty($this->auxiliaryInfo)) {
 				throw new Exception("Enum must declare possible values.");
 			}
 			if (!$this->isArray() && isset($this->defaultContent) &&
-					!array_key_exists($this->defaultContent, $this->additionalNames)) {
+					!array_key_exists($this->defaultContent, $this->auxiliaryInfo)) {
 				throw new Exception("Invalid enum default value.");
 			}
 		}
@@ -166,8 +169,8 @@ class FieldInfo {
 		return $this->maxContentLength;
 	}
 
-	public function getAdditionalNames() {
-		return $this->additionalNames;
+	public function getAuxiliaryInfo() {
+		return $this->auxiliaryInfo;
 	}
 
 	public function getDefaultType() {
@@ -338,12 +341,42 @@ class FieldInfo {
 					$millis = (int) (($converted - $seconds) * 1000);
 					$content = Utils::normalizeDuration(0, 0, 0, 0, 0, $seconds, $millis);
 				}
+				break;
+			case FieldInfo::TYPE_RANGE:
+				// normalize e.g. "2/20"
+				$split = explode('/', $content);
+				if (count($split) === 2 && is_numeric($split[0]) && is_numeric($split[1])) {
+					$content = ((float) $split[0]) / ((float) $split[1]);
+				}
+				// normalize percentages e.g. "0.2"
+				else if (is_numeric($content) && isset($this->auxiliaryInfo) && $this->auxiliaryInfo >= 1) {
+					$value = (float) $content;
+					if ($value < 0 && isset($this->minContentLength) && isset($this->maxContentLength)) {
+						$range = $this->maxContentLength - $this->minContentLength;
+						$content = $this->minContentLength + $value * $range;
+					}
+				}
+				break;
+			case FieldInfo::TYPE_BOOLEAN:
+				$content = strtolower($content);
+				if ($content === 'false' || $content === '0' || $content === 'f') {
+					$content = '';
+				} else if ($content === 'true' || $content === '1' || $content === 't') {
+					$content = '1';
+				} else {
+					return null;
+				}
+				break;
+			case FieldInfo::TYPE_ENCRYPTED:
+				return null; // encrypted content cannot be normalized
 			default:
 				break; // do nothing
 		}
 
-		// skip empty content
-		if ($content === '') {
+		$content = (string) $content;
+
+		// skip empty content (except for boolean)
+		if ($content === '' && $type !== FieldInfo::TYPE_BOOLEAN) {
 			return null;
 		}
 
@@ -379,12 +412,14 @@ class FieldInfo {
 		$typeAndContent = [];
 
 		foreach ($typeArray as $key => $type) {
-			// each type must have a corresponding content
+			// boolean content does not have a content at all
+			$content = '';
 			if (array_key_exists($key, $contentArray)) {
-				$newTypeAndContent = $this->convertToTypeAndContent($type, $contentArray[$key]);
-				if ($newTypeAndContent !== false) {
-					$typeAndContent[] = $newTypeAndContent;
-				}
+				$content = $contentArray[$key];
+			}
+			$newTypeAndContent = $this->convertToTypeAndContent($type, $content);
+			if ($newTypeAndContent !== false) {
+				$typeAndContent[] = $newTypeAndContent;
 			}
 		}
 		return $typeAndContent;
@@ -402,9 +437,7 @@ class FieldInfo {
 		$uniqueTypeName = $this->generateTypeName($uniqueId);
 		$uniqueContentName = $this->generateContentName($uniqueId);
 		// for arrays
-		if ($this->isArray()
-				&& Utils::isValidFieldArray($uniqueTypeName)
-				&& Utils::isValidFieldArray($uniqueContentName)) {
+		if ($this->isArray() && Utils::isValidFieldArray($uniqueTypeName)) {
 			$postTypeAndContent = $this->convertPostArraysToTypeAndContent($uniqueId);
 			// print an error if one of the types was invalid
 			if (count($postTypeAndContent) !== count(Utils::getValidFieldArray($uniqueTypeName))) {
@@ -419,15 +452,11 @@ class FieldInfo {
 			}
 		}
 		// for empty array
-		else if ($this->isArray()
-				&& !Utils::isValidFieldArray($uniqueTypeName)
-				&& !Utils::isValidFieldArray($uniqueContentName)) {
+		else if ($this->isArray() && !Utils::isValidFieldArray($uniqueTypeName)) {
 			return true;
 		}
 		// use post content for non-arrays
-		else if (!$this->isArray()
-				&& Utils::isValidField($uniqueTypeName)
-				&& Utils::isValidField($uniqueContentName)) {
+		else if (!$this->isArray() && Utils::isValidField($uniqueTypeName)) {
 			$postTypeAndContent = $this->convertToTypeAndContent(
 				Utils::getUnmodifiedStringOrEmpty($uniqueTypeName),
 				Utils::getUnmodifiedStringOrEmpty($uniqueContentName));
@@ -506,7 +535,7 @@ class FieldInfo {
 				// check required
 				if ($this->required === true && $length === 0) {
 					return 'FIELD_IS_REQUIRED';
-				} else if ($length > 0 && !array_key_exists($trimmedContent, $this->additionalNames)) {
+				} else if ($length > 0 && !array_key_exists($trimmedContent, $this->auxiliaryInfo)) {
 					return 'FIELD_INVALID_TYPE';
 				}
 				break;
@@ -583,6 +612,28 @@ class FieldInfo {
 					}
 				}
 				break;
+			case FieldInfo::TYPE_RANGE:
+				// check required
+				if ($this->required === true && $length === 0) {
+					return 'FIELD_IS_REQUIRED';
+				} else if ($length > 0) {
+					if (filter_var($trimmedContent, FILTER_VALIDATE_FLOAT) === false) {
+						return 'FIELD_INVALID_TYPE';
+					}
+					$value = (float) $trimmedContent;
+					if (isset($this->minContentLength) && $value < $this->minContentLength) {
+						return 'FIELD_TOO_SMALL';
+					}
+					if (isset($this->maxContentLength) && $value > $this->maxContentLength) {
+						return 'FIELD_TOO_LARGE';
+					}
+					if (isset($this->auxiliaryInfo) && fmod($value, $this->auxiliaryInfo) != 0) {
+						return 'FIELD_INVALID_TYPE';
+					}
+				}
+				break;
+			case FieldInfo::TYPE_ENCRYPTED:
+				break;
 		}
 		return true;
 	}
@@ -591,9 +642,7 @@ class FieldInfo {
 		$uniqueTypeName = $this->generateTypeName($uniqueId);
 		$uniqueContentName = $this->generateContentName($uniqueId);
 		// for arrays
-		if ($this->isArray()
-				&& Utils::isValidFieldArray($uniqueTypeName)
-				&& Utils::isValidFieldArray($uniqueContentName)) {
+		if ($this->isArray() && Utils::isValidFieldArray($uniqueTypeName)) {
 			$postTypeAndContent = $this->convertPostArraysToTypeAndContent($uniqueId);
 			// transform the content
 			foreach ($postTypeAndContent as &$element) {
@@ -602,15 +651,11 @@ class FieldInfo {
 			return $postTypeAndContent;
 		}
 		// for empty array
-		else if ($this->isArray()
-				&& !Utils::isValidFieldArray($uniqueTypeName)
-				&& !Utils::isValidFieldArray($uniqueContentName)) {
+		else if ($this->isArray() && !Utils::isValidFieldArray($uniqueTypeName)) {
 			return [];
 		}
 		// use post content for non-arrays
-		else if (!$this->isArray()
-				&& Utils::isValidField($uniqueTypeName)
-				&& Utils::isValidField($uniqueContentName)) {
+		else if (!$this->isArray() && Utils::isValidField($uniqueTypeName)) {
 			$postTypeAndContent = $this->convertToTypeAndContent(
 				Utils::getUnmodifiedStringOrEmpty($uniqueTypeName),
 				Utils::getUnmodifiedStringOrEmpty($uniqueContentName));
@@ -623,7 +668,8 @@ class FieldInfo {
 	}
 
 	private function transformContentForType($type, $trimmedContent) {
-		if ($trimmedContent === '') {
+		// a boolean field uses the empty string for indicating'false'
+		if ($trimmedContent === '' && $type !== FieldInfo::TYPE_BOOLEAN) {
 			return '';
 		}
 		switch ($type) {
@@ -631,6 +677,7 @@ class FieldInfo {
 			case FieldInfo::TYPE_HTML:
 			case FieldInfo::TYPE_MARKDOWN:
 			case FieldInfo::TYPE_LOCALE:
+			case FieldInfo::TYPE_ENCRYPTED:
 				return $trimmedContent;
 			case FieldInfo::TYPE_TAGS:
 				return Utils::normalizeTags($trimmedContent);
@@ -659,6 +706,7 @@ class FieldInfo {
 			case FieldInfo::TYPE_DATE_TIME:
 				return str_replace('T', ' ', $trimmedContent);
 			case FieldInfo::TYPE_FLOAT:
+			case FieldInfo::TYPE_RANGE:
 				return (float) $trimmedContent;
 			case FieldInfo::TYPE_DURATION:
 				// extract parts
@@ -670,7 +718,6 @@ class FieldInfo {
 				$minutePart = (int) $split[4];
 				$secondPart = (int) $split[5];
 				$milliPart = (isset($split[6]))? (int) $split[6] : 0;
-
 				// normalize
 				return Utils::normalizeDuration($yearPart, $monthPart, $dayPart,
 					$hourPart, $minutePart, $secondPart, $milliPart);
@@ -703,16 +750,12 @@ class FieldInfo {
 		// find source of current content
 		$currentTypeAndContent = null;
 		// use post type and content for arrays
-		if ($this->isArray()
-				&& Utils::isValidFieldArray($this->generateTypeName($uniqueId))
-				&& Utils::isValidFieldArray($this->generateContentName($uniqueId))) {
+		if ($this->isArray() && Utils::isValidFieldArray($this->generateTypeName($uniqueId))) {
 			$postTypeAndContent = $this->convertPostArraysToTypeAndContent($uniqueId);
 			$currentTypeAndContent = $postTypeAndContent;
 		}
 		// use post content for non-arrays
-		else if (!$this->isArray()
-				&& Utils::isValidField($this->generateTypeName($uniqueId))
-				&& Utils::isValidField($this->generateContentName($uniqueId))) {
+		else if (!$this->isArray() && Utils::isValidField($this->generateTypeName($uniqueId))) {
 			$postTypeAndContent = $this->convertToTypeAndContent(
 				Utils::getUnmodifiedStringOrEmpty($this->generateTypeName($uniqueId)),
 				Utils::getUnmodifiedStringOrEmpty($this->generateContentName($uniqueId)));
@@ -883,10 +926,10 @@ class FieldInfo {
 				break;
 			case FieldInfo::TYPE_BOOLEAN:
 				UiUtils::printCheckbox(
-						$this,
-						$value,
-						$disabled,
-						$uniqueId);
+					$this,
+					$value,
+					$disabled,
+					$uniqueId);
 				break;
 			case FieldInfo::TYPE_ENUM:
 				UiUtils::printEnumSelection(
@@ -905,7 +948,6 @@ class FieldInfo {
 				UiUtils::printPageSelection(
 					$this,
 					$value,
-					$disabled,
 					$uniqueId);
 				break;
 			case FieldInfo::TYPE_ID:
@@ -914,10 +956,10 @@ class FieldInfo {
 				break;
 			case FieldInfo::TYPE_LOCALE:
 				UiUtils::printLocaleSelection(
-						$this,
-						$value,
-						$disabled,
-						$uniqueId);
+					$this,
+					$value,
+					$disabled,
+					$uniqueId);
 				break;
 			case FieldInfo::TYPE_DATE_TIME:
 				UiUtils::printDateTimeInput(
@@ -935,10 +977,23 @@ class FieldInfo {
 				break;
 			case FieldInfo::TYPE_DURATION:
 				UiUtils::printDurationInput(
-						$this,
-						$value,
-						$disabled,
-						$uniqueId);
+					$this,
+					$value,
+					$disabled,
+					$uniqueId);
+				break;
+			case FieldInfo::TYPE_RANGE:
+				UiUtils::printRangeInput(
+					$this,
+					$value,
+					$disabled,
+					$uniqueId);
+				break;
+			case FieldInfo::TYPE_ENCRYPTED:
+				UiUtils::printEncryptedInput(
+					$this,
+					$value,
+					$uniqueId);
 				break;
 		}
 	}
@@ -971,7 +1026,9 @@ class FieldInfo {
 			FieldInfo::TYPE_LOCALE =>'TYPE_LOCALE',
 			FieldInfo::TYPE_DATE_TIME =>'TYPE_DATE_TIME',
 			FieldInfo::TYPE_FLOAT =>'TYPE_FLOAT',
-			FieldInfo::TYPE_DURATION =>'TYPE_DURATION'
+			FieldInfo::TYPE_DURATION =>'TYPE_DURATION',
+			FieldInfo::TYPE_RANGE =>'TYPE_RANGE',
+			FieldInfo::TYPE_ENCRYPTED =>'TYPE_ENCRYPTED'
 		];
 	}
 

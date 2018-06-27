@@ -15,7 +15,7 @@ class DebugModule extends RichModule {
 // largeContent
 // minContentLength
 // maxContentLength
-// additionalNames
+// auxiliaryInfo
 // defaultType
 // defaultContent
 	*/
@@ -39,7 +39,7 @@ class DebugModule extends RichModule {
 			null, // largeContent
 			null, // minContentLength
 			null, // maxContentLength
-			null, // additionalNames
+			null, // auxiliaryInfo
 			FieldInfo::TYPE_HTML, // defaultType
 			'<b>THIS IS STRONG</b>' // defaultContent
 			);
@@ -54,7 +54,7 @@ class DebugModule extends RichModule {
 			null, // largeContent
 			null, // minContentLength
 			null, // maxContentLength
-			null, // additionalNames
+			null, // auxiliaryInfo
 			FieldInfo::TYPE_HTML, // defaultType
 			'<b>THIS IS STRONG</b>' // defaultContent
 			);
@@ -92,7 +92,7 @@ class DebugModule extends RichModule {
 			null, // largeContent
 			null, // minContentLength
 			null, // maxContentLength
-			['OTHER' => 'MY_OTHER_FIELD', 'APPLICATION' => 'MY_APPLICATION_FIELD'], // additionalNames
+			['OTHER' => 'MY_OTHER_FIELD', 'APPLICATION' => 'MY_APPLICATION_FIELD'], // auxiliaryInfo
 			[FieldInfo::TYPE_PLAIN, FieldInfo::TYPE_ENUM], // defaultType
 			['hello', 'OTHER'] // defaultContent
 			);
@@ -107,7 +107,7 @@ class DebugModule extends RichModule {
 			null, // largeContent
 			null, // minContentLength
 			null, // maxContentLength
-			['OTHER' => 'MY_OTHER_FIELD', 'APPLICATION' => 'MY_APPLICATION_FIELD'], // additionalNames
+			['OTHER' => 'MY_OTHER_FIELD', 'APPLICATION' => 'MY_APPLICATION_FIELD'], // auxiliaryInfo
 			FieldInfo::TYPE_ENUM, // defaultType
 			'APPLICATION' // defaultContent
 			);
@@ -122,7 +122,7 @@ class DebugModule extends RichModule {
 			null, // largeContent
 			3, // minContentLength
 			10, // maxContentLength
-			null, // additionalNames
+			null, // auxiliaryInfo
 			FieldInfo::TYPE_INT, // defaultType
 			7 // defaultContent
 			);
@@ -137,7 +137,7 @@ class DebugModule extends RichModule {
 			null, // largeContent
 			'2018-01-01 12:30:00', // minContentLength
 			'2018-06-01 12:30:00', // maxContentLength
-			null, // additionalNames
+			null, // auxiliaryInfo
 			FieldInfo::TYPE_DATE_TIME, // defaultType
 			'2018-03-01 12:30:00' // defaultContent
 			);
@@ -152,7 +152,7 @@ class DebugModule extends RichModule {
 			null, // largeContent
 			null, // minContentLength
 			null, // maxContentLength
-			null, // additionalNames
+			null, // auxiliaryInfo
 			FieldInfo::TYPE_TAGS, // defaultType
 			'hello, world' // defaultContent
 			);
@@ -167,7 +167,7 @@ class DebugModule extends RichModule {
 			null, // largeContent
 			3, // minContentLength
 			10, // maxContentLength
-			null, // additionalNames
+			null, // auxiliaryInfo
 			FieldInfo::TYPE_FLOAT, // defaultType
 			7.0 // defaultContent
 			);
@@ -182,7 +182,7 @@ class DebugModule extends RichModule {
 			null, // largeContent
 			null, // minContentLength
 			null, // maxContentLength
-			null, // additionalNames
+			null, // auxiliaryInfo
 			FieldInfo::TYPE_LOCALE, // defaultType
 			'de' // defaultContent
 			);
@@ -197,7 +197,7 @@ class DebugModule extends RichModule {
 			null, // largeContent
 			1, // minContentLength
 			10, // maxContentLength
-			null, // additionalNames
+			null, // auxiliaryInfo
 			FieldInfo::TYPE_DURATION, // defaultType
 			'0000-00-00 12:30:00' // defaultContent
 			);
@@ -208,13 +208,43 @@ class DebugModule extends RichModule {
 			FieldInfo::TYPE_BOOLEAN, // allowedTypes
 			'FIELD_14', // name
 			false, // array
-			true, // required
+			false, // required
 			null, // largeContent
 			null, // minContentLength
 			null, // maxContentLength
-			"Dhis is a test.", // additionalNames
+			"Dhis is a test.", // auxiliaryInfo
 			FieldInfo::TYPE_BOOLEAN, // defaultType
-			'1' // defaultContent
+			null // defaultContent
+			);
+
+		// range
+		$config[] = new FieldInfo(
+			'field15', // key
+			FieldInfo::TYPE_RANGE, // allowedTypes
+			'FIELD_15', // name
+			false, // array
+			false, // required
+			null, // largeContent
+			0, // minContentLength
+			10, // maxContentLength
+			1, // auxiliaryInfo
+			null, // defaultType
+			null // defaultContent
+			);
+
+		// encrypted
+		$config[] = new FieldInfo(
+			'field16', // key
+			FieldInfo::TYPE_ENCRYPTED, // allowedTypes
+			'FIELD_16', // name
+			false, // array
+			false, // required
+			false, // largeContent
+			null, // minContentLength
+			null, // maxContentLength
+			null, // auxiliaryInfo
+			null, // defaultType
+			null // defaultContent
 			);
 
 		return $config;
@@ -242,7 +272,7 @@ class DebugModule extends RichModule {
 			null, // largeContent
 			null, // minContentLength
 			null, // maxContentLength
-			null, // additionalNames
+			null, // auxiliaryInfo
 			FieldInfo::TYPE_HTML, // defaultType
 			'<b>COOL</b>' // defaultContent
 			);
@@ -307,7 +337,7 @@ class DebugModule extends RichModule {
 			null, // largeContent
 			null, // minContentLength
 			null, // maxContentLength
-			null, // additionalNames
+			null, // auxiliaryInfo
 			FieldInfo::TYPE_HTML, // defaultType
 			'<b>COOL</b>' // defaultContent
 			);

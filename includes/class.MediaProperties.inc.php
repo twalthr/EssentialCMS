@@ -172,7 +172,7 @@ abstract class MediaProperties {
 			'key' => MediaProperties::KEY_TYPE_GROUP,
 			'types' => FieldInfo::TYPE_ENUM,
 			'name' => 'TYPE_GROUP',
-			'values' => [
+			'auxiliaryInfo' => [
 				'OTHER',
 				'TEXT',
 				'BINARY',
@@ -199,10 +199,11 @@ abstract class MediaProperties {
 
 		$props[MediaProperties::KEY_RATING] = FieldInfo::create([
 			'key' => MediaProperties::KEY_RATING,
-			'types' => FieldInfo::TYPE_INT,
+			'types' => FieldInfo::TYPE_RANGE,
 			'name' => 'RATING',
 			'min' => 1,
-			'max' => 5]);
+			'max' => 5,
+			'auxiliaryInfo' => 1]);
 
 		$props[MediaProperties::KEY_WIDTH] = FieldInfo::create([
 			'key' => MediaProperties::KEY_WIDTH,
@@ -282,7 +283,7 @@ abstract class MediaProperties {
 			'key' => MediaProperties::KEY_ORIENTATION,
 			'types' => FieldInfo::TYPE_ENUM,
 			'name' => 'TYPE_GROUP',
-			'values' => [
+			'auxiliaryInfo' => [
 				'NONE_0',
 				'HORIZONTAL_0',
 				'NONE_180',
@@ -382,7 +383,7 @@ abstract class MediaProperties {
 			'key' => MediaProperties::KEY_IMAGE_TYPE,
 			'types' => FieldInfo::TYPE_ENUM,
 			'name' => 'IMAGE_TYPE',
-			'values' => [
+			'auxiliaryInfo' => [
 				'IMAGE',
 				'PHOTO',
 				'GRAPHIC']
@@ -392,7 +393,7 @@ abstract class MediaProperties {
 			'key' => MediaProperties::KEY_DOCUMENT_TYPE,
 			'types' => FieldInfo::TYPE_ENUM,
 			'name' => 'DOCUMENT_TYPE',
-			'values' => [
+			'auxiliaryInfo' => [
 				'BOOK',
 				'EDITABLE',
 				'DOCUMENT']
@@ -451,7 +452,7 @@ abstract class MediaProperties {
 			'key' => MediaProperties::KEY_VIDEO_TYPE,
 			'types' => FieldInfo::TYPE_ENUM,
 			'name' => 'VIDEO_TYPE',
-			'values' => [
+			'auxiliaryInfo' => [
 				'SERIES',
 				'MOVIE',
 				'VIDEO']
@@ -461,7 +462,7 @@ abstract class MediaProperties {
 			'key' => MediaProperties::KEY_AUDIO_TYPE,
 			'types' => FieldInfo::TYPE_ENUM,
 			'name' => 'AUDIO_TYPE',
-			'values' => [
+			'auxiliaryInfo' => [
 				'SONG',
 				'BOOK',
 				'AUDIO']

@@ -42,10 +42,12 @@ $(document).ready(function(){
 		openedTab.removeClass('hidden');
 		openedTab.find(':input:not(.neverEnable)').prop('disabled', false);
 	});
+
 	$(document).on('click', '.arrayElementOptions .remove', function() {
 		var button = $(this);
 		button.closest('.arrayElement').remove();
 	});
+
 	$(document).on('click', '.arrayOptions .add', function() {
 		var button = $(this);
 		var newArrayElement = button
@@ -56,6 +58,7 @@ $(document).ready(function(){
 		newArrayElement.removeClass('hidden');
 		button.parent().before(newArrayElement);
 	});
+
 	$(document).on('click', '.pageSelectionButton', function() {
 		var button = $(this);
 		var idInput = button.siblings('.pageSelectionId');
@@ -74,7 +77,230 @@ $(document).ready(function(){
 			true,
 			lightboxOpened);
 	});
+
+	$(document).on('change', '.rangeWrapper input[type="range"]', function() {
+		var el = $(this);
+		el.parent().find('.rangeValue').val(el.val());
+	});
+	$('.rangeWrapper input[type="range"]').trigger('change');
+
+	$('.encryptionWrapper').each(function() {
+		var wrapper = $(this);
+		var value = wrapper.find('input[type=hidden]');
+		var text = wrapper.find('input[type=text]');
+		var password1 = wrapper.find('input[type=password]').first();
+		var password2 = wrapper.find('input[type=password]').last();
+		var encryptButton = wrapper.find('.encryptButton');
+		var decryptButton = wrapper.find('.decryptButton');
+		var shortPasswordError = wrapper.find('.shortPassword');
+		var unequalPasswordsError = wrapper.find('.unequalPasswords');
+		var wrongPasswordError = wrapper.find('.wrongPassword');
+		var unsupportedBrowserError = wrapper.find('.unsupportedBrowser');
+
+		var resetInterface = function() {
+			text.prop('disabled', true);
+			decryptButton.addClass('hidden');
+			encryptButton.addClass('hidden');
+			password1.addClass('hidden');
+			password1.val('');
+			password2.addClass('hidden');
+			password2.val('');
+		}
+
+		// reset the content to allow deleting invalid entries
+		var resetContent = function() {
+			resetInterface();
+			text.val('');
+			text.prop('disabled', false);
+			encryptButton.removeClass('hidden');
+		}
+
+		// copy value
+		text.val(value.val());
+
+		// test support for Web Crypto API
+		if (window.crypto === undefined || window.crypto.subtle === undefined ||
+				window.TextEncoder === undefined || window.TextDecoder === undefined ||
+				window.atob === undefined || window.btoa === undefined) {
+			unsupportedBrowserError.removeClass('hidden');
+			resetInterface();
+			return;
+		}
+
+		// disable input if there is encrypted content
+		if (text.val().length > 0) {
+			text.prop('disabled', true);
+			encryptButton.addClass('hidden');
+		} else {
+			decryptButton.addClass('hidden');
+		}
+
+		// encryption action
+		encryptButton.on('click', function() {
+			shortPasswordError.addClass('hidden');
+			unequalPasswordsError.addClass('hidden');
+			// text enter state
+			if (!text.prop('disabled')) {
+				text.prop('disabled', true);
+				password1.removeClass('hidden');
+				password2.removeClass('hidden');
+			}
+			// password enter state
+			else {
+				// verify password
+				if (password1.val().length < 8) {
+					shortPasswordError.removeClass('hidden');
+				} else if (password1.val() !== password2.val()) {
+					unequalPasswordsError.removeClass('hidden');
+				}
+				// encrypt
+				else {
+					// encode text
+					const plainText = new TextEncoder().encode(text.val());
+
+					// encode password
+					const encodedPassword = new TextEncoder().encode(password1.val());
+
+					// generate salt
+					const salt = new Uint8Array(64);
+					crypto.getRandomValues(salt);
+					const saltString = bufferToBase64(salt);
+
+					// add salt to password
+					const saltedPassword = new Uint8Array(encodedPassword.length + salt.length);
+					saltedPassword.set(encodedPassword, 0);
+					saltedPassword.set(salt, encodedPassword.length);
+
+					// generate init vector
+					const iv = new Uint8Array(12);
+					crypto.getRandomValues(iv);
+					const ivString = bufferToBase64(iv);
+
+					// perform encryption
+					const alg = {name: 'AES-GCM', iv: iv};
+					crypto.subtle
+						// hash
+						.digest('SHA-256', saltedPassword)
+						// import key
+						.then(function(hashedPassword) {
+							return crypto.subtle.importKey(
+								'raw',
+								hashedPassword,
+								alg,
+								false,
+								['encrypt']);
+						})
+						// encrypt
+						.then(function(key) {
+							return crypto.subtle.encrypt(alg, key, plainText);
+						})
+						// save
+						.then(function(encrypted) {
+							const encryptedString = bufferToBase64(new Uint8Array(encrypted));
+							text.val(
+								'AES-GCM|SHA-256|' + saltString + '|' + ivString + '|' + encryptedString + '|'
+							);
+							value.val(text.val());
+							// reset
+							resetInterface();
+							// enable decrypt mode
+							decryptButton.removeClass('hidden');
+						})
+						// error
+						.catch(function() {
+							unsupportedBrowserError.removeClass('hidden');
+							resetInterface();
+						});
+				}
+			}
+		});
+
+		// decryption action
+		decryptButton.on('click', function() {
+			shortPasswordError.addClass('hidden');
+			wrongPasswordError.addClass('hidden');
+			// encrypted state
+			if (password1.hasClass('hidden')) {
+				password1.removeClass('hidden');
+			}
+			// password enter state
+			else {
+				// verify password
+				if (password1.val().length < 8) {
+					shortPasswordError.removeClass('hidden');
+				}
+				// decrypt
+				else {
+					// decode components
+					const components = text.val().split('|');
+
+					// check components
+					if (components.length != 6 || components[0] !== 'AES-GCM' || components[1] !== 'SHA-256') {
+						resetContent();
+						return;
+					}
+
+					try {
+						const salt = base64ToBuffer(components[2]);
+						const iv = base64ToBuffer(components[3]);
+						const encrypted = base64ToBuffer(components[4]);
+					} catch (e) {
+						resetContent();
+						return;
+					}
+
+					// encode password
+					const encodedPassword = new TextEncoder().encode(password1.val());
+
+					// add salt to password
+					const saltedPassword = new Uint8Array(encodedPassword.length + salt.length);
+					saltedPassword.set(encodedPassword, 0);
+					saltedPassword.set(salt, encodedPassword.length);
+
+					// perform decryption
+					const alg = {name: 'AES-GCM', iv: iv};
+					crypto.subtle
+						// hash
+						.digest('SHA-256', saltedPassword)
+						// import key
+						.then(function(hashedPassword) {
+							return crypto.subtle.importKey(
+								'raw',
+								hashedPassword,
+								alg,
+								false,
+								['decrypt']);
+						})
+						// decrypt
+						.then(function(key) {
+							return crypto.subtle.decrypt(alg, key, encrypted);
+						})
+						// save
+						.then(function(decrypted) {
+							const plainText = new TextDecoder().decode(new Uint8Array(decrypted));
+							text.val(plainText);
+							value.val(''); // only the empty string is a valid plain value
+							// reset
+							resetInterface();
+							// enable encrypt mode
+							text.prop('disabled', false);
+							encryptButton.removeClass('hidden');
+						})
+						// error
+						.catch(function() {
+							wrongPasswordError.removeClass('hidden');
+							resetInterface();
+							decryptButton.removeClass('hidden');
+						});
+				}
+			}
+		});
+	});
 });
+
+// --------------------------------------------------------------------------------------------
+// Helper functions
+// --------------------------------------------------------------------------------------------
 
 function enableList(button) {
 	var list = button.closest('.dialog-box').siblings('.enableButtonsIfChecked');
@@ -219,4 +445,24 @@ function closeLightbox() {
 				$(document).off('keyup', lightboxEscapeCallback);
 		});
 	});
+}
+
+function bufferToBase64(buffer) {
+	var binary = '';
+	var bytes = new Uint8Array(buffer);
+	var len = bytes.byteLength;
+	for (var i = 0; i < len; i++) {
+		binary += String.fromCharCode(bytes[i]);
+	}
+	return window.btoa(binary);
+}
+
+function base64ToBuffer(base64) {
+	var binary =  window.atob(base64);
+	var len = binary.length;
+	var bytes = new Uint8Array(len);
+	for (var i = 0; i < len; i++) {
+		bytes[i] = binary.charCodeAt(i);
+	}
+	return bytes;
 }

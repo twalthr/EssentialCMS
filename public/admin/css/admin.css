@@ -92,8 +92,7 @@ ol, ul {
 blockquote, q {
 	quotes: none;
 }
-blockquote:before, blockquote:after,
-q:before, q:after {
+blockquote:before, blockquote:after, q:before, q:after {
 	content: '';
 	content: none;
 }
@@ -278,9 +277,13 @@ input[type='text']:disabled, input[type='password']:disabled, input[type='email'
 }
 
 input[type='text'].large, input[type='password'].large, input[type='email'].large,
-		input[type='number'].large, input[type='datetime-local'].large, textarea.large {
+		input[type='number'].large, input[type='datetime-local'].large, textarea.large, select.large {
 	width: 100%;
-} 
+}
+
+input[type='range'].large {
+	width: 60%;
+}
 
 input::after {
 	clear: both;
@@ -385,6 +388,24 @@ label {
 
 .checkboxWrapper label.checkbox {
 	margin-right: 5px !important;
+}
+
+.rangeWrapper {
+	font-weight: 600;
+}
+
+.rangeWrapper datalist {
+	display: none;
+}
+
+.rangeWrapper input[type='range'] {
+	vertical-align: middle;
+	margin: 0 20px;
+}
+
+.rangeWrapper .rangeValue {
+	margin-right: 20px;
+	max-width: 100px;
 }
 
 .hidden {

@@ -294,3 +294,4 @@ DECRYPT=Entschlüsseln
 ENCRYPTION_PASSWORD=Geben Sie das Verschlüsselungspasswort ein
 RETYPE_ENCRYPTION_PASSWORD=Wiederholung des Verschlüsselungspassworts
 ENCRYPTION_ERROR=Ihr Browser unterstützt keine Verschlüsselung.
+PLAIN_TEXT_HINT=Text kann nicht unverschlüsselt gespeichert werden.

@@ -247,6 +247,37 @@ class DebugModule extends RichModule {
 			null // defaultContent
 			);
 
+		// encrypted
+		$config[] = new FieldInfo(
+			'field17', // key
+			FieldInfo::TYPE_ENCRYPTED, // allowedTypes
+			'FIELD_17', // name
+			false, // array
+			false, // required
+			true, // largeContent
+			null, // minContentLength
+			null, // maxContentLength
+			null, // auxiliaryInfo
+			null, // defaultType
+			null // defaultContent
+			);
+
+		// color
+		$config[] = new FieldInfo(
+			'field18', // key
+			FieldInfo::TYPE_COLOR, // allowedTypes
+			'FIELD_18', // name
+			false, // array
+			false, // required
+			false, // largeContent
+			null, // minContentLength
+			null, // maxContentLength
+			null, // auxiliaryInfo
+			null, // defaultType
+			null // defaultContent
+			);
+
+
 		return $config;
 	}
 

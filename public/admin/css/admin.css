@@ -270,6 +270,11 @@ input[type='text'], input[type='password'], input[type='email'], input[type='num
 	box-sizing: border-box;
 }
 
+textarea {
+	display: block;
+	white-space: pre;
+}
+
 input[type='text']:disabled, input[type='password']:disabled, input[type='email']:disabled,
 		input[type='number']:disabled, input[type='datetime-local']:disabled, textarea:disabled {
 	background-color: #EAEAEA;
@@ -353,9 +358,8 @@ label {
 
 .fields .field .inputWithOption button {
 	float: right;
-	position: relative;
-	top: -47px;
-	margin-bottom: -47px;
+	margin-top: -15px; /* -20 + 5*/
+	margin-bottom: 20px;
 }
 
 .fieldsRequired {
@@ -755,6 +759,7 @@ div.siteMap .subLevel>li {
 .fields .richField>* {
 	display: table-cell;
 	text-align: left;
+	vertical-align: top;
 }
 
 .fields .richField .hint {
@@ -788,9 +793,8 @@ div.siteMap .subLevel>li {
 
 .fields .richField .inputWithOption button {
 	float: right;
-	position: relative;
-	top: -47px;
-	margin-bottom: -47px;
+	margin-top: -15px; /* -20 + 5*/
+	margin-bottom: 20px;
 }
 
 .fields .richField .checkboxWrapper label.checkbox {

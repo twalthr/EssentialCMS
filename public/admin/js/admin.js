@@ -87,7 +87,7 @@ $(document).ready(function(){
 	$('.encryptionWrapper').each(function() {
 		var wrapper = $(this);
 		var value = wrapper.find('input[type=hidden]');
-		var text = wrapper.find('input[type=text]');
+		var text = wrapper.find('input[type=text], textarea');
 		var password1 = wrapper.find('input[type=password]').first();
 		var password2 = wrapper.find('input[type=password]').last();
 		var encryptButton = wrapper.find('.encryptButton');
@@ -110,6 +110,7 @@ $(document).ready(function(){
 		// reset the content to allow deleting invalid entries
 		var resetContent = function() {
 			resetInterface();
+			value.val('');
 			text.val('');
 			text.prop('disabled', false);
 			encryptButton.removeClass('hidden');

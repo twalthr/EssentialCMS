@@ -294,3 +294,4 @@ DECRYPT=Decrypt
 ENCRYPTION_PASSWORD=Enter encryption password
 RETYPE_ENCRYPTION_PASSWORD=Retype encryption password
 ENCRYPTION_ERROR=Your browser does not support encryption.
+PLAIN_TEXT_HINT=Text cannot be saved unencrypted.

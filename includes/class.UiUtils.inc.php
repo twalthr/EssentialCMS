@@ -339,58 +339,87 @@ abstract class UiUtils {
 
 	public static function printEncryptedInput($field, $value, $uniqueId) {
 		$postFieldName = $field->generateContentName($uniqueId) . ($field->isArray() ? '[]' : '');
+
+		echo '<div class="encryptionWrapper inputWithOption">';
+
+		// errors
+		echo '<div class="dialog-error-message hidden shortPassword">' .
+			Translator::get()->translate('PASSWORD_MINLENGTH') . '</div>';
+		echo '<div class="dialog-error-message hidden unequalPasswords">' .
+			Translator::get()->translate('PASSWORDS_NOT_EQUAL') . '</div>';
+		echo '<div class="dialog-error-message hidden wrongPassword">' .
+			Translator::get()->translate('WRONG_PASSWORD') . '</div>';
+		echo '<div class="dialog-error-message hidden unsupportedBrowser">' .
+			Translator::get()->translate('ENCRYPTION_ERROR') . '</div>';
+		// value
+		echo '<input type="hidden" value="';
+		echo Utils::escapeString($value);
+		echo '" name="' . $postFieldName . '" />';
+
+		// visualization
 		if ($field->isLargeContent()) {
-			echo 'TODO';
-		} else {
-			echo '<div class="encryptionWrapper inputWithOption">';
-
-			// errors
-			echo '<div class="dialog-error-message hidden shortPassword">' .
-				Translator::get()->translate('PASSWORD_MINLENGTH') . '</div>';
-			echo '<div class="dialog-error-message hidden unequalPasswords">' .
-				Translator::get()->translate('PASSWORDS_NOT_EQUAL') . '</div>';
-			echo '<div class="dialog-error-message hidden wrongPassword">' .
-				Translator::get()->translate('WRONG_PASSWORD') . '</div>';
-			echo '<div class="dialog-error-message hidden unsupportedBrowser">' .
-				Translator::get()->translate('ENCRYPTION_ERROR') . '</div>';
-			// value
-			echo '<input type="hidden" value="';
-			echo Utils::escapeString($value);
-			echo '" name="' . $postFieldName . '" />';
-
-			// visualization
-			echo '<input type="text"';
-			if ($field->isRequired() === true) {
-				echo ' required';
+			echo '<textarea pattern="^$" title="' .
+				Translator::get()->translate('PLAIN_TEXT_HINT') . '" class="large ' .
+				FieldInfo::translateTypeToString(FieldInfo::TYPE_ENCRYPTED) . '"';
+			if (!$field->isArray()) {
+				echo ' id="' . $postFieldName . '"';
 			}
-			echo ' class="large ' . FieldInfo::translateTypeToString(FieldInfo::TYPE_ENCRYPTED) . '"';
+			echo '></textarea>';
+		} else {
+			// the pattern enforces that no plain text is submitted
+			echo '<input type="text" pattern="^$" title="' .
+				Translator::get()->translate('PLAIN_TEXT_HINT') . '" class="large ' .
+				FieldInfo::translateTypeToString(FieldInfo::TYPE_ENCRYPTED) . '"';
 			if (!$field->isArray()) {
 				echo ' id="' . $postFieldName . '"';
 			}
 			echo ' />';
-
-			// password 1
-			echo '<input type="password" class="large hidden" maxlength="64" placeholder="' .
-				Translator::get()->translate('ENCRYPTION_PASSWORD') .
-				'" />';
-
-			// password 2
-			echo '<input type="password" class="large hidden" maxlength="64" placeholder="' .
-				Translator::get()->translate('RETYPE_ENCRYPTION_PASSWORD') .
-				'" />';
-
-			// encryption button
-			echo '<button class="encryptButton">';
-			echo Translator::get()->translate('ENCRYPT');
-			echo '</button>';
-
-			// decryption button
-			echo '<button class="decryptButton">';
-			echo Translator::get()->translate('DECRYPT');
-			echo '</button>';
-
-			echo '</div>';
 		}
+
+		// password 1
+		echo '<input type="password" class="large hidden" maxlength="64" placeholder="' .
+			Translator::get()->translate('ENCRYPTION_PASSWORD') .
+			'" />';
+
+		// password 2
+		echo '<input type="password" class="large hidden" maxlength="64" placeholder="' .
+			Translator::get()->translate('RETYPE_ENCRYPTION_PASSWORD') .
+			'" />';
+
+		// encryption button
+		echo '<button class="encryptButton">';
+		echo Translator::get()->translate('ENCRYPT');
+		echo '</button>';
+
+		// decryption button
+		echo '<button class="decryptButton">';
+		echo Translator::get()->translate('DECRYPT');
+		echo '</button>';
+
+		echo '</div>';
+	}
+
+	public static function printColorPicker($field, $value, $disabled, $uniqueId) {
+		$postFieldName = $field->generateContentName($uniqueId) . ($field->isArray() ? '[]' : '');
+		echo '<input name="' . $postFieldName . '" type="color" pattern="#[0-9a-fA-F]{6}" ' . 
+			'title="#rrggbb" class="' . FieldInfo::translateTypeToString(FieldInfo::TYPE_INT) . '"';
+		echo ' value="';
+		if (!isset($value) || !preg_match('/^#[0-9a-fA-F]{6}$/', $value)) {
+			echo '#000000';
+		} else {
+			echo Utils::escapeString($value);
+		}
+		echo '"';
+		if ($field->isRequired() === true) {
+			echo ' required';
+		}
+		if ($disabled === true) {
+			echo ' disabled';
+		}
+		if (!$field->isArray()) {
+			echo ' id="' . $postFieldName . '"';
+		}
+		echo ' />';
 	}
 }
 

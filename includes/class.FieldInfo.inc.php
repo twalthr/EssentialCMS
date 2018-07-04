@@ -369,6 +369,9 @@ class FieldInfo {
 				break;
 			case FieldInfo::TYPE_ENCRYPTED:
 				return null; // encrypted content cannot be normalized
+			case FieldInfo::TYPE_COLOR:
+				$content = Utils::normalizeColor($content);
+				break;
 			default:
 				break; // do nothing
 		}
@@ -477,15 +480,15 @@ class FieldInfo {
 	private function isValidContentForType($type, $trimmedContent) {
 		// check value
 		$length = mb_strlen($trimmedContent);
+		// check required
+		if ($this->required === true && $length === 0) {
+			return 'FIELD_IS_REQUIRED';
+		}
 		switch ($type) {
 			case FieldInfo::TYPE_PLAIN:
 			case FieldInfo::TYPE_HTML:
 			case FieldInfo::TYPE_MARKDOWN:
 			case FieldInfo::TYPE_TAGS:
-				// check required
-				if ($this->required === true && $length === 0) {
-					return 'FIELD_IS_REQUIRED';
-				}
 				// check min length
 				if (isset($this->minContentLength) && $length < $this->minContentLength) {
 					return 'FIELD_TOO_SHORT';
@@ -505,10 +508,7 @@ class FieldInfo {
 			case FieldInfo::TYPE_PAGE:
 			case FieldInfo::TYPE_IMAGE:
 			case FieldInfo::TYPE_FILE:
-				// check required
-				if ($this->required === true && $length === 0) {
-					return 'FIELD_IS_REQUIRED';
-				} else if ($length > 0) {
+				if ($length > 0) {
 					if (filter_var($trimmedContent, FILTER_VALIDATE_INT) === false) {
 						return 'FIELD_INVALID_TYPE';
 					}
@@ -522,20 +522,14 @@ class FieldInfo {
 				}
 				break;
 			case FieldInfo::TYPE_BOOLEAN:
-				// check required
-				if ($this->required === true && $length === 0) {
-					return 'FIELD_IS_REQUIRED';
-				} else if ($length > 0) {
+				if ($length > 0) {
 					if ($trimmedContent !== '1') {
 						return 'FIELD_INVALID_TYPE';
 					}
 				}
 				break;
 			case FieldInfo::TYPE_ENUM:
-				// check required
-				if ($this->required === true && $length === 0) {
-					return 'FIELD_IS_REQUIRED';
-				} else if ($length > 0 && !array_key_exists($trimmedContent, $this->auxiliaryInfo)) {
+				if ($length > 0 && !array_key_exists($trimmedContent, $this->auxiliaryInfo)) {
 					return 'FIELD_INVALID_TYPE';
 				}
 				break;
@@ -543,7 +537,12 @@ class FieldInfo {
 				return 'NOT_YET_IMPLEMENTED';
 				break;
 			case FieldInfo::TYPE_COLOR:
-				return 'NOT_YET_IMPLEMENTED';
+				if ($length > 0) {
+					$converted = strtolower($trimmedContent);
+					if (!preg_match('/^#[0-9a-f]{6}$/', $converted)) {
+						return 'FIELD_INVALID_TYPE';
+					}
+				}
 				break;
 			case FieldInfo::TYPE_LINK:
 				return 'NOT_YET_IMPLEMENTED';
@@ -555,9 +554,7 @@ class FieldInfo {
 				return 'NOT_YET_IMPLEMENTED';
 				break;
 			case FieldInfo::TYPE_LOCALE:
-				if ($this->required === true && $length === 0) {
-					return 'FIELD_IS_REQUIRED';
-				} else if ($length > 0) {
+				if ($length > 0) {
 					$locales = Translator::get()->translateLocaleList(true);
 					if (!array_key_exists($trimmedContent, $locales)) {
 						return 'FIELD_INVALID_TYPE';
@@ -566,10 +563,7 @@ class FieldInfo {
 				break;
 			case FieldInfo::TYPE_DATE_TIME:
 				$converted = str_replace('T', ' ', $trimmedContent);
-				// check required
-				if ($this->required === true && $length === 0) {
-					return 'FIELD_IS_REQUIRED';
-				} else if ($length > 0) {
+				if ($length > 0) {
 					if (!preg_match('/^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1]) '.
 							'(2[0-3]|[01][0-9]):[0-5][0-9]:[0-5][0-9]$/', $converted)) {
 						return 'FIELD_INVALID_TYPE';
@@ -584,10 +578,7 @@ class FieldInfo {
 				}
 				break;
 			case FieldInfo::TYPE_FLOAT:
-				// check required
-				if ($this->required === true && $length === 0) {
-					return 'FIELD_IS_REQUIRED';
-				} else if ($length > 0) {
+				if ($length > 0) {
 					if (filter_var($trimmedContent, FILTER_VALIDATE_FLOAT) === false) {
 						return 'FIELD_INVALID_TYPE';
 					}
@@ -601,10 +592,7 @@ class FieldInfo {
 				}
 				break;
 			case FieldInfo::TYPE_DURATION:
-				// check required
-				if ($this->required === true && $length === 0) {
-					return 'FIELD_IS_REQUIRED';
-				} else if ($length > 0) {
+				if ($length > 0) {
 					if (!preg_match('/^([0-9]{1,10})-([0-9]{1,10})-([0-9]{1,10}) '.
 							'([0-9]{1,10}):([0-9]{1,10}):([0-9]{1,10})([\.,][0-9]{1,3})?$/',
 							$trimmedContent)) {
@@ -613,10 +601,7 @@ class FieldInfo {
 				}
 				break;
 			case FieldInfo::TYPE_RANGE:
-				// check required
-				if ($this->required === true && $length === 0) {
-					return 'FIELD_IS_REQUIRED';
-				} else if ($length > 0) {
+				if ($length > 0) {
 					if (filter_var($trimmedContent, FILTER_VALIDATE_FLOAT) === false) {
 						return 'FIELD_INVALID_TYPE';
 					}
@@ -633,6 +618,12 @@ class FieldInfo {
 				}
 				break;
 			case FieldInfo::TYPE_ENCRYPTED:
+				if ($length > 0) {
+					$split = explode('|', $trimmedContent);
+					if (count($split) !== 6 || $split[0] !== 'AES-GCM' || $split[1] !== 'SHA-256') {
+						return 'FIELD_INVALID_TYPE';
+					}
+				}
 				break;
 		}
 		return true;
@@ -696,7 +687,7 @@ class FieldInfo {
 			case FieldInfo::TYPE_DATE:
 				break;
 			case FieldInfo::TYPE_COLOR:
-				break;
+				return strtolower($trimmedContent);
 			case FieldInfo::TYPE_LINK:
 				break;
 			case FieldInfo::TYPE_ID:
@@ -941,6 +932,11 @@ class FieldInfo {
 			case FieldInfo::TYPE_DATE:
 				break;
 			case FieldInfo::TYPE_COLOR:
+				UiUtils::printColorPicker(
+					$this,
+					$value,
+					$disabled,
+					$uniqueId);
 				break;
 			case FieldInfo::TYPE_LINK:
 				break;

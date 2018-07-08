@@ -181,6 +181,12 @@ input[type='submit'], button {
 	margin-bottom: 20px;
 }
 
+input[type='color'] {
+	background-color: #EAEAEA;
+	border: 1px solid #DCDCDC;
+	margin-bottom: 20px;
+}
+
 input[type='checkbox'], input[type='radio'] {
 	display: none;
 }
@@ -236,7 +242,7 @@ input[type='submit']:last-child, button:last-child {
 	margin-bottom: 0;
 }
 
-input[type='submit']:hover, button:hover {
+input[type='submit']:hover, button:hover, input[type='color']:hover {
 	background-color: #CCCCCC;
 	border: 1px solid #B5B4B4;
 	color: #000000;
@@ -250,15 +256,15 @@ button.selected {
 	text-decoration: none;
 }
 
-input[type='submit']:disabled, button:disabled, select:disabled {
+input[type='submit']:disabled, button:disabled, select:disabled, input[type='color']:disabled {
 	background-color: #FAFAFA;
 	border: 1px solid #EDEDED;
 	color: #EDEDED;
 	cursor: default;
 }
 
-input[type='text'], input[type='password'], input[type='email'], input[type='number'],
-		input[type='datetime-local'], textarea {
+input[type='text'], input[type='password'], input[type='url'], input[type='email'], input[type='number'],
+		input[type='datetime-local'], input[type='date'], textarea {
 	background-color: #FFFFFF;
 	line-height: 23px;
 	color: #494949;
@@ -275,14 +281,16 @@ textarea {
 	white-space: pre;
 }
 
-input[type='text']:disabled, input[type='password']:disabled, input[type='email']:disabled,
-		input[type='number']:disabled, input[type='datetime-local']:disabled, textarea:disabled {
+input[type='text']:disabled, input[type='password']:disabled, input[type='url']:disabled,
+		input[type='email']:disabled, input[type='number']:disabled, input[type='datetime-local']:disabled,
+		input[type='date']:disabled, textarea:disabled {
 	background-color: #EAEAEA;
 	border: 1px solid #DCDCDC;
 }
 
-input[type='text'].large, input[type='password'].large, input[type='email'].large,
-		input[type='number'].large, input[type='datetime-local'].large, textarea.large, select.large {
+input[type='text'].large, input[type='password'].large, input[type='url'].large, input[type='email'].large,
+		input[type='number'].large, input[type='datetime-local'].large, input[type='date'].large,
+		textarea.large, select.large {
 	width: 100%;
 }
 
@@ -297,14 +305,14 @@ input::after {
 }
 
 input[type='text']:hover, input[type='password']:hover, input[type='email']:hover,
-		input[type='number']:hover, input[type='datetime-local']:hover, select:hover,
-		textarea:hover {
+		input[type='number']:hover, input[type='datetime-local']:hover, input[type='date']:hover,
+		select:hover, textarea:hover {
 	border: 1px solid #B5B4B4;
 }
 
 input[type='text']:focus, input[type='password']:focus, input[type='email']:focus,
-		input[type='number']:focus, input[type='datetime-local']:focus, select:focus,
-		textarea:focus {
+		input[type='number']:focus, input[type='datetime-local']:focus, input[type='date']:focus,
+		select:focus, textarea:focus {
 	border: 1px solid #B5B4B4;
 	color: #000000;
 }

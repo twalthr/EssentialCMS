@@ -277,6 +277,65 @@ class DebugModule extends RichModule {
 			null // defaultContent
 			);
 
+		// link
+		$config[] = new FieldInfo(
+			'field19', // key
+			FieldInfo::TYPE_LINK, // allowedTypes
+			'FIELD_19', // name
+			false, // array
+			false, // required
+			false, // largeContent
+			null, // minContentLength
+			null, // maxContentLength
+			null, // auxiliaryInfo
+			null, // defaultType
+			null // defaultContent
+			);
+
+		// date
+		$config[] = new FieldInfo(
+			'field20', // key
+			FieldInfo::TYPE_DATE, // allowedTypes
+			'FIELD_20', // name
+			false, // array
+			false, // required
+			false, // largeContent
+			'2012-04-12', // minContentLength
+			'2012-04-15', // maxContentLength
+			null, // auxiliaryInfo
+			FieldInfo::TYPE_DATE, // defaultType
+			'2012-04-12' // defaultContent
+			);
+
+		// email
+		$config[] = new FieldInfo(
+			'field21', // key
+			FieldInfo::TYPE_EMAIL, // allowedTypes
+			'FIELD_21', // name
+			false, // array
+			false, // required
+			true, // largeContent
+			null, // minContentLength
+			10, // maxContentLength
+			null, // auxiliaryInfo
+			null, // defaultType
+			null // defaultContent
+			);
+
+		// id
+		$config[] = new FieldInfo(
+			'field22', // key
+			FieldInfo::TYPE_ID, // allowedTypes
+			'FIELD_22', // name
+			false, // array
+			false, // required
+			true, // largeContent
+			null, // minContentLength
+			10, // maxContentLength
+			null, // auxiliaryInfo
+			null, // defaultType
+			null // defaultContent
+			);
 
 		return $config;
 	}
@@ -291,6 +350,21 @@ class DebugModule extends RichModule {
 			'TITLE', // name
 			null,
 			true
+			);
+
+		// id
+		$fields[] = new FieldInfo(
+			'id', // key
+			FieldInfo::TYPE_ID, // allowedTypes
+			'ID_FIELD', // name
+			false, // array
+			false, // required
+			true, // largeContent
+			null, // minContentLength
+			null, // maxContentLength
+			null, // auxiliaryInfo
+			null, // defaultType
+			null // defaultContent
 			);
 
 		// mixed small type with default

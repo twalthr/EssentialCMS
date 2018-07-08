@@ -295,3 +295,5 @@ ENCRYPTION_PASSWORD=Enter encryption password
 RETYPE_ENCRYPTION_PASSWORD=Retype encryption password
 ENCRYPTION_ERROR=Your browser does not support encryption.
 PLAIN_TEXT_HINT=Text cannot be saved unencrypted.
+GENERATE=Generate
+GENERATE_ID_EXPLANATION=Generate ID from title or current ID field content.

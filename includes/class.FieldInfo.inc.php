@@ -81,6 +81,7 @@ class FieldInfo {
 
 		// validate parameters
 		if (!isset($this->key) && !preg_match('/^[A-Za-z][A-Za-z0-9]*$/', $this->key)) {
+			// this property is also used for ID field generation
 			throw new Exception("Key must not be null and only consist of [A-Za-z][A-Za-z0-9]*.");
 		}
 		if (!isset($this->allowedTypes) || !is_int($this->allowedTypes) || $this->allowedTypes < 1) {
@@ -98,7 +99,7 @@ class FieldInfo {
 		if (isset($this->largeContent) && !is_bool($this->largeContent)) {
 			throw new Exception("Large content can only be boolean or null.");
 		}
-		if ($this->allowedTypes & FieldInfo::TYPE_DATE_TIME) {
+		if ($this->allowedTypes & FieldInfo::TYPE_DATE_TIME || $this->allowedTypes & FieldInfo::TYPE_DATE) {
 			// format is '2017-12-12 13:20:11'
 			if (isset($this->minContentLength) && (!is_string($this->minContentLength) ||
 					strtotime($this->minContentLength) === false)) {
@@ -372,6 +373,39 @@ class FieldInfo {
 			case FieldInfo::TYPE_COLOR:
 				$content = Utils::normalizeColor($content);
 				break;
+			case FieldInfo::TYPE_LINK:
+				if (preg_match(
+						'/[-a-zA-Z0-9@:%\._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+\.~#\?&\/\/=]*)/',
+						$content)) {
+					$content = 'http://' . $content;
+				}
+				break;
+			case FieldInfo::TYPE_DATE:
+				$parsed = date_parse($content);
+				// do not accept warnings/errors
+				if ($parsed['warning_count'] === 0 &&
+						$parsed['error_count'] === 0 &&
+						$parsed['year'] !== false &&
+						$parsed['month'] !== false &&
+						$parsed['day'] !== false &&
+						!isset($parsed['relative'])) {
+					$content = $parsed['year'] . '-' . $parsed['month'] . '-' . $parsed['day'];
+				}
+			case FieldInfo::TYPE_DATE_TIME:
+				$parsed = date_parse($content);
+				// do not accept warnings/errors
+				if ($parsed['warning_count'] === 0 &&
+						$parsed['error_count'] === 0 &&
+						$parsed['year'] !== false &&
+						$parsed['month'] !== false &&
+						$parsed['day'] !== false &&
+						$parsed['hour'] !== false &&
+						$parsed['minute'] !== false &&
+						$parsed['second'] !== false &&
+						!isset($parsed['relative'])) {
+					$content = $parsed['year'] . '-' . $parsed['month'] . '-' . $parsed['day'] . ' ' .
+						$parsed['hour'] . ':' . $parsed['minute']. ':' . $parsed['second'];
+				}
 			default:
 				break; // do nothing
 		}
@@ -489,16 +523,11 @@ class FieldInfo {
 			case FieldInfo::TYPE_HTML:
 			case FieldInfo::TYPE_MARKDOWN:
 			case FieldInfo::TYPE_TAGS:
-				// check min length
 				if (isset($this->minContentLength) && $length < $this->minContentLength) {
 					return 'FIELD_TOO_SHORT';
-				}
-				// check max length
-				if (isset($this->maxContentLength) && $length > $this->maxContentLength) {
+				} else if (isset($this->maxContentLength) && $length > $this->maxContentLength) {
 					return 'FIELD_TOO_LONG';
-				}
-				// check largeness
-				if ($this->largeContent !== true 
+				} else if ($this->largeContent !== true 
 						&& !(strpos($trimmedContent, "\r") === false
 								&& strpos($trimmedContent, "\n") === false)) {
 					return 'FIELD_CONTAINS_LINEBREAKS';
@@ -515,8 +544,7 @@ class FieldInfo {
 					$value = (int) $trimmedContent;
 					if (isset($this->minContentLength) && $value < $this->minContentLength) {
 						return 'FIELD_TOO_SMALL';
-					}
-					if (isset($this->maxContentLength) && $value > $this->maxContentLength) {
+					} else if (isset($this->maxContentLength) && $value > $this->maxContentLength) {
 						return 'FIELD_TOO_LARGE';
 					}
 				}
@@ -534,7 +562,19 @@ class FieldInfo {
 				}
 				break;
 			case FieldInfo::TYPE_DATE:
-				return 'NOT_YET_IMPLEMENTED';
+				if ($length > 0) {
+					if (!preg_match('/^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$/',
+							$trimmedContent)) {
+						return 'FIELD_INVALID_TYPE';
+					}
+					$timestamp = strtotime($trimmedContent);
+					if (isset($this->minContentLength) && $timestamp < strtotime($this->minContentLength)) {
+						return 'FIELD_TOO_SMALL';
+					} else if (isset($this->maxContentLength) &&
+							$timestamp > strtotime($this->maxContentLength)) {
+						return 'FIELD_TOO_LARGE';
+					}
+				}
 				break;
 			case FieldInfo::TYPE_COLOR:
 				if ($length > 0) {
@@ -545,13 +585,31 @@ class FieldInfo {
 				}
 				break;
 			case FieldInfo::TYPE_LINK:
-				return 'NOT_YET_IMPLEMENTED';
+				if ($length > 0 && filter_var($trimmedContent, FILTER_VALIDATE_URL) === false) {
+					return 'FIELD_INVALID_TYPE';
+				} else if (isset($this->minContentLength) && $length < $this->minContentLength) {
+					return 'FIELD_TOO_SHORT';
+				} else if (isset($this->maxContentLength) && $length > $this->maxContentLength) {
+					return 'FIELD_TOO_LONG';
+				}
 				break;
 			case FieldInfo::TYPE_ID:
-				return 'NOT_YET_IMPLEMENTED';
+				if ($length > 0 && !preg_match('/^[.:0-9a-zA-Z+_-]+$/', $trimmedContent)) {
+					return 'FIELD_INVALID_TYPE';
+				} else if (isset($this->minContentLength) && $length < $this->minContentLength) {
+					return 'FIELD_TOO_SHORT';
+				} else if (isset($this->maxContentLength) && $length > $this->maxContentLength) {
+					return 'FIELD_TOO_LONG';
+				}
 				break;
 			case FieldInfo::TYPE_EMAIL:
-				return 'NOT_YET_IMPLEMENTED';
+				if ($length > 0 && filter_var($trimmedContent, FILTER_VALIDATE_EMAIL) === false) {
+					return 'FIELD_INVALID_TYPE';
+				} else if (isset($this->minContentLength) && $length < $this->minContentLength) {
+					return 'FIELD_TOO_SHORT';
+				} else if (isset($this->maxContentLength) && $length > $this->maxContentLength) {
+					return 'FIELD_TOO_LONG';
+				}
 				break;
 			case FieldInfo::TYPE_LOCALE:
 				if ($length > 0) {
@@ -571,8 +629,7 @@ class FieldInfo {
 					$timestamp = strtotime($converted);
 					if (isset($this->minContentLength) && $timestamp < strtotime($this->minContentLength)) {
 						return 'FIELD_TOO_SMALL';
-					}
-					if (isset($this->maxContentLength) && $timestamp > strtotime($this->maxContentLength)) {
+					} else if (isset($this->maxContentLength) && $timestamp > strtotime($this->maxContentLength)) {
 						return 'FIELD_TOO_LARGE';
 					}
 				}
@@ -585,19 +642,16 @@ class FieldInfo {
 					$value = (float) $trimmedContent;
 					if (isset($this->minContentLength) && $value < $this->minContentLength) {
 						return 'FIELD_TOO_SMALL';
-					}
-					if (isset($this->maxContentLength) && $value > $this->maxContentLength) {
+					} else if (isset($this->maxContentLength) && $value > $this->maxContentLength) {
 						return 'FIELD_TOO_LARGE';
 					}
 				}
 				break;
 			case FieldInfo::TYPE_DURATION:
-				if ($length > 0) {
-					if (!preg_match('/^([0-9]{1,10})-([0-9]{1,10})-([0-9]{1,10}) '.
-							'([0-9]{1,10}):([0-9]{1,10}):([0-9]{1,10})([\.,][0-9]{1,3})?$/',
-							$trimmedContent)) {
-						return 'FIELD_INVALID_TYPE';
-					}
+				if ($length > 0 && !preg_match('/^([0-9]{1,10})-([0-9]{1,10})-([0-9]{1,10}) '.
+						'([0-9]{1,10}):([0-9]{1,10}):([0-9]{1,10})([\.,][0-9]{1,3})?$/',
+						$trimmedContent)) {
+					return 'FIELD_INVALID_TYPE';
 				}
 				break;
 			case FieldInfo::TYPE_RANGE:
@@ -608,11 +662,9 @@ class FieldInfo {
 					$value = (float) $trimmedContent;
 					if (isset($this->minContentLength) && $value < $this->minContentLength) {
 						return 'FIELD_TOO_SMALL';
-					}
-					if (isset($this->maxContentLength) && $value > $this->maxContentLength) {
+					} else if (isset($this->maxContentLength) && $value > $this->maxContentLength) {
 						return 'FIELD_TOO_LARGE';
-					}
-					if (isset($this->auxiliaryInfo) && fmod($value, $this->auxiliaryInfo) != 0) {
+					} else if (isset($this->auxiliaryInfo) && fmod($value, $this->auxiliaryInfo) != 0) {
 						return 'FIELD_INVALID_TYPE';
 					}
 				}
@@ -669,6 +721,11 @@ class FieldInfo {
 			case FieldInfo::TYPE_MARKDOWN:
 			case FieldInfo::TYPE_LOCALE:
 			case FieldInfo::TYPE_ENCRYPTED:
+			case FieldInfo::TYPE_LINK:
+			case FieldInfo::TYPE_DATE:
+			case FieldInfo::TYPE_ENUM:
+			case FieldInfo::TYPE_EMAIL:
+			case FieldInfo::TYPE_ID:
 				return $trimmedContent;
 			case FieldInfo::TYPE_TAGS:
 				return Utils::normalizeTags($trimmedContent);
@@ -682,18 +739,8 @@ class FieldInfo {
 					return true;
 				}
 				return false;
-			case FieldInfo::TYPE_ENUM:
-				break;
-			case FieldInfo::TYPE_DATE:
-				break;
 			case FieldInfo::TYPE_COLOR:
 				return strtolower($trimmedContent);
-			case FieldInfo::TYPE_LINK:
-				break;
-			case FieldInfo::TYPE_ID:
-				break;
-			case FieldInfo::TYPE_EMAIL:
-				break;
 			case FieldInfo::TYPE_DATE_TIME:
 				return str_replace('T', ' ', $trimmedContent);
 			case FieldInfo::TYPE_FLOAT:
@@ -712,8 +759,9 @@ class FieldInfo {
 				// normalize
 				return Utils::normalizeDuration($yearPart, $monthPart, $dayPart,
 					$hourPart, $minutePart, $secondPart, $milliPart);
+			default:
+				throw new Exception("Unsupported type.");
 		}
-		return $trimmedContent;
 	}
 
 	// --------------------------------------------------------------------------------------------
@@ -930,6 +978,11 @@ class FieldInfo {
 					$uniqueId);
 				break;
 			case FieldInfo::TYPE_DATE:
+				UiUtils::printDateInput(
+					$this,
+					$value,
+					$disabled,
+					$uniqueId);
 				break;
 			case FieldInfo::TYPE_COLOR:
 				UiUtils::printColorPicker(
@@ -939,6 +992,11 @@ class FieldInfo {
 					$uniqueId);
 				break;
 			case FieldInfo::TYPE_LINK:
+				UiUtils::printUrlInput(
+					$this,
+					$value,
+					$disabled,
+					$uniqueId);
 				break;
 			case FieldInfo::TYPE_PAGE:
 				UiUtils::printPageSelection(
@@ -947,8 +1005,18 @@ class FieldInfo {
 					$uniqueId);
 				break;
 			case FieldInfo::TYPE_ID:
+				UiUtils::printIdInput(
+					$this,
+					$value,
+					$disabled,
+					$uniqueId);
 				break;
 			case FieldInfo::TYPE_EMAIL:
+				UiUtils::printEmailInput(
+					$this,
+					$value,
+					$disabled,
+					$uniqueId);
 				break;
 			case FieldInfo::TYPE_LOCALE:
 				UiUtils::printLocaleSelection(

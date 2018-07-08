@@ -84,6 +84,23 @@ $(document).ready(function(){
 	});
 	$('.rangeWrapper input[type="range"]').trigger('change');
 
+	$(document).on('click', '.idWrapper button', function() {
+		var el = $(this);
+		var id = el.parent().find('input');
+		var form = el.closest('form');
+		var title = form.find('input[type="text"][name$="_title"]');
+		var str;
+		// use title
+		if (title.length === 1 && title.val().length > 0) {
+			str = title.val();
+		}
+		// use ID field
+		else {
+			str = id.val();
+		}
+		id.val(generateIdentifierFromString(str));
+	});
+
 	$('.encryptionWrapper').each(function() {
 		var wrapper = $(this);
 		var value = wrapper.find('input[type=hidden]');

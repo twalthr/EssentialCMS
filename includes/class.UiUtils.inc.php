@@ -142,7 +142,8 @@ abstract class UiUtils {
 
 	public static function printDateTimeInput($field, $value, $disabled, $uniqueId) {
 		$postFieldName = $field->generateContentName($uniqueId) . ($field->isArray() ? '[]' : '');
-		echo '<input name="' . $postFieldName . '" type="datetime-local" class="large ' .
+		echo '<input name="' . $postFieldName . '" type="datetime-local" ' .
+			'pattern="[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}" class="large ' .
 			FieldInfo::translateTypeToString(FieldInfo::TYPE_DATE_TIME) . '"';
 		echo ' value="';
 		$value = str_replace(' ', 'T', $value);
@@ -402,7 +403,7 @@ abstract class UiUtils {
 	public static function printColorPicker($field, $value, $disabled, $uniqueId) {
 		$postFieldName = $field->generateContentName($uniqueId) . ($field->isArray() ? '[]' : '');
 		echo '<input name="' . $postFieldName . '" type="color" pattern="#[0-9a-fA-F]{6}" ' . 
-			'title="#rrggbb" class="' . FieldInfo::translateTypeToString(FieldInfo::TYPE_INT) . '"';
+			'title="#rrggbb" class="' . FieldInfo::translateTypeToString(FieldInfo::TYPE_COLOR) . '"';
 		echo ' value="';
 		if (!isset($value) || !preg_match('/^#[0-9a-fA-F]{6}$/', $value)) {
 			echo '#000000';
@@ -420,6 +421,129 @@ abstract class UiUtils {
 			echo ' id="' . $postFieldName . '"';
 		}
 		echo ' />';
+	}
+
+	public static function printUrlInput($field, $value, $disabled, $uniqueId) {
+		$postFieldName = $field->generateContentName($uniqueId) . ($field->isArray() ? '[]' : '');
+		echo '<input name="' . $postFieldName . '" type="url" pattern="[a-zA-Z]+://.+" ' . 
+			'title="http://www.example.com" class=" ' .
+			FieldInfo::translateTypeToString(FieldInfo::TYPE_LINK);
+		if ($field->isLargeContent()) {
+			echo ' large';
+		}
+		echo '" value="';
+		echo Utils::escapeString($value);
+		echo '"';
+		if ($field->getMaxContentLength() !== null) {
+			echo ' maxlength="' . $field->getMaxContentLength() . '"';
+		}
+		if ($field->getMinContentLength() !== null) {
+			echo ' minlength="' . $field->getMinContentLength() . '"';
+		}
+		if ($field->isRequired() === true) {
+			echo ' required';
+		}
+		if ($disabled === true) {
+			echo ' disabled';
+		}
+		if (!$field->isArray()) {
+			echo ' id="' . $postFieldName . '"';
+		}
+		echo ' />';
+	}
+
+	public static function printDateInput($field, $value, $disabled, $uniqueId) {
+		$postFieldName = $field->generateContentName($uniqueId) . ($field->isArray() ? '[]' : '');
+		echo '<input name="' . $postFieldName . '" type="date" pattern="[0-9]{4}-[0-9]{2}-[0-9]{2}" class="' .
+			FieldInfo::translateTypeToString(FieldInfo::TYPE_DATE);
+		if ($field->isLargeContent()) {
+			echo ' large';
+		}
+		echo '"';
+		echo ' value="';
+		echo Utils::escapeString($value);
+		echo '"';
+		if ($field->getMaxContentLength() !== null) {
+			echo ' max="' . $field->getMaxContentLength() . '"';
+		}
+		if ($field->getMinContentLength() !== null) {
+			echo ' min="' . $field->getMinContentLength() . '"';
+		}
+		if ($field->isRequired() === true) {
+			echo ' required';
+		}
+		if ($disabled === true) {
+			echo ' disabled';
+		}
+		if (!$field->isArray()) {
+			echo ' id="' . $postFieldName . '"';
+		}
+		echo ' />';
+	}
+
+	public static function printEmailInput($field, $value, $disabled, $uniqueId) {
+		$postFieldName = $field->generateContentName($uniqueId) . ($field->isArray() ? '[]' : '');
+		echo '<input name="' . $postFieldName . '" type="email" pattern=".+@.+" class="' .
+			FieldInfo::translateTypeToString(FieldInfo::TYPE_EMAIL);
+		if ($field->isLargeContent()) {
+			echo ' large';
+		}
+		echo '"';
+		echo ' value="';
+		echo Utils::escapeString($value);
+		echo '"';
+		if ($field->getMaxContentLength() !== null) {
+			echo ' maxlength="' . $field->getMaxContentLength() . '"';
+		}
+		if ($field->getMinContentLength() !== null) {
+			echo ' minlength="' . $field->getMinContentLength() . '"';
+		}
+		if ($field->isRequired() === true) {
+			echo ' required';
+		}
+		if ($disabled === true) {
+			echo ' disabled';
+		}
+		if (!$field->isArray()) {
+			echo ' id="' . $postFieldName . '"';
+		}
+		echo ' />';
+	}
+
+	public static function printIdInput($field, $value, $disabled, $uniqueId) {
+		$postFieldName = $field->generateContentName($uniqueId) . ($field->isArray() ? '[]' : '');
+
+		echo '<div class="idWrapper inputWithOption">';
+		echo '<input name="' . $postFieldName . '" type="text" pattern="[.:0-9a-zA-Z+_-]+" class="' .
+			FieldInfo::translateTypeToString(FieldInfo::TYPE_ID);
+		if ($field->isLargeContent()) {
+			echo ' large';
+		}
+		echo '" value="';
+		echo Utils::escapeString($value);
+		echo '" title="[.:0-9a-zA-Z+_-]"';
+		if ($field->getMaxContentLength() !== null) {
+			echo ' maxlength="' . $field->getMaxContentLength() . '"';
+		}
+		if ($field->getMinContentLength() !== null) {
+			echo ' minlength="' . $field->getMinContentLength() . '"';
+		}
+		if ($field->isRequired() === true) {
+			echo ' required';
+		}
+		if ($disabled === true) {
+			echo ' disabled';
+		}
+		if (!$field->isArray()) {
+			echo ' id="' . $postFieldName . '"';
+		}
+		echo ' />';
+		echo '<button title="';
+		echo Translator::get()->translate('GENERATE_ID_EXPLANATION');
+		echo '">';
+		echo Translator::get()->translate('GENERATE');
+		echo '</button>';
+		echo '</div>';
 	}
 }
 

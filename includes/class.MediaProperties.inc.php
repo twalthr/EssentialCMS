@@ -13,7 +13,7 @@ abstract class MediaProperties {
 
 	const KEY_TYPE_GROUP = 'typegroup';
 	const VALUE_TYPE_GROUP_OTHER = 0;
-	const VALUE_TYPE_GROUP_TEXT = 1;
+	const VALUE_TYPE_GROUP_TEXT = 1; // i.e. view it without decoding
 	const VALUE_TYPE_GROUP_BINARY = 2;
 	const VALUE_TYPE_GROUP_IMAGE = 3;
 	const VALUE_TYPE_GROUP_AUDIO = 4;

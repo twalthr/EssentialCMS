@@ -94,7 +94,7 @@ class DocxAnalyzer extends OfficeAnalyzer {
 					}
 				}
 			}
-			if (sizeof($titles) > 0) {
+			if (count($titles) > 0) {
 				$props[] = [MediaProperties::KEY_HEADING, $titles];
 			}
 		}
@@ -113,7 +113,7 @@ class DocxAnalyzer extends OfficeAnalyzer {
 
 		// determine frequent words
 		$words = $this->generateFrequentWords($text);
-		if (sizeof($words) > 0) {
+		if (count($words) > 0) {
 			$props[] = [MediaProperties::KEY_FREQUENT_WORDS, implode(', ', $words)];
 		}
 

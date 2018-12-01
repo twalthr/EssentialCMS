@@ -15,37 +15,11 @@ abstract class DocumentAnalyzer extends MediaAnalyzer {
 
 	public function generateFrequentWords($text) {
 
-		$subtext = substr($text, 0, Utils::configOrDefault($this->config, 'document-analyzer.langlength', 16384));
-
-		// too little information
-		if (strlen($subtext) < 50) {
-			return [];
-		}
-
-		Utils::requireLibrary('Text_LanguageDetect', 'Text/LanguageDetect.php');
-
-		$detector = new Text_LanguageDetect();
-		$detector->setNameMode(2);
-		$scores = $detector->detect($subtext);
-
-		// save memory
-		unset($detector);
-
-		$processor = null;
-		foreach ($this->processors as $p) {
-			if ($p->matches($subtext, $scores)) {
-				$processor = $p;
-				break;
-			}
-		}
-
-		// language could not be detected
+		// get processor
+		$processor = $this->getProcessor($text);
 		if (!isset($processor)) {
 			return [];
 		}
-
-		// initiate processor
-		$processor->open();
 
 		// tokenize
 		$tokens = $processor->tokenize($text);
@@ -94,7 +68,7 @@ abstract class DocumentAnalyzer extends MediaAnalyzer {
 		$histogramLimit = Utils::configOrDefault($this->config, 'document-analyzer.histogramlimit', 8192);
 		$keyphraseLength = Utils::configOrDefault($this->config, 'document-analyzer.keyphraselength', 3);
 		$sampleSize = Utils::configOrDefault($this->config, 'document-analyzer.samplesize', 512);
-		$length = sizeof($normalizedTokens);
+		$length = count($normalizedTokens);
 		for ($i = 0; $i < $length; ++$i) {
 			// generate histogram of multiple words (e.g. "operating system explorer")
 			$nToken = '';
@@ -111,19 +85,19 @@ abstract class DocumentAnalyzer extends MediaAnalyzer {
 				// token not in histogram yet
 				else {
 					// enough space, just add it
-					if (sizeof($histogram) < $histogramLimit) {
+					if (count($histogram) < $histogramLimit) {
 						$histogram[$nToken] = [1, $nToken, $oToken];
 					}
 					// cleanup
 					else {
 						// sample
-						$sampleKeys = array_rand($histogram, min(sizeof($histogram), $sampleSize));
+						$sampleKeys = array_rand($histogram, min(count($histogram), $sampleSize));
 						$sample = [];
 						foreach ($sampleKeys as &$sampleKey) {
 							$sample[] = $histogram[$sampleKey][0];
 						}
 						sort($sample, SORT_NUMERIC);
-						$median = $sample[floor(sizeof($sample) / 2)];
+						$median = $sample[floor(count($sample) / 2)];
 						// clean up histogram (filter everything below median)
 						foreach ($histogram as $k => &$v) {
 							if ($v[0] <= $median) {
@@ -158,7 +132,7 @@ abstract class DocumentAnalyzer extends MediaAnalyzer {
 		}
 
 		$topCountFactor = Utils::configOrDefault($this->config, 'document-analyzer.topcountfactor', 0.2);
-		$topCount = min(sizeof($histogram) * $topCountFactor, 40);
+		$topCount = min(count($histogram) * $topCountFactor, 40);
 
 		$topHistogram = array_slice($histogram, 0, $topCount);
 
@@ -179,5 +153,86 @@ abstract class DocumentAnalyzer extends MediaAnalyzer {
 		$processor->close();
 
 		return $result;
+	}
+
+	public function generateWordCount($text) {
+
+		// get processor
+		$processor = $this->getProcessor($text);
+		if (!isset($processor)) {
+			return null;
+		}
+
+		// tokenize
+		$tokens = $processor->tokenize($text);
+		$wordCount = 0;
+
+		// process tokens
+		foreach ($tokens as $token) {
+			// remove links
+			if (filter_var($token, FILTER_VALIDATE_URL) !== false) {
+				continue;
+			}
+			// remove emails
+			if (filter_var($token, FILTER_VALIDATE_EMAIL) !== false) {
+				continue;
+			}
+
+			// normalize
+			$normalized = $processor->normalizeToken($token);
+
+			if (strlen($normalized) > 1) {
+				$wordCount++;
+			}
+		}
+
+		return $wordCount;
+	}
+
+	public function generateCharacterCount($text) {
+		// ignore line breaks
+		$text = str_replace(["\n", "\r"], '', $text);
+		return mb_strlen($text);
+	}
+
+	public function generateLineCount($text) {
+		$text = str_replace(["\r\n", "\r"], "\n", $text);
+		return substr_count($text, "\n");
+	}
+
+	private function getProcessor($text) {
+		$subtext = substr($text, 0, Utils::configOrDefault($this->config, 'document-analyzer.langlength', 16384));
+
+		// too little information
+		if (strlen($subtext) < 50) {
+			return null;
+		}
+
+		Utils::requireLibrary('Text_LanguageDetect', 'Text/LanguageDetect.php');
+
+		$detector = new Text_LanguageDetect();
+		$detector->setNameMode(2);
+		$scores = $detector->detect($subtext);
+
+		// save memory
+		unset($detector);
+
+		$processor = null;
+		foreach ($this->processors as $p) {
+			if ($p->matches($subtext, $scores)) {
+				$processor = $p;
+				break;
+			}
+		}
+
+		// language could not be detected
+		if (!isset($processor)) {
+			return null;
+		}
+
+		// initiate processor
+		$processor->open();
+
+		return $processor;
 	}
 }

@@ -57,7 +57,8 @@ abstract class UiUtils {
 
 	public static function printPageSelection($field, $value, $uniqueId) {
 		$postFieldName = $field->generateContentName($uniqueId) . ($field->isArray() ? '[]' : '');
-		echo '<div class="inputWithOption">';
+		echo '<div class="pageSelectionWrapper inputWithOption">';
+
 		echo '	<input type="hidden" name="' . $postFieldName . '" class="pageSelectionId"';
 		echo '		value="';
 		echo Utils::escapeString($value);
@@ -68,6 +69,17 @@ abstract class UiUtils {
 		echo Utils::escapeString($value);
 		echo '" />';
 
+		// open button
+		echo '<button class="openButton">';
+		echo Translator::get()->translate('SHOW');
+		echo '</button>';
+
+		// delete button
+		echo '<button class="deleteButton">';
+		echo Translator::get()->translate('DELETE');
+		echo '</button>';
+
+		// select button
 		echo '	<button class="pageSelectionButton"';
 		if (!$field->isArray()) {
 			echo ' id="' . $postFieldName . '"';
@@ -75,6 +87,7 @@ abstract class UiUtils {
 		echo '>';
 		echo Translator::get()->translate('SELECT');
 		echo '	</button>';
+
 		echo '</div>';
 	}
 
@@ -386,6 +399,11 @@ abstract class UiUtils {
 		echo '<input type="password" class="large hidden" maxlength="64" placeholder="' .
 			Translator::get()->translate('RETYPE_ENCRYPTION_PASSWORD') .
 			'" />';
+
+		// delete button
+		echo '<button class="deleteButton">';
+		echo Translator::get()->translate('DELETE');
+		echo '</button>';
 
 		// encryption button
 		echo '<button class="encryptButton">';

@@ -109,8 +109,17 @@ final class PageOperations {
 
 		$result = $this->db->impactQuery($query, $types, ...$values);
 
+		if ($result === false) {
+			return false;
+		}
+
+		$title = $this->getPageTitle($pid);
+		if ($title === false) {
+			return false;
+		}
+
 		// publish page update
-		$result = $result && $this->changelogOperations->addChange(
+		$result = $this->changelogOperations->addChange(
 			ChangelogOperations::CHANGELOG_TYPE_PAGE,
 			ChangelogOperations::CHANGELOG_OPERATION_UPDATED,
 			$pid,

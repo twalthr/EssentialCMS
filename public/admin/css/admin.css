@@ -725,6 +725,7 @@ div.siteMap .subLevel>li {
 .dialog-window {
 	padding: 5px;
 	border: 1px solid #DCDCDC;
+	min-width: 300px;
 }
 
 .dialog-window h1 {
@@ -803,6 +804,7 @@ div.siteMap .subLevel>li {
 	float: right;
 	margin-top: -15px; /* -20 + 5*/
 	margin-bottom: 20px;
+	margin-left: 5px;
 }
 
 .fields .richField .checkboxWrapper label.checkbox {

@@ -297,3 +297,4 @@ ENCRYPTION_ERROR=Ihr Browser unterstützt keine Verschlüsselung.
 PLAIN_TEXT_HINT=Text kann nicht unverschlüsselt gespeichert werden.
 GENERATE=Generieren
 GENERATE_ID_EXPLANATION=Generierung der ID vom Titel oder aktuellem Inhalt des ID Feldes
+SHOW=Anzeigen

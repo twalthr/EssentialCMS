@@ -6,12 +6,15 @@ class MediaAnalyzerHub {
 
 	public function __construct() {
 		$this->analyzers[] = new ImageAnalyzer([]); // generic analyzers first!
+		$this->analyzers[] = new TextAnalyzer([]);
+		$this->analyzers[] = new RtfAnalyzer([]);
 		$this->analyzers[] = new JpegAnalyzer([]);
 		$this->analyzers[] = new PdfAnalyzer([]);
 		$this->analyzers[] = new PptxAnalyzer([]);
 		$this->analyzers[] = new DocxAnalyzer([]);
 		$this->analyzers[] = new XlsxAnalyzer([]);
 		$this->analyzers[] = new Id3Analyzer([]);
+		$this->analyzers[] = new MarkdownAnalyzer([]);
 	}
 
 	public function summarize($mid, $originalFileName, $rawPath, $smallThumbnailPath, $largeThumbnailPath) {
@@ -121,6 +124,9 @@ class MediaAnalyzerHub {
 		$handle = fopen($path, 'rb');
 		if ($handle) {
 			$fsize = filesize($path); 
+			if ($fsize === 0) {
+				return $result;
+			}
 			$contents = fread($handle, min($fsize, 40)); // read first 40 bytes
 			fclose($handle);
 			$result = bin2hex($contents);

@@ -59,23 +59,47 @@ $(document).ready(function(){
 		button.parent().before(newArrayElement);
 	});
 
-	$(document).on('click', '.pageSelectionButton', function() {
-		var button = $(this);
-		var idInput = button.siblings('.pageSelectionId');
-		var lightboxOpened = function() {
-			$('input:checked').trigger('change');
-			$('.dialog-window .selectPage').click(function() {
-				var page = $('.dialog-window input[name="page"]:checked');
-				var label = page.siblings('label');
-				idInput.val(page.val());
-				button.siblings('.pageSelectionName').val(
-					label.text().trim() + ' / ' + page.val());
-				closeLightbox();
-			});
-		};
-		openLightboxWithUrl(rootUrl + '/select-page-dialog/' + idInput.val(),
-			true,
-			lightboxOpened);
+	$('.pageSelectionWrapper').each(function() {
+		var wrapper = $(this);
+		var selectButton = wrapper.find('.pageSelectionButton');
+		var deleteButton = wrapper.find('.deleteButton');
+		var openButton = wrapper.find('.openButton');
+		var selectedId = wrapper.find('.pageSelectionId');
+		var selectedName = wrapper.find('.pageSelectionName');
+
+		if (selectedId.val().length == 0) {
+			deleteButton.addClass('hidden');
+			openButton.addClass('hidden');
+		}
+
+		selectButton.on('click', function() {
+			var lightboxOpened = function() {
+				$('input:checked').trigger('change');
+				$('.dialog-window .selectPage').click(function() {
+					var page = $('.dialog-window input[name="page"]:checked');
+					selectedId.val(page.val());
+					selectedName.val(page.val());
+					deleteButton.removeClass('hidden');
+					openButton.removeClass('hidden');
+					closeLightbox();
+				});
+			};
+			openLightboxWithUrl(
+				rootUrl + '/select-page-dialog/' + selectedId.val(),
+				true,
+				lightboxOpened);
+		});
+
+		deleteButton.on('click', function() {
+			selectedId.val('');
+			selectedName.val('');
+			deleteButton.addClass('hidden');
+			openButton.addClass('hidden');
+		});
+
+		openButton.on('click', function() {
+			window.open(rootUrl + '/page/' + selectedId.val(), '_self');
+		});
 	});
 
 	$(document).on('change', '.rangeWrapper input[type="range"]', function() {
@@ -109,6 +133,7 @@ $(document).ready(function(){
 		var password2 = wrapper.find('input[type=password]').last();
 		var encryptButton = wrapper.find('.encryptButton');
 		var decryptButton = wrapper.find('.decryptButton');
+		var deleteButton = wrapper.find('.deleteButton');
 		var shortPasswordError = wrapper.find('.shortPassword');
 		var unequalPasswordsError = wrapper.find('.unequalPasswords');
 		var wrongPasswordError = wrapper.find('.wrongPassword');
@@ -118,6 +143,7 @@ $(document).ready(function(){
 			text.prop('disabled', true);
 			decryptButton.addClass('hidden');
 			encryptButton.addClass('hidden');
+			deleteButton.addClass('hidden');
 			password1.addClass('hidden');
 			password1.val('');
 			password2.addClass('hidden');
@@ -151,7 +177,14 @@ $(document).ready(function(){
 			encryptButton.addClass('hidden');
 		} else {
 			decryptButton.addClass('hidden');
+			deleteButton.addClass('hidden');
 		}
+
+		// delete action
+		deleteButton.on('click', function() {
+			wrongPasswordError.addClass('hidden');
+			resetContent();
+		});
 
 		// encryption action
 		encryptButton.on('click', function() {
@@ -223,6 +256,7 @@ $(document).ready(function(){
 							resetInterface();
 							// enable decrypt mode
 							decryptButton.removeClass('hidden');
+							deleteButton.removeClass('hidden');
 						})
 						// error
 						.catch(function() {
@@ -240,6 +274,7 @@ $(document).ready(function(){
 			// encrypted state
 			if (password1.hasClass('hidden')) {
 				password1.removeClass('hidden');
+				deleteButton.addClass('hidden');
 			}
 			// password enter state
 			else {
@@ -309,6 +344,7 @@ $(document).ready(function(){
 							wrongPasswordError.removeClass('hidden');
 							resetInterface();
 							decryptButton.removeClass('hidden');
+							deleteButton.removeClass('hidden');
 						});
 				}
 			}

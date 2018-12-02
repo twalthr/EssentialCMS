@@ -59,7 +59,7 @@ abstract class MediaProperties {
 
 	const KEY_DESCRIPTION = 'description';
 
-	const KEY_REVISION = 'revision';
+	const KEY_REVISION = 'revision'; // e.g. ISBN
 
 	const KEY_TAGS = 'tags';
 
@@ -67,7 +67,7 @@ abstract class MediaProperties {
 
 	const KEY_PARTS = 'parts';
 
-	const KEY_TEXT_CONTENT = 'textcontent'; // e.g. lyrics or subtitles
+	const KEY_TEXT_CONTENT = 'textcontent'; // e.g. lyrics, subtitles, category, section
 
 	const KEY_LANGUAGE = 'language';
 
@@ -106,6 +106,8 @@ abstract class MediaProperties {
 	const VALUE_DOCUMENT_TYPE_BOOK = 0;
 	const VALUE_DOCUMENT_TYPE_EDITABLE = 1; // e.g. word, power point document
 	const VALUE_DOCUMENT_TYPE_DOCUMENT = 2; // e.g. scanned invoice, contract
+	const VALUE_DOCUMENT_TYPE_ARTICLE = 3;
+	const VALUE_DOCUMENT_TYPE_WEBSITE = 4;
 
 	const KEY_PAGE_COUNT = 'pagecount';
 
@@ -396,7 +398,9 @@ abstract class MediaProperties {
 			'auxiliaryInfo' => [
 				'BOOK',
 				'EDITABLE',
-				'DOCUMENT']
+				'DOCUMENT',
+				'ARTICLE',
+				'WEBSITE']
 			]);
 
 		$props[MediaProperties::KEY_PAGE_COUNT] = FieldInfo::create([

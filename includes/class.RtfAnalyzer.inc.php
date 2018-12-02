@@ -46,8 +46,17 @@ class RtfAnalyzer extends DocumentAnalyzer {
 			},
 			$text);
 
+		// remove fonts and styles
+		// e.g.
+		// {\*\cs13\fs20\super Endnote Reference;}
+		// {\f4\fnil\fcharset0\fprq0\fttruetype Courier New;}
+		// {\s1\fi-431\li720\sbasedon29\snext29 Contents 1;}
+		$text = preg_replace('/{\\\\(([fs][0-9]+)|\\\*)[^;{}]+;}/u', '', $text);
+
 		// remove rich text syntax (e.g. \fonttbl)
-		$text = preg_replace('/(\\\\)(\\S+)/', '', $text);
+		// best effort, not very precise
+		$text = preg_replace('/(\\\\)[\\S]+[0-9]*/', ' ', $text);
+		$text = preg_replace('/[{}]+/', ' ', $text);
 
 		// determine frequent words
 		$words = $this->generateFrequentWords($text);

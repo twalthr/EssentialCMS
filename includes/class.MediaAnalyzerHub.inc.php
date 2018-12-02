@@ -15,6 +15,7 @@ class MediaAnalyzerHub {
 		$this->analyzers[] = new XlsxAnalyzer([]);
 		$this->analyzers[] = new Id3Analyzer([]);
 		$this->analyzers[] = new MarkdownAnalyzer([]);
+		$this->analyzers[] = new HtmlAnalyzer([]);
 	}
 
 	public function summarize($mid, $originalFileName, $rawPath, $smallThumbnailPath, $largeThumbnailPath) {
@@ -28,7 +29,7 @@ class MediaAnalyzerHub {
 		// check text content
 		$content = null;
 		if (Utils::stringStartsWith($mime, 'text')) {
-			$content = file_get_contents($rawPath);
+			$content = trim(file_get_contents($rawPath));
 		}
 
 		foreach ($this->analyzers as $analyzer) {

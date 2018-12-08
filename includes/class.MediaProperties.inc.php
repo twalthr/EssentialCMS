@@ -59,13 +59,13 @@ abstract class MediaProperties {
 
 	const KEY_DESCRIPTION = 'description';
 
-	const KEY_REVISION = 'revision'; // e.g. ISBN
+	const KEY_REVISION = 'revision'; // e.g. v1 or ISBN
 
 	const KEY_TAGS = 'tags';
 
 	const KEY_PART = 'part'; // starts at 1
 
-	const KEY_PARTS = 'parts';
+	const KEY_PARTS = 'parts'; // part x of x or contained files
 
 	const KEY_TEXT_CONTENT = 'textcontent'; // e.g. lyrics, subtitles, category, section
 

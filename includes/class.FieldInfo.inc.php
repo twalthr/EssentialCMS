@@ -275,10 +275,15 @@ class FieldInfo {
 			return null;
 		}
 		// normalize string
-		if ($this->isLargeContent()) {
-			$content = str_replace(array("\r", "\n"), '', $content);
+		if (!$this->isLargeContent()) {
+			$content = str_replace(array("\r", "\n"), ' ', $content);
+			// normalize space only if it doesn't change plain indention
+			$content = preg_replace('/[[:space:]]+/u', ' ', $content);
+		} else {
+			$content = str_replace(array("\r", "\n", "\r\n"), "\n", $content);
 		}
-		$content = preg_replace('/[[:space:][:cntrl:]]+/u', ' ', $content);
+		// remove control characters
+		$content = preg_replace('/[^\P{C}\n]+/u', '', $content);
 		// clear strings that only contain punctuation characters
 		$content = preg_replace('/^[[:punct:]]+$/u', '', $content);
 		$content = trim($content);

@@ -7,6 +7,8 @@ class MediaAnalyzerHub {
 	public function __construct() {
 		$this->analyzers[] = new ImageAnalyzer([]); // generic analyzers first!
 		$this->analyzers[] = new TextAnalyzer([]);
+		$this->analyzers[] = new ArchiveAnalyzer([]);
+		$this->analyzers[] = new ZipAnalyzer([]);
 		$this->analyzers[] = new RtfAnalyzer([]);
 		$this->analyzers[] = new JpegAnalyzer([]);
 		$this->analyzers[] = new PdfAnalyzer([]);
